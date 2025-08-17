@@ -1,0 +1,21 @@
+/* Login page specific styles */
+.loginForm input {
+  color: #000000 !important;
+  font-weight: 600 !important;
+}
+
+.loginForm input::placeholder {
+  color: #9CA3AF !important;
+  font-weight: 400 !important;
+}
+
+.loginForm input:focus {
+  color: #000000 !important;
+}
+
+.loginForm input[type="email"],
+.loginForm input[type="password"] {
+  color: #000000 !important;
+  font-weight: 600 !important;
+  background-color: rgba(255, 255, 255, 0.1) !important;
+}
