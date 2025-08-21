@@ -1,12 +1,12 @@
 {
-  "buildCommand": "cd biomed-nextjs && npm run build",
-  "outputDirectory": "biomed-nextjs/.next",
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
   "framework": "nextjs",
-  "installCommand": "cd biomed-nextjs && npm install",
-  "devCommand": "cd biomed-nextjs && npm run dev",
+  "installCommand": "npm install --legacy-peer-deps",
+  "devCommand": "npm run dev",
   "regions": ["bom1"],
   "functions": {
-    "biomed-nextjs/src/app/api/**/*.ts": {
+    "src/app/api/**/*.ts": {
       "maxDuration": 30
     }
   },
@@ -37,5 +37,8 @@
         }
       ]
     }
-  ]
+  ],
+  "env": {
+    "NODE_OPTIONS": "--max-old-space-size=4096"
+  }
 }
