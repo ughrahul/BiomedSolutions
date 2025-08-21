@@ -5,30 +5,20 @@ export interface ContactMessage {
   name: string;
   email: string;
   phone?: string;
-  company?: string;
-  subject: string;
+  organization?: string;
   message: string;
   status: 'unread' | 'read' | 'responded' | 'resolved';
-  priority: 'low' | 'medium' | 'high';
-  source: 'website' | 'email' | 'phone' | 'social';
-  tags?: string[];
   notes?: string;
-  assigned_to?: string;
   created_at: string;
   updated_at: string;
-  response_sent_at?: string;
-  resolved_at?: string;
 }
 
 export interface CreateContactMessage {
   name: string;
   email: string;
   phone?: string;
-  company?: string;
-  subject: string;
+  organization?: string;
   message: string;
-  priority?: 'low' | 'medium' | 'high';
-  source?: 'website' | 'email' | 'phone' | 'social';
 }
 
 export interface UpdateContactMessage {

@@ -166,6 +166,8 @@ export default function RegisterPage() {
               >
                 <Input
                   type="text"
+                  id="fullName"
+                  name="fullName"
                   label="Full Name"
                   placeholder="Enter your full name"
                   value={formData.fullName}
@@ -173,6 +175,7 @@ export default function RegisterPage() {
                   error={errors.fullName}
                   icon={<User className="w-4 h-4" />}
                   iconPosition="left"
+                  autoComplete="name"
                 />
               </motion.div>
 
@@ -183,6 +186,8 @@ export default function RegisterPage() {
               >
                 <Input
                   type="email"
+                  id="email"
+                  name="email"
                   label="Email Address"
                   placeholder="Enter your email"
                   value={formData.email}
@@ -190,6 +195,7 @@ export default function RegisterPage() {
                   error={errors.email}
                   icon={<Mail className="w-4 h-4" />}
                   iconPosition="left"
+                  autoComplete="email"
                 />
               </motion.div>
 
@@ -201,6 +207,8 @@ export default function RegisterPage() {
               >
                 <Input
                   type={showPassword ? "text" : "password"}
+                  id="password"
+                  name="password"
                   label="Password"
                   placeholder="Create a strong password"
                   value={formData.password}
@@ -208,6 +216,7 @@ export default function RegisterPage() {
                   error={errors.password}
                   icon={<Lock className="w-4 h-4" />}
                   iconPosition="left"
+                  autoComplete="new-password"
                 />
                 <button
                   type="button"
@@ -230,6 +239,8 @@ export default function RegisterPage() {
               >
                 <Input
                   type={showConfirmPassword ? "text" : "password"}
+                  id="confirmPassword"
+                  name="confirmPassword"
                   label="Confirm Password"
                   placeholder="Confirm your password"
                   value={formData.confirmPassword}
@@ -239,6 +250,7 @@ export default function RegisterPage() {
                   error={errors.confirmPassword}
                   icon={<Lock className="w-4 h-4" />}
                   iconPosition="left"
+                  autoComplete="new-password"
                 />
                 <button
                   type="button"

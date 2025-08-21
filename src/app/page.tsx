@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { suppressMapsErrors } from "@/lib/utils";
 import {
   motion,
   useInView,
@@ -40,6 +41,8 @@ import { Card } from "@/components/ui/card";
 import Link from "next/link";
 import Image from "next/image";
 import FeaturedProducts from "@/components/FeaturedProducts";
+import { useWebsiteSettings } from "@/hooks/useWebsiteSettings";
+import ClientOnly from "@/components/ClientOnly";
 
 
 // Floating animation variants
@@ -90,14 +93,14 @@ const cardVariants = {
 const stats = [
   {
     label: "Hospitals Served",
-    value: "150",
+    value: "15",
     icon: Building2,
     color: "from-sky-400 to-sky-600",
     suffix: "+",
   },
   {
     label: "Equipment Installed",
-    value: "2500",
+    value: "200",
     icon: Settings,
     color: "from-teal-400 to-teal-600",
     suffix: "+",
@@ -111,7 +114,7 @@ const stats = [
   },
   {
     label: "Years Experience",
-    value: "15",
+    value: "10",
     icon: TrendingUp,
     color: "from-cyan-400 to-cyan-600",
     suffix: "+",
@@ -171,6 +174,7 @@ const testimonials = [
 ];
 
 export default function HomePage() {
+  const { settings, mounted } = useWebsiteSettings();
   const heroRef = useRef(null);
   const servicesRef = useRef(null);
   const statsRef = useRef(null);
@@ -194,6 +198,9 @@ export default function HomePage() {
   useEffect(() => {
     // Initialize the time on client side
     setLastScrollTime(Date.now());
+
+    // Suppress Google Maps API console errors
+    suppressMapsErrors();
   }, []);
 
   useEffect(() => {
@@ -394,9 +401,11 @@ export default function HomePage() {
         </motion.div>
 
         {/* Floating Orbs Animation */}
-        <FloatingParticles />
+        <ClientOnly>
+          <FloatingParticles />
+        </ClientOnly>
 
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <div className="relative z-10 container-responsive text-center -mt-10 sm:-mt-20">
           <motion.div
             initial={{ opacity: 0, y: 100 }}
             animate={heroInView ? { opacity: 1, y: 0 } : {}}
@@ -410,7 +419,7 @@ export default function HomePage() {
               className="mb-4 flex justify-center"
             >
               <motion.div
-                className="relative bg-white/10 backdrop-blur-lg border border-white/20 rounded-3xl px-8 py-6 shadow-2xl"
+                className="relative bg-white/10 backdrop-blur-lg border border-white/20 rounded-3xl px-10 py-8 shadow-2xl"
                 whileHover={{ 
                   scale: 1.02,
                   boxShadow: "0 25px 50px rgba(0, 0, 0, 0.3)",
@@ -427,7 +436,7 @@ export default function HomePage() {
                   transition={{ duration: 4, repeat: Infinity }}
                 />
                 <motion.h1
-                  className="relative text-4xl md:text-6xl font-black bg-gradient-to-r from-white via-cyan-200 to-blue-200 bg-clip-text text-transparent leading-tight"
+                  className="relative text-2xl sm:text-3xl md:text-5xl lg:text-6xl xl:text-7xl font-black bg-gradient-to-r from-white via-cyan-200 to-blue-200 bg-clip-text text-transparent leading-tight"
                   animate={{
                     backgroundPosition: ["0%", "100%", "0%"],
                     textShadow: [
@@ -849,7 +858,9 @@ export default function HomePage() {
       </section>
 
       {/* Featured Products Section */}
-      <FeaturedProducts />
+      <ClientOnly>
+        <FeaturedProducts />
+      </ClientOnly>
 
       {/* Diagnostic Panel - Temporary for debugging */}
 
@@ -1056,15 +1067,15 @@ export default function HomePage() {
           />
         </div>
 
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="relative z-10 container-responsive">
           <motion.div
             initial={{ opacity: 0, y: 50 }}
             animate={mapInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.8 }}
-            className="text-center mb-12"
+            className="text-center mb-8 sm:mb-12"
           >
             <motion.h2
-              className="text-3xl md:text-4xl font-bold bg-gradient-to-r from-gray-800 via-blue-600 to-cyan-600 bg-clip-text text-transparent mb-4"
+              className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-gray-800 via-blue-600 to-cyan-600 bg-clip-text text-transparent mb-3 sm:mb-4"
               animate={{
                 backgroundPosition: ["0%", "100%", "0%"],
               }}
@@ -1076,7 +1087,7 @@ export default function HomePage() {
               initial={{ opacity: 0, y: 20 }}
               animate={mapInView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.8, delay: 0.2 }}
-              className="text-lg text-gray-600 max-w-2xl mx-auto"
+              className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto"
             >
               Visit our advanced medical facility at Annapurna Neurological
               Institute & Allied Sciences
@@ -1089,44 +1100,62 @@ export default function HomePage() {
             transition={{ duration: 0.8, delay: 0.2 }}
             className="bg-white rounded-3xl shadow-2xl overflow-hidden"
           >
-            <iframe
-              src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3532.5440193842667!2d85.31673821504788!3d27.703030282849743!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39eb199a07a31fc5%3A0x984031b6bb9f6b5a!2sAnnapurna%20Neurological%20Institute%20%26%20Allied%20Sciences!5e0!3m2!1sen!2snp!4v1734518769875!5m2!1sen!2snp"
-              width="100%"
-              height="400"
-              style={{ border: 0 }}
-              allowFullScreen
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-              title="Annapurna Neuro Hospital Location in Maitighar, Kathmandu"
-              className="w-full rounded-xl"
-            />
+            <div className="relative w-full h-[300px]">
+              <iframe
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3532.5440193842667!2d85.31673821504788!3d27.703030282849743!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39eb199a07a31fc5%3A0x984031b6bb9f6b5a!2sAnnapurna%20Neurological%20Institute%20%26%20Allied%20Sciences!5e0!3m2!1sen!2snp!4v1734518769875!5m2!1sen!2snp"
+                width="100%"
+                height="300"
+                style={{ border: 0 }}
+                allowFullScreen
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+                title="Annapurna Neuro Hospital Location in Maitighar, Kathmandu"
+                className="w-full rounded-xl"
+                sandbox="allow-scripts allow-same-origin"
+              />
+              {/* Fallback content in case iframe fails to load */}
+              <div className="absolute inset-0 bg-gray-100 flex items-center justify-center opacity-0 pointer-events-none" id="maps-fallback">
+                <div className="text-center p-4">
+                  <p className="font-semibold text-gray-700 mb-2">Map temporarily unavailable</p>
+                  <a
+                    href="https://maps.google.com/?q=Annapurna+Neurological+Institute+Maitighar+Kathmandu+Nepal"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline text-sm font-medium"
+                  >
+                    Open in Google Maps →
+                  </a>
+                </div>
+              </div>
+            </div>
           </motion.div>
 
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={mapInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.8, delay: 0.4 }}
-            className="mt-6"
+            className="mt-4 sm:mt-6"
           >
-            <Card className="p-8 bg-white/80 backdrop-blur-lg border border-blue-200 rounded-3xl shadow-xl">
+            <Card className="p-4 sm:p-6 lg:p-8 bg-white/80 backdrop-blur-lg border border-blue-200 rounded-2xl sm:rounded-3xl shadow-xl">
               <div className="text-center">
-                <h3 className="text-2xl font-bold text-blue-600 mb-4">
-                  <MapPin className="w-8 h-8 inline mr-2" />
+                <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-blue-600 mb-3 sm:mb-4">
+                  <MapPin className="w-6 h-6 sm:w-8 sm:h-8 inline mr-2" />
                   Annapurna Neurological Institute & Allied Sciences
                 </h3>
-                <p className="text-gray-700 mb-2">
-                  <strong>Address:</strong> Maitighar Mandala-10, Kathmandu
-                  44600, Nepal
-                </p>
-                <p className="text-gray-700 mb-2">
-                  <strong>Contact:</strong> 24/7 Support - 980120335/61
-                </p>
-                <p className="text-gray-700 mb-2">
-                  <strong>Hospital:</strong> 977-1-5356656 / 977-1-5356185
-                </p>
-                <p className="text-gray-700 mb-6">
-                  <strong>Email:</strong> info@annapurnahospitals.com
-                </p>
+                <div className="space-y-1 sm:space-y-2 text-sm sm:text-base">
+                  <p className="text-gray-700">
+                    <strong>Address:</strong> {mounted ? settings.contact.address : "Annapurna Neurological Institute & Allied Sciences, Maitighar Mandala-10, Kathmandu 44600, Nepal"}
+                  </p>
+                  <p className="text-gray-700">
+                    <strong>Contact:</strong> 24/7 Support - {mounted ? settings.contact.supportPhone : "980120335/61"}
+                  </p>
+                  <p className="text-gray-700">
+                    <strong>Hospital:</strong> {mounted ? settings.contact.hospitalPhone : "01-5356568"}
+                  </p>
+                  <p className="text-gray-700 mb-4 sm:mb-6">
+                    <strong>Email:</strong> {mounted ? settings.contact.email : "hingmang75@gmail.com"}
+                  </p>
+                </div>
                 <motion.a
                   href="https://maps.google.com/?q=Annapurna+Neurological+Institute+Maitighar+Kathmandu+Nepal"
                   target="_blank"
@@ -1134,8 +1163,8 @@ export default function HomePage() {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  <Button className="bg-gradient-to-r from-sky-500 to-teal-500 hover:from-sky-600 hover:to-teal-600 text-white px-8 py-3 rounded-xl font-semibold">
-                    <ExternalLink className="w-5 h-5 mr-2" />
+                  <Button className="bg-gradient-to-r from-sky-500 to-teal-500 hover:from-sky-600 hover:to-teal-600 text-white px-6 sm:px-8 py-2 sm:py-3 rounded-xl font-semibold text-sm sm:text-base">
+                    <ExternalLink className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
                     Open in Google Maps
                   </Button>
                 </motion.a>

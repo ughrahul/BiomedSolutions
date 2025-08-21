@@ -10,26 +10,20 @@ export async function GET() {
       const defaultSettings = {
         contact: {
           phone: "+977-980-120-335",
-          email: "info@annapurnahospitals.com",
+          email: "hingmang75@gmail.com",
           address:
-            "Annapurna Neurological Institute, Maitighar, Kathmandu, Nepal",
-          website: "https://annapurnahospitals.com",
+            "Annapurna Neurological Institute & Allied Sciences, Maitighar Mandala-10, Kathmandu 44600, Nepal",
           whatsapp: "+977-980-120-335",
           businessHours:
             "Monday - Friday: 8:00 AM - 6:00 PM, Saturday: 9:00 AM - 4:00 PM",
+          hospitalPhone: "01-5356568",
+          supportPhone: "980120335/61",
         },
         social: {
           facebook: "https://facebook.com/annapurnahospitals",
           twitter: "https://twitter.com/annapurnahospitals",
           instagram: "https://instagram.com/annapurnahospitals",
           linkedin: "https://linkedin.com/company/annapurnahospitals",
-        },
-        company: {
-          name: "Biomed Solutions",
-          tagline: "Advanced Medical Equipment for Healthcare Excellence",
-          description:
-            "Leading provider of cutting-edge medical equipment and healthcare solutions at Annapurna Neurological Institute.",
-          logo: "/assets/images/logo.png",
         },
       };
 
@@ -49,26 +43,20 @@ export async function GET() {
     const settings: any = {
       contact: {
         phone: "+977-980-120-335",
-        email: "info@annapurnahospitals.com",
+        email: "hingmang75@gmail.com",
         address:
-          "Annapurna Neurological Institute, Maitighar, Kathmandu, Nepal",
-        website: "https://annapurnahospitals.com",
+          "Annapurna Neurological Institute & Allied Sciences, Maitighar Mandala-10, Kathmandu 44600, Nepal",
         whatsapp: "+977-980-120-335",
         businessHours:
           "Monday - Friday: 8:00 AM - 6:00 PM, Saturday: 9:00 AM - 4:00 PM",
+        hospitalPhone: "01-5356568",
+        supportPhone: "980120335/61",
       },
       social: {
         facebook: "https://facebook.com/annapurnahospitals",
         twitter: "https://twitter.com/annapurnahospitals",
         instagram: "https://instagram.com/annapurnahospitals",
         linkedin: "https://linkedin.com/company/annapurnahospitals",
-      },
-      company: {
-        name: "Biomed Solutions",
-        tagline: "Advanced Medical Equipment for Healthcare Excellence",
-        description:
-          "Leading provider of cutting-edge medical equipment and healthcare solutions at Annapurna Neurological Institute.",
-        logo: "/assets/images/logo.png",
       },
     };
 
@@ -83,11 +71,6 @@ export async function GET() {
         const field = setting.key.replace("social_", "");
         if (Object.prototype.hasOwnProperty.call(settings.social, field)) {
           settings.social[field] = setting.value;
-        }
-      } else if (setting.key.startsWith("company_")) {
-        const field = setting.key.replace("company_", "");
-        if (Object.prototype.hasOwnProperty.call(settings.company, field)) {
-          settings.company[field] = setting.value;
         }
       }
     });
@@ -104,7 +87,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { settings } = body;
+    const { contact, social } = body;
 
     const supabase = createAdminSupabaseClient();
 
@@ -123,8 +106,8 @@ export async function POST(request: NextRequest) {
     }> = [];
 
     // Contact settings
-    if (settings.contact) {
-      Object.entries(settings.contact).forEach(([key, value]) => {
+    if (contact) {
+      Object.entries(contact).forEach(([key, value]) => {
         updates.push({
           key: `contact_${key}`,
           value: value as string,
@@ -134,8 +117,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Social settings
-    if (settings.social) {
-      Object.entries(settings.social).forEach(([key, value]) => {
+    if (social) {
+      Object.entries(social).forEach(([key, value]) => {
         updates.push({
           key: `social_${key}`,
           value: value as string,
@@ -144,16 +127,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // Company settings
-    if (settings.company) {
-      Object.entries(settings.company).forEach(([key, value]) => {
-        updates.push({
-          key: `company_${key}`,
-          value: value as string,
-          updated_at: new Date().toISOString(),
-        });
-      });
-    }
+
 
     // Upsert all settings
     const { error } = await supabase

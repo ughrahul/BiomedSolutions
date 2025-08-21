@@ -4,8 +4,6 @@ import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { 
   User, 
-  Mail, 
-  Phone, 
   Building, 
   MapPin,
   Bell,
@@ -14,16 +12,17 @@ import {
   Save,
   Camera,
   Settings,
-  Palette,
-  Monitor,
-  Moon,
-  Sun,
-  Globe
+  Globe,
+  Upload,
+  Mail,
+  Phone
 } from "lucide-react";
 import { EnhancedCard } from "@/components/ui/enhanced-card";
 import { EnhancedButton } from "@/components/ui/enhanced-button";
 import { EnhancedInput } from "@/components/ui/enhanced-input";
 import { getCurrentUser } from "@/lib/auth";
+import { useAdminProfile } from "@/contexts/AdminProfileContext";
+import toast from "react-hot-toast";
 
 interface AdminProfileProps {
   className?: string;
@@ -32,8 +31,6 @@ interface AdminProfileProps {
 interface AdminSettings {
   personal: {
     full_name: string;
-    email: string;
-    phone: string;
     avatar_url?: string;
   };
   company: {
@@ -50,11 +47,6 @@ interface AdminSettings {
     password_strength: 'weak' | 'medium' | 'strong';
     login_notifications: boolean;
   };
-  theme: {
-    mode: 'light' | 'dark' | 'system';
-    sidebar_collapsed: boolean;
-    primary_color: string;
-  };
   notifications: {
     email_notifications: boolean;
     push_notifications: boolean;
@@ -64,15 +56,15 @@ interface AdminSettings {
 }
 
 export default function AdminProfile({ className = "" }: AdminProfileProps) {
+  const { profile, updateProfile, saveProfile, loading: profileLoading } = useAdminProfile();
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState('personal');
   const [settings, setSettings] = useState<AdminSettings>({
     personal: {
-      full_name: 'Admin User',
-      email: 'admin@biomed.com',
-      phone: '+977-980-120-335',
+      full_name: profile.full_name,
+      avatar_url: profile.avatar_url,
     },
     company: {
       name: 'Biomed Solutions',
@@ -88,11 +80,6 @@ export default function AdminProfile({ className = "" }: AdminProfileProps) {
       password_strength: 'medium',
       login_notifications: true,
     },
-    theme: {
-      mode: 'light',
-      sidebar_collapsed: false,
-      primary_color: '#3b82f6',
-    },
     notifications: {
       email_notifications: true,
       push_notifications: true,
@@ -103,20 +90,34 @@ export default function AdminProfile({ className = "" }: AdminProfileProps) {
 
   const tabs = [
     { id: 'personal', label: 'Personal Info', icon: User },
-    { id: 'theme', label: 'Appearance', icon: Palette },
   ];
 
-  const colorOptions = [
-    { name: 'Blue', value: '#0ea5e9' },
-    { name: 'Cyan', value: '#06b6d4' },
-    { name: 'Green', value: '#10b981' },
-    { name: 'Purple', value: '#8b5cf6' },
-    { name: 'Pink', value: '#ec4899' },
-    { name: 'Orange', value: '#f59e0b' },
-  ];
+
 
   useEffect(() => {
     loadUserData();
+  }, []);
+
+  // Update settings when profile changes
+  useEffect(() => {
+    setSettings(prev => ({
+      ...prev,
+      personal: {
+        ...prev.personal,
+        full_name: profile.full_name,
+        avatar_url: profile.avatar_url,
+      }
+    }));
+  }, [profile]);
+
+  // Sync profile with context on mount
+  useEffect(() => {
+    if (profile.full_name !== settings.personal.full_name) {
+      updateProfile({
+        full_name: settings.personal.full_name,
+        avatar_url: settings.personal.avatar_url,
+      });
+    }
   }, []);
 
   const loadUserData = async () => {
@@ -124,11 +125,15 @@ export default function AdminProfile({ className = "" }: AdminProfileProps) {
       const currentUser = await getCurrentUser();
       setUser(currentUser);
       
-      // Load settings from localStorage or API
-      const savedSettings = localStorage.getItem('admin-settings');
-      if (savedSettings) {
-        setSettings(JSON.parse(savedSettings));
-      }
+      // Update settings with current profile data
+      setSettings(prev => ({
+        ...prev,
+        personal: {
+          ...prev.personal,
+          full_name: profile.full_name,
+          avatar_url: profile.avatar_url,
+        }
+      }));
     } catch (error) {
       console.error('Error loading user data:', error);
     } finally {
@@ -139,15 +144,20 @@ export default function AdminProfile({ className = "" }: AdminProfileProps) {
   const handleSave = async () => {
     setSaving(true);
     try {
-      // Save to localStorage for demo
-      localStorage.setItem('admin-settings', JSON.stringify(settings));
+      // Update profile with personal settings
+      updateProfile({
+        full_name: settings.personal.full_name,
+        avatar_url: settings.personal.avatar_url,
+      });
       
-      // Here you would typically save to your backend
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Save profile
+      await saveProfile();
       
-      console.log('Settings saved:', settings);
+      toast.success('Profile updated successfully!');
+      console.log('Profile saved:', settings.personal);
     } catch (error) {
-      console.error('Error saving settings:', error);
+      console.error('Error saving profile:', error);
+      toast.error('Failed to save profile');
     } finally {
       setSaving(false);
     }
@@ -161,6 +171,44 @@ export default function AdminProfile({ className = "" }: AdminProfileProps) {
         [field]: value
       }
     }));
+    
+    // Update profile immediately for real-time updates
+    updateProfile({
+      [field]: value
+    });
+  };
+
+  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    try {
+      // Create FormData for file upload
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('folder', 'admin-avatars');
+
+      // Upload image
+      const response = await fetch('/api/upload-image', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to upload image');
+      }
+
+      const data = await response.json();
+      
+      // Update profile with new avatar URL
+      updatePersonalSetting('avatar_url', data.url);
+      updateProfile({ avatar_url: data.url });
+      
+      toast.success('Profile picture updated successfully!');
+    } catch (error) {
+      console.error('Error uploading avatar:', error);
+      toast.error('Failed to upload profile picture');
+    }
   };
 
   const updateCompanySetting = (field: string, value: any) => {
@@ -183,15 +231,7 @@ export default function AdminProfile({ className = "" }: AdminProfileProps) {
     }));
   };
 
-  const updateThemeSetting = (field: string, value: any) => {
-    setSettings(prev => ({
-      ...prev,
-      theme: {
-        ...prev.theme,
-        [field]: value
-      }
-    }));
-  };
+
 
   const updateSecuritySetting = (field: string, value: any) => {
     setSettings(prev => ({
@@ -203,7 +243,7 @@ export default function AdminProfile({ className = "" }: AdminProfileProps) {
     }));
   };
 
-  if (loading) {
+  if (loading || profileLoading) {
     return (
       <div className="text-center py-8">
         <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
@@ -217,7 +257,6 @@ export default function AdminProfile({ className = "" }: AdminProfileProps) {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Admin Profile</h2>
           <p className="text-gray-600">Manage your account settings and preferences</p>
         </div>
         <EnhancedButton
@@ -263,40 +302,44 @@ export default function AdminProfile({ className = "" }: AdminProfileProps) {
                 {/* Avatar */}
                 <div className="flex items-center gap-6">
                   <div className="relative">
-                    <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-full flex items-center justify-center">
-                      <User className="w-8 h-8 text-white" />
-                    </div>
-                    <button className="absolute -bottom-1 -right-1 w-6 h-6 bg-white rounded-full border-2 border-gray-200 flex items-center justify-center hover:bg-gray-50">
+                    {settings.personal.avatar_url ? (
+                      <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-gray-200">
+                        <img
+                          src={settings.personal.avatar_url}
+                          alt="Profile"
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    ) : (
+                      <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-cyan-600 rounded-full flex items-center justify-center">
+                        <User className="w-8 h-8 text-white" />
+                      </div>
+                    )}
+                    <label className="absolute -bottom-1 -right-1 w-6 h-6 bg-white rounded-full border-2 border-gray-200 flex items-center justify-center hover:bg-gray-50 cursor-pointer">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleAvatarUpload}
+                        className="hidden"
+                      />
                       <Camera className="w-3 h-3 text-gray-600" />
-                    </button>
+                    </label>
                   </div>
                   <div>
                     <h4 className="font-medium text-gray-900">Profile Picture</h4>
-                    <p className="text-sm text-gray-600">Update your profile picture</p>
+                    <p className="text-sm text-gray-600">Click the camera icon to update your profile picture</p>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <EnhancedInput
+                    id="full-name"
+                    name="full-name"
                     label="Full Name"
                     value={settings.personal.full_name}
                     onChange={(e) => updatePersonalSetting('full_name', e.target.value)}
                     icon={<User className="w-4 h-4" />}
-                  />
-                  
-                  <EnhancedInput
-                    label="Email Address"
-                    type="email"
-                    value={settings.personal.email}
-                    onChange={(e) => updatePersonalSetting('email', e.target.value)}
-                    icon={<Mail className="w-4 h-4" />}
-                  />
-                  
-                  <EnhancedInput
-                    label="Phone Number"
-                    value={settings.personal.phone}
-                    onChange={(e) => updatePersonalSetting('phone', e.target.value)}
-                    icon={<Phone className="w-4 h-4" />}
+                    autoComplete="name"
                   />
                 </div>
               </div>
@@ -308,32 +351,44 @@ export default function AdminProfile({ className = "" }: AdminProfileProps) {
                 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <EnhancedInput
+                    id="company-name"
+                    name="company-name"
                     label="Company Name"
                     value={settings.company.name}
                     onChange={(e) => updateCompanySetting('name', e.target.value)}
                     icon={<Building className="w-4 h-4" />}
+                    autoComplete="organization"
                   />
                   
                   <EnhancedInput
+                    id="company-email"
+                    name="company-email"
                     label="Company Email"
                     type="email"
                     value={settings.company.email}
                     onChange={(e) => updateCompanySetting('email', e.target.value)}
                     icon={<Mail className="w-4 h-4" />}
+                    autoComplete="email"
                   />
                   
                   <EnhancedInput
+                    id="company-phone"
+                    name="company-phone"
                     label="Company Phone"
                     value={settings.company.phone}
                     onChange={(e) => updateCompanySetting('phone', e.target.value)}
                     icon={<Phone className="w-4 h-4" />}
+                    autoComplete="tel"
                   />
                   
                   <EnhancedInput
+                    id="company-website"
+                    name="company-website"
                     label="Website"
                     value={settings.company.website || ''}
                     onChange={(e) => updateCompanySetting('website', e.target.value)}
                     icon={<Globe className="w-4 h-4" />}
+                    autoComplete="url"
                   />
                 </div>
                 
@@ -343,9 +398,12 @@ export default function AdminProfile({ className = "" }: AdminProfileProps) {
                     Company Address
                   </label>
                   <textarea
+                    id="company-address"
+                    name="company-address"
                     value={settings.company.address}
                     onChange={(e) => updateCompanySetting('address', e.target.value)}
                     rows={3}
+                    autoComplete="street-address"
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                   />
                 </div>
@@ -387,77 +445,7 @@ export default function AdminProfile({ className = "" }: AdminProfileProps) {
               </div>
             )}
 
-            {activeTab === 'theme' && (
-              <div className="space-y-6">
-                <h3 className="text-lg font-semibold text-gray-900">Appearance Settings</h3>
-                
-                <div className="space-y-6">
-                  {/* Theme Mode */}
-                  <div>
-                    <h4 className="font-medium text-gray-900 mb-3">Theme Mode</h4>
-                    <div className="grid grid-cols-3 gap-3">
-                      {[
-                        { value: 'light', label: 'Light', icon: Sun },
-                        { value: 'dark', label: 'Dark', icon: Moon },
-                        { value: 'system', label: 'System', icon: Monitor },
-                      ].map((mode) => (
-                        <button
-                          key={mode.value}
-                          onClick={() => updateThemeSetting('mode', mode.value)}
-                          className={`p-4 rounded-lg border-2 transition-colors ${
-                            settings.theme.mode === mode.value
-                              ? 'border-blue-500 bg-blue-50'
-                              : 'border-gray-200 hover:border-gray-300'
-                          }`}
-                        >
-                          <mode.icon className="w-6 h-6 mx-auto mb-2 text-gray-600" />
-                          <span className="text-sm font-medium">{mode.label}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
 
-                  {/* Primary Color */}
-                  <div>
-                    <h4 className="font-medium text-gray-900 mb-3">Primary Color</h4>
-                    <div className="flex gap-3">
-                      {colorOptions.map((color) => (
-                        <button
-                          key={color.value}
-                          onClick={() => updateThemeSetting('primary_color', color.value)}
-                          className={`w-10 h-10 rounded-lg border-2 transition-all ${
-                            settings.theme.primary_color === color.value
-                              ? 'border-gray-400 scale-110'
-                              : 'border-gray-200 hover:border-gray-300'
-                          }`}
-                          style={{ backgroundColor: color.value }}
-                          title={color.name}
-                        />
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Other Preferences */}
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h4 className="font-medium text-gray-900">Collapsed Sidebar</h4>
-                        <p className="text-sm text-gray-600">Keep sidebar collapsed by default</p>
-                      </div>
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={settings.theme.sidebar_collapsed}
-                          onChange={(e) => updateThemeSetting('sidebar_collapsed', e.target.checked)}
-                          className="sr-only peer"
-                        />
-                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                      </label>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
 
             {activeTab === 'security' && (
               <div className="space-y-6">
@@ -471,7 +459,7 @@ export default function AdminProfile({ className = "" }: AdminProfileProps) {
                       <p className="text-sm text-gray-600">Add an extra layer of security to your account</p>
                     </div>
                     <EnhancedButton
-                      variant={settings.security.two_factor_enabled ? "danger" : "primary"}
+                      variant={settings.security.two_factor_enabled ? "error" : "primary"}
                       size="sm"
                       onClick={() => updateSecuritySetting('two_factor_enabled', !settings.security.two_factor_enabled)}
                     >

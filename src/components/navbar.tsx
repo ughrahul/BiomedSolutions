@@ -11,7 +11,6 @@ import {
   Mail,
   User,
   LogOut,
-  Settings,
   Shield,
   Clock,
   MapPin,
@@ -20,6 +19,7 @@ import {
 import Image from "next/image";
 import { getCurrentUser, getUserProfile, signOut } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
+import { useWebsiteSettings } from "@/hooks/useWebsiteSettings";
 import toast from "react-hot-toast";
 
 const navigation = [
@@ -30,12 +30,22 @@ const navigation = [
 ];
 
 export default function Navbar() {
+  const { settings } = useWebsiteSettings();
   const [isOpen, setIsOpen] = useState(false);
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [windowWidth, setWindowWidth] = useState(0);
   const pathname = usePathname();
+
+  // Track window width for responsive text
+  useEffect(() => {
+    const handleResize = () => setWindowWidth(window.innerWidth);
+    setWindowWidth(window.innerWidth);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
 
   // Fetch user data on mount and when auth state changes
   const fetchUserData = async () => {
@@ -106,35 +116,44 @@ export default function Navbar() {
     <>
       {/* Top Info Bar */}
       <motion.div 
-        className="bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 text-white text-sm py-3 border-b border-white/20 shadow-lg"
+        className="bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 text-white text-xs sm:text-sm py-2 sm:py-3 border-b border-white/20 shadow-lg"
         initial={{ y: -40, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.6, ease: [0.23, 1, 0.32, 1] }}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
           <div className="flex items-center justify-between">
+            {/* Contact Info - Left Side */}
             <motion.div 
-              className="flex items-center space-x-8"
+              className="flex items-center space-x-2 sm:space-x-4 lg:space-x-6"
               initial={{ x: -30, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               transition={{ duration: 0.6, delay: 0.2, ease: [0.23, 1, 0.32, 1] }}
             >
-              <motion.div 
-                className="flex items-center space-x-3 group cursor-pointer"
-                whileHover={{ scale: 1.05, x: 3 }}
+              {/* Phone - Always visible */}
+              <motion.a 
+                href={`tel:${settings.contact.phone}`}
+                className="flex items-center space-x-1 sm:space-x-2 group cursor-pointer"
+                whileHover={{ scale: 1.05, x: 2 }}
                 transition={{ duration: 0.3 }}
               >
                 <motion.div
                   animate={{ rotate: [0, 5, -5, 0] }}
                   transition={{ duration: 2, repeat: Infinity, repeatDelay: 3 }}
                 >
-                  <Phone className="w-4 h-4 text-cyan-300" />
+                  <Phone className="w-3 h-3 sm:w-4 sm:h-4 text-cyan-300" />
                 </motion.div>
-                <span className="font-semibold text-white hover:text-cyan-200 transition-colors duration-300">+977-1-5555555</span>
-              </motion.div>
-              <motion.div 
-                className="flex items-center space-x-3 hidden sm:flex group cursor-pointer"
-                whileHover={{ scale: 1.05, x: 3 }}
+                <span className="font-semibold text-white hover:text-cyan-200 transition-colors duration-300 text-xs sm:text-sm">
+                  {windowWidth < 640 ? settings.contact.phone.replace(/\s+/g, '') : settings.contact.phone}
+                </span>
+                <span className="text-cyan-300 font-bold text-xs sm:text-sm ml-1">|</span>
+              </motion.a>
+
+              {/* Email - Hidden on very small screens */}
+              <motion.a 
+                href={`mailto:${settings.contact.email}`}
+                className="hidden sm:flex items-center space-x-2 group cursor-pointer"
+                whileHover={{ scale: 1.05, x: 2 }}
                 transition={{ duration: 0.3 }}
               >
                 <motion.div
@@ -143,30 +162,45 @@ export default function Navbar() {
                 >
                   <Mail className="w-4 h-4 text-cyan-300" />
                 </motion.div>
-                <span className="font-semibold text-white hover:text-cyan-200 transition-colors duration-300">info@biomed.com.np</span>
-              </motion.div>
-              <motion.div 
-                className="flex items-center space-x-3 hidden md:flex group cursor-pointer"
-                whileHover={{ scale: 1.05, x: 3 }}
+                <span className="font-semibold text-white hover:text-cyan-200 transition-colors duration-300 text-sm">
+                  {windowWidth < 768 ? settings.contact.email.split('@')[0] + '@...' : settings.contact.email}
+                </span>
+                <span className="text-cyan-300 font-bold text-xs sm:text-sm ml-1">|</span>
+              </motion.a>
+
+              {/* Address - Show on all screens */}
+              <motion.a 
+                href={`https://maps.google.com/?q=${encodeURIComponent(settings.contact.address)}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center space-x-1.5 sm:space-x-2 group cursor-pointer"
+                whileHover={{ scale: 1.05, x: 2 }}
                 transition={{ duration: 0.3 }}
               >
                 <motion.div
                   animate={{ scale: [1, 1.1, 1] }}
                   transition={{ duration: 2, repeat: Infinity, repeatDelay: 1 }}
                 >
-                  <MapPin className="w-4 h-4 text-cyan-300" />
+                  <MapPin className="w-3 h-3 sm:w-4 sm:h-4 text-cyan-300" />
                 </motion.div>
-                <span className="font-semibold text-white hover:text-cyan-200 transition-colors duration-300">Maitighar, Kathmandu</span>
-              </motion.div>
+                <span className="font-semibold text-white hover:text-cyan-200 transition-colors duration-300 text-xs sm:text-sm max-w-20 sm:max-w-xs truncate">
+                  {windowWidth < 640 ? 'Maitighar' : settings.contact.address}
+                </span>
+                
+              </motion.a>
+              
             </motion.div>
+
+            {/* Status Info - Right Side */}
             <motion.div 
-              className="flex items-center space-x-6"
+              className="flex items-center space-x-2 sm:space-x-4"
               initial={{ x: 30, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
               transition={{ duration: 0.6, delay: 0.3, ease: [0.23, 1, 0.32, 1] }}
             >
+              {/* 24/7 Support - Show on all screens */}
               <motion.div 
-                className="hidden md:flex items-center space-x-3 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full border border-white/30"
+                className="flex items-center space-x-2 bg-white/20 backdrop-blur-sm px-2 sm:px-3 py-1 sm:py-2 rounded-full border border-white/30"
                 whileHover={{ scale: 1.05, backgroundColor: "rgba(255, 255, 255, 0.3)" }}
                 transition={{ duration: 0.3 }}
               >
@@ -174,28 +208,35 @@ export default function Navbar() {
                   animate={{ rotate: 360 }}
                   transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
                 >
-                  <Clock className="w-4 h-4 text-cyan-300" />
+                  <Clock className="w-3 h-3 sm:w-4 sm:h-4 text-cyan-300" />
                 </motion.div>
-                <span className="font-semibold text-white">24/7 Premium Support</span>
+                <span className="font-semibold text-white text-xs sm:text-sm">
+                  {windowWidth < 768 ? '24/7' : '24/7 Premium Support'}
+                </span>
+                
               </motion.div>
+
+              {/* Live Status - Always visible but compact */}
               <motion.div 
-                className="flex items-center space-x-3 bg-emerald-500/30 backdrop-blur-sm px-4 py-2 rounded-full border border-emerald-400/50"
+                className="flex items-center space-x-1 sm:space-x-2 bg-emerald-500/30 backdrop-blur-sm px-2 sm:px-3 py-1 sm:py-2 rounded-full border border-emerald-400/50"
                 whileHover={{ scale: 1.05 }}
                 transition={{ duration: 0.3 }}
               >
                 <motion.div 
-                  className="w-3 h-3 bg-emerald-400 rounded-full"
+                  className="w-2 h-2 sm:w-3 sm:h-3 bg-emerald-400 rounded-full"
                   animate={{ 
                     scale: [1, 1.3, 1],
                     boxShadow: [
                       "0 0 0 0 rgba(74, 222, 128, 0.7)",
-                      "0 0 0 6px rgba(74, 222, 128, 0)",
+                      "0 0 0 4px rgba(74, 222, 128, 0)",
                       "0 0 0 0 rgba(74, 222, 128, 0)"
                     ]
                   }}
                   transition={{ duration: 2, repeat: Infinity }}
                 />
-                <span className="text-sm font-bold text-emerald-100">LIVE NOW</span>
+                <span className="text-xs sm:text-sm font-bold text-emerald-100">
+                  {windowWidth < 640 ? 'LIVE' : 'LIVE NOW'}
+                </span>
               </motion.div>
             </motion.div>
           </div>
@@ -209,8 +250,8 @@ export default function Navbar() {
         animate={{ y: 0, opacity: 1 }}
         transition={{ duration: 0.8, ease: [0.23, 1, 0.32, 1], delay: 0.2 }}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-20">
+        <div className="container-responsive">
+          <div className="flex items-center justify-between h-14 sm:h-16 md:h-20">
             {/* Logo */}
             <motion.div
               initial={{ x: -50, opacity: 0 }}
@@ -218,53 +259,45 @@ export default function Navbar() {
               transition={{ duration: 0.8, delay: 0.4, ease: [0.23, 1, 0.32, 1] }}
               whileHover={{ scale: 1.02 }}
             >
-              <Link href="/" className="flex items-center space-x-4">
-                <motion.div 
-                  className="relative w-16 h-16 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-2xl border-2 border-blue-200/60 flex items-center justify-center p-3 shadow-lg"
-                  whileHover={{ 
-                    scale: 1.08, 
-                    rotate: 3,
-                    boxShadow: "0 12px 40px rgba(59, 130, 246, 0.25)" 
+              <Link href="/" className="flex items-center space-x-2 sm:space-x-3 md:space-x-4 flex-shrink-0">
+                <motion.div
+                  className="relative w-12 h-12 sm:w-16 sm:h-16 md:w-18 md:h-18 lg:w-20 lg:h-20 flex items-center justify-center flex-shrink-0"
+                  whileHover={{
+                    scale: 1.08,
+                    rotate: 2,
                   }}
                   transition={{ duration: 0.3, ease: "easeOut" }}
                 >
                   <Image
                     src="/assets/images/logo.png"
                     alt="Biomed Solutions Logo"
-                    width={56}
-                    height={56}
-                    className="w-full h-full object-contain filter drop-shadow-md"
+                    width={80}
+                    height={80}
+                    className="w-full h-full object-contain filter drop-shadow-lg"
                     priority
                   />
-                  <motion.div
-                    className="absolute inset-0 bg-gradient-to-br from-blue-400/0 to-indigo-500/0 rounded-2xl"
-                    whileHover={{ 
-                      background: "linear-gradient(135deg, rgba(59, 130, 246, 0.15), rgba(79, 70, 229, 0.15))" 
-                    }}
-                    transition={{ duration: 0.3 }}
-                  />
                 </motion.div>
-                <div>
-                  <motion.h1 
-                    className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent"
+                <div className="flex-shrink-0 min-w-0">
+                  <motion.h1
+                    className="text-sm sm:text-lg md:text-xl lg:text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent whitespace-nowrap"
                     whileHover={{ scale: 1.02 }}
                     transition={{ duration: 0.3 }}
                   >
                     Biomed Solutions
                   </motion.h1>
-                  <motion.p 
-                    className="text-sm text-gray-600 hidden sm:block font-medium"
+                  <motion.p
+                    className="text-xs sm:text-sm md:text-base text-gray-600 hidden sm:block font-medium"
                     whileHover={{ color: "#4f46e5" }}
                     transition={{ duration: 0.3 }}
                   >
-                    Premium Medical Equipment
+                    For You, We Innovate
                   </motion.p>
                 </div>
               </Link>
             </motion.div>
 
             {/* Desktop Navigation */}
-            <div className="hidden md:flex items-center space-x-2">
+            <div className="hidden lg:flex items-center space-x-1 xl:space-x-2">
               {navigation.map((item, index) => {
                 const isActive =
                   pathname === item.href ||
@@ -279,7 +312,7 @@ export default function Navbar() {
                   >
                     <Link
                       href={item.href}
-                      className={`relative px-6 py-3 text-lg font-semibold transition-all duration-300 rounded-xl group ${
+                      className={`relative px-3 sm:px-4 lg:px-6 py-2 sm:py-3 text-base sm:text-lg font-semibold transition-all duration-300 rounded-xl group ${
                         isActive
                           ? "text-blue-600"
                           : "text-gray-700 hover:text-blue-600"
@@ -383,18 +416,6 @@ export default function Navbar() {
                             </motion.div>
                           )}
 
-                          <motion.button
-                            onClick={() => {
-                              /* Profile settings */
-                            }}
-                            className="flex items-center w-full px-5 py-4 text-base text-gray-700 transition-colors"
-                            whileHover={{ backgroundColor: "#f8fafc", x: 4 }}
-                            transition={{ duration: 0.2 }}
-                          >
-                            <Settings className="w-5 h-5 mr-4 text-gray-400" />
-                            Settings
-                          </motion.button>
-
                           <hr className="my-2" />
 
                           <motion.button
@@ -464,7 +485,7 @@ export default function Navbar() {
             {/* Mobile Menu Button */}
             <motion.button
               onClick={() => setIsOpen(!isOpen)}
-              className="md:hidden p-3 rounded-2xl bg-gray-50/80 hover:bg-gray-100/90 transition-all duration-300 border-2 border-gray-200/60 shadow-sm"
+              className="lg:hidden p-3 rounded-2xl bg-gray-50/80 hover:bg-gray-100/90 transition-all duration-300 border-2 border-gray-200/60 shadow-sm touch-target"
               whileHover={{ scale: 1.05 }}
               whileTap={{ scale: 0.95 }}
               initial={{ x: 50, opacity: 0 }}
@@ -493,9 +514,9 @@ export default function Navbar() {
               animate={{ opacity: 1, height: "auto", y: 0 }}
               exit={{ opacity: 0, height: 0, y: -30 }}
               transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
-              className="md:hidden bg-white border-t border-gray-200 shadow-xl"
+              className="lg:hidden bg-white border-t border-gray-200 shadow-xl"
             >
-              <div className="px-6 py-6 space-y-4">
+              <div className="px-4 sm:px-6 py-4 space-y-3 mobile-spacing">
                 {navigation.map((item, index) => {
                   const isActive =
                     pathname === item.href ||
@@ -515,7 +536,7 @@ export default function Navbar() {
                       >
                         <Link
                           href={item.href}
-                          className={`block px-5 py-4 text-lg font-semibold rounded-2xl transition-all duration-300 ${
+                          className={`block px-4 py-3 text-base font-semibold rounded-xl transition-all duration-300 ${
                             isActive
                               ? "bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-600 border-2 border-blue-200/80 shadow-md"
                               : "text-gray-700 hover:bg-gray-50/90 hover:text-blue-600"
@@ -539,7 +560,7 @@ export default function Navbar() {
 
                 {/* Mobile Auth Section */}
                 <motion.div 
-                  className="border-t border-gray-200/80 pt-5 mt-5"
+                  className="border-t border-gray-200/80 pt-4 mt-4"
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
                   transition={{ duration: 0.4, delay: 0.3, ease: [0.23, 1, 0.32, 1] }}
@@ -547,14 +568,14 @@ export default function Navbar() {
                   {user ? (
                     <div className="space-y-4">
                       <motion.div 
-                        className="px-5 py-4 bg-gray-50/90 backdrop-blur-sm rounded-2xl border-2 border-gray-200/60 shadow-sm"
+                        className="px-4 py-3 bg-gray-50/90 backdrop-blur-sm rounded-xl border-2 border-gray-200/60 shadow-sm"
                         whileHover={{ scale: 1.01 }}
                         transition={{ duration: 0.2 }}
                       >
-                        <p className="text-lg font-semibold text-gray-900">
+                        <p className="text-base font-semibold text-gray-900">
                           {profile?.full_name || "User"}
                         </p>
-                        <p className="text-base text-gray-500">{user?.email}</p>
+                        <p className="text-sm text-gray-500">{user?.email}</p>
                       </motion.div>
 
                       {profile?.role === "admin" && (
@@ -565,10 +586,10 @@ export default function Navbar() {
                         >
                           <Link
                             href="/admin"
-                            className="flex items-center px-5 py-4 text-lg text-gray-700 hover:bg-gray-50/90 hover:text-blue-600 rounded-2xl transition-all duration-300"
+                            className="flex items-center px-4 py-3 text-base text-gray-700 hover:bg-gray-50/90 hover:text-blue-600 rounded-xl transition-all duration-300"
                             onClick={() => setIsOpen(false)}
                           >
-                            <Shield className="w-5 h-5 mr-4 text-blue-600" />
+                            <Shield className="w-4 h-4 mr-3 text-blue-600" />
                             Admin Dashboard
                           </Link>
                         </motion.div>
@@ -576,12 +597,12 @@ export default function Navbar() {
 
                       <motion.button
                         onClick={handleSignOut}
-                        className="flex items-center w-full px-5 py-4 text-lg text-red-600 hover:bg-red-50/90 rounded-2xl transition-all duration-300"
+                        className="flex items-center w-full px-4 py-3 text-base text-red-600 hover:bg-red-50/90 rounded-xl transition-all duration-300"
                         whileHover={{ scale: 1.02, x: 3 }}
                         whileTap={{ scale: 0.98 }}
                         transition={{ duration: 0.2 }}
                       >
-                        <LogOut className="w-5 h-5 mr-4" />
+                        <LogOut className="w-4 h-4 mr-3" />
                         Sign Out
                       </motion.button>
                     </div>

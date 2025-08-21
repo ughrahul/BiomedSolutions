@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useRef, useCallback } from 'react';
 import { createClientSupabase } from '@/lib/supabase';
 import type { RealtimeChannel } from '@supabase/supabase-js';
 
@@ -27,7 +27,7 @@ export const useRealtime = () => {
 export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isConnected, setIsConnected] = useState(false);
   const [supabase] = useState(() => createClientSupabase());
-  const [channels, setChannels] = useState<Map<string, RealtimeChannel>>(new Map());
+  const channelsRef = useRef<Map<string, RealtimeChannel>>(new Map());
 
   useEffect(() => {
     if (!supabase) return;
@@ -38,7 +38,7 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         const { data, error } = await supabase.from('products').select('count').limit(1);
         if (!error) {
           setIsConnected(true);
-          console.log('✅ Real-time database connection established');
+          // Connection established successfully
         }
       } catch (error) {
         console.warn('⚠️ Database connection failed, using offline mode');
@@ -50,19 +50,20 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
     return () => {
       // Clean up all channels
-      channels.forEach((channel) => {
+      channelsRef.current.forEach((channel) => {
         supabase.removeChannel(channel);
       });
+      channelsRef.current.clear();
     };
-  }, [supabase, channels]);
+  }, [supabase]);
 
-  const subscribeToTable = (table: string, callback: (payload: any) => void): RealtimeChannel | null => {
+  const subscribeToTable = useCallback((table: string, callback: (payload: any) => void): RealtimeChannel | null => {
     if (!supabase || !isConnected) return null;
 
     const channelName = `realtime:${table}`;
     
     // Remove existing channel if any
-    const existingChannel = channels.get(channelName);
+    const existingChannel = channelsRef.current.get(channelName);
     if (existingChannel) {
       supabase.removeChannel(existingChannel);
     }
@@ -77,33 +78,28 @@ export const RealtimeProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           table: table,
         },
         (payload) => {
-          console.log(`🔄 Real-time update for ${table}:`, payload);
           callback(payload);
         }
       )
       .subscribe((status) => {
-        console.log(`📡 Subscription status for ${table}:`, status);
+        // Subscription status updated
       });
 
-    setChannels(prev => new Map(prev.set(channelName, channel)));
+    channelsRef.current.set(channelName, channel);
     return channel;
-  };
+  }, [supabase, isConnected]);
 
-  const unsubscribeFromTable = (channel: RealtimeChannel) => {
+  const unsubscribeFromTable = useCallback((channel: RealtimeChannel) => {
     if (supabase && channel) {
       supabase.removeChannel(channel);
-      setChannels(prev => {
-        const newChannels = new Map(prev);
-        for (const [key, value] of newChannels) {
-          if (value === channel) {
-            newChannels.delete(key);
-            break;
-          }
+      // Remove from ref without triggering state update
+      Array.from(channelsRef.current.entries()).forEach(([key, value]) => {
+        if (value === channel) {
+          channelsRef.current.delete(key);
         }
-        return newChannels;
       });
     }
-  };
+  }, [supabase]);
 
   return (
     <RealtimeContext.Provider
@@ -127,18 +123,29 @@ export const useRealtimeSubscription = (
   const { subscribeToTable, unsubscribeFromTable, isConnected } = useRealtime();
   const [channel, setChannel] = useState<RealtimeChannel | null>(null);
 
+  // Store callback in ref to avoid dependency issues
+  const callbackRef = useRef(callback);
+  callbackRef.current = callback;
+
+  // Store functions in refs to avoid dependency issues
+  const subscribeToTableRef = useRef(subscribeToTable);
+  const unsubscribeFromTableRef = useRef(unsubscribeFromTable);
+  
+  subscribeToTableRef.current = subscribeToTable;
+  unsubscribeFromTableRef.current = unsubscribeFromTable;
+
   useEffect(() => {
     if (!enabled || !isConnected) return;
 
-    const newChannel = subscribeToTable(table, callback);
+    const newChannel = subscribeToTableRef.current(table, (payload) => callbackRef.current(payload));
     setChannel(newChannel);
 
     return () => {
       if (newChannel) {
-        unsubscribeFromTable(newChannel);
+        unsubscribeFromTableRef.current(newChannel);
       }
     };
-  }, [table, callback, enabled, isConnected, subscribeToTable, unsubscribeFromTable]);
+  }, [table, enabled, isConnected]); // Remove function dependencies
 
   return { isConnected, channel };
 };
@@ -152,9 +159,7 @@ export const useContactMessageUpdates = (callback: (payload: any) => void) => {
   return useRealtimeSubscription('contact_messages', callback);
 };
 
-export const useInventoryUpdates = (callback: (payload: any) => void) => {
-  return useRealtimeSubscription('inventory_history', callback);
-};
+
 
 export const useCategoryUpdates = (callback: (payload: any) => void) => {
   return useRealtimeSubscription('categories', callback);

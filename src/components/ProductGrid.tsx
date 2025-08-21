@@ -4,11 +4,13 @@ import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
 import { Star, ArrowRight, ShoppingCart, Heart, Eye, Zap, Loader2 } from "lucide-react";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { EnhancedCard } from "@/components/ui/enhanced-card";
 import { EnhancedButton } from "@/components/ui/enhanced-button";
 import { Product } from "@/types/product";
 import { createClientSupabase } from "@/lib/supabase";
+import { useWebsiteSettings } from "@/hooks/useWebsiteSettings";
+import Pagination from "@/components/Pagination";
 import toast from "react-hot-toast";
 
 interface ProductGridProps {
@@ -24,71 +26,26 @@ export default function ProductGrid({
   selectedCategory = "",
   sortBy: initialSortBy = "featured",
 }: ProductGridProps) {
+  const { settings } = useWebsiteSettings();
   const [favorites, setFavorites] = useState<Set<string>>(new Set());
   const [sortBy, setSortBy] = useState(initialSortBy);
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState<Product[]>([]);
   const [error, setError] = useState<string | null>(null);
-
-  // Real-time product updates
-  const handleRealtimeUpdate = useCallback((payload: any) => {
-    console.log('🔄 Real-time product update:', payload);
-    
-    switch (payload.eventType) {
-      case 'INSERT':
-        // Add new product to the list
-        const newProduct = transformProductData(payload.new);
-        setProducts(prev => [newProduct, ...prev]);
-        break;
-      case 'UPDATE':
-        // Update existing product
-        const updatedProduct = transformProductData(payload.new);
-        setProducts(prev => prev.map(p => p.id === updatedProduct.id ? updatedProduct : p));
-        break;
-      case 'DELETE':
-        // Remove deleted product
-        setProducts(prev => prev.filter(p => p.id !== payload.old.id));
-        break;
-    }
-  }, []);
-
-  // Subscribe to real-time updates
-  useEffect(() => {
-    const supabase = createClientSupabase();
-    if (!supabase) return;
-
-    const channel = supabase
-      .channel('product-changes')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'products',
-          filter: 'is_active=eq.true'
-        },
-        handleRealtimeUpdate
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, [handleRealtimeUpdate]);
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 12; // Show 12 products per page
 
   // Transform database data to Product type
-  const transformProductData = (item: any): Product => ({
+  const transformProductData = useCallback((item: any): Product => ({
     id: item.id,
     name: item.name,
     slug: item.name.toLowerCase().replace(/\s+/g, '-'),
     category: item.categories?.name || "Medical Equipment",
-    categoryId: item.category_id,
+    category_id: item.category_id,
     description: item.description,
-    shortDescription: item.short_description || item.description?.substring(0, 150) + '...',
-    fullDescription: item.description,
+    short_description: item.short_description || item.description?.substring(0, 150) + '...',
+    full_description: item.description,
     sku: item.sku,
-    inStock: item.stock_quantity > 0,
-    stockQuantity: item.stock_quantity,
     image_url: item.images?.[0] || "/assets/images/placeholder-product.svg",
     images: item.images?.map((url: string, index: number) => ({
       id: `${item.id}-${index}`,
@@ -115,13 +72,63 @@ export default function ProductGrid({
     warranty: "1 year manufacturer warranty",
     certifications: ["CE Marked", "FDA Approved"],
     rating: 4.5,
-    reviewCount: Math.floor(Math.random() * 50) + 10,
+    review_count: Math.floor(Math.random() * 50) + 10,
     tags: item.features?.slice(0, 3) || [],
-    isActive: item.is_active,
-    isFeatured: item.is_featured,
+    is_active: item.is_active,
+    is_featured: item.is_featured,
     created_at: item.created_at,
     updated_at: item.updated_at,
-  });
+  }), []);
+
+  // Real-time product updates
+  const handleRealtimeUpdate = useCallback((payload: any) => {
+            // Real-time product update received
+    
+    switch (payload.eventType) {
+      case 'INSERT':
+        // Add new product to the list
+        const newProduct = transformProductData(payload.new);
+        setProducts(prev => [newProduct, ...prev]);
+        break;
+      case 'UPDATE':
+        // Update existing product
+        const updatedProduct = transformProductData(payload.new);
+        setProducts(prev => prev.map(p => p.id === updatedProduct.id ? updatedProduct : p));
+        break;
+      case 'DELETE':
+        // Remove deleted product
+        setProducts(prev => prev.filter(p => p.id !== payload.old.id));
+        break;
+    }
+  }, [transformProductData]);
+
+  // Store the callback in a ref to avoid dependency issues
+  const handleRealtimeUpdateRef = useRef(handleRealtimeUpdate);
+  handleRealtimeUpdateRef.current = handleRealtimeUpdate;
+
+  // Subscribe to real-time updates
+  useEffect(() => {
+    const supabase = createClientSupabase();
+    if (!supabase) return;
+
+    const channel = supabase
+      .channel('product-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'products',
+          filter: 'is_active=eq.true'
+        },
+        (payload) => handleRealtimeUpdateRef.current(payload)
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []); // Empty dependency array to prevent infinite loops
 
   useEffect(() => {
     fetchProducts();
@@ -140,12 +147,10 @@ export default function ProductGrid({
             id: 'sample-1',
             name: 'Digital ECG Machine',
             description: 'Advanced 12-lead ECG machine with high-resolution display and automatic interpretation.',
-            shortDescription: 'Advanced 12-lead ECG machine with automatic interpretation',
+            short_description: 'Advanced 12-lead ECG machine with automatic interpretation',
             category: 'Diagnostic Equipment',
-
+            category_id: 'sample-cat-1',
             sku: 'ECG-DIG-001',
-            inStock: true,
-            stockQuantity: 5,
             image_url: '/assets/images/placeholder-product.svg',
             images: [{ id: 'sample-1-img', url: '/assets/images/placeholder-product.svg', alt: 'Digital ECG Machine', isPrimary: true, order: 1 }],
             features: ['12-lead ECG recording', 'Automatic interpretation', 'Wireless connectivity'],
@@ -154,8 +159,8 @@ export default function ProductGrid({
               { name: 'Connectivity', value: 'WiFi, Bluetooth' },
               { name: 'Power', value: 'Battery + AC' }
             ],
-            isActive: true,
-            isFeatured: true,
+            is_active: true,
+            is_featured: true,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
           }
@@ -184,14 +189,11 @@ export default function ProductGrid({
         name: item.name,
         slug: item.name.toLowerCase().replace(/\s+/g, '-'),
         category: item.categories?.name || "Medical Equipment",
-        categoryId: item.category_id,
+        category_id: item.category_id,
         description: item.description,
-        shortDescription: item.short_description || item.description?.substring(0, 150) + '...',
-        fullDescription: item.description,
-
+        short_description: item.short_description || item.description?.substring(0, 150) + '...',
+        full_description: item.description,
         sku: item.sku,
-        inStock: item.stock_quantity > 0,
-        stockQuantity: item.stock_quantity,
         image_url: item.images?.[0] || "/assets/images/placeholder-product.svg",
         images: item.images?.map((url: string, index: number) => ({
           id: `${item.id}-${index}`,
@@ -218,10 +220,10 @@ export default function ProductGrid({
         warranty: "1 year manufacturer warranty",
         certifications: ["CE Marked", "FDA Approved"],
         rating: 4.5,
-        reviewCount: Math.floor(Math.random() * 50) + 10,
+        review_count: Math.floor(Math.random() * 50) + 10,
         tags: item.features?.slice(0, 3) || [],
-        isActive: item.is_active,
-        isFeatured: item.is_featured,
+        is_active: item.is_active,
+        is_featured: item.is_featured,
         created_at: item.created_at,
         updated_at: item.updated_at,
       }));
@@ -244,6 +246,27 @@ export default function ProductGrid({
       !selectedCategory || product.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
+
+  // Pagination logic
+  const totalItems = filteredProducts.length;
+  const totalPages = Math.ceil(totalItems / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const currentProducts = filteredProducts.slice(startIndex, endIndex);
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, selectedCategory]);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    // Smooth scroll to top of products section
+    const productsSection = document.getElementById('products-grid');
+    if (productsSection) {
+      productsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
 
   const toggleFavorite = (productId: string) => {
     setFavorites((prev) => {
@@ -336,13 +359,37 @@ export default function ProductGrid({
     return (
       <section className="py-16 bg-gradient-to-br from-gray-50 to-blue-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Results Header for List View */}
+          {!loading && filteredProducts.length > 0 && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+            >
+              <div className="text-sm text-gray-600">
+                Found <span className="font-semibold text-gray-900">{totalItems}</span> products
+                {searchQuery && (
+                  <span> matching "<span className="font-semibold text-gray-900">{searchQuery}</span>"</span>
+                )}
+                {selectedCategory && (
+                  <span> in <span className="font-semibold text-gray-900">{selectedCategory}</span></span>
+                )}
+              </div>
+              {totalPages > 1 && (
+                <div className="text-sm text-gray-500">
+                  Page {currentPage} of {totalPages}
+                </div>
+              )}
+            </motion.div>
+          )}
+
           <motion.div
             className="space-y-6"
             variants={containerVariants}
             initial="hidden"
             animate="visible"
           >
-            {filteredProducts.map((product) => (
+            {currentProducts.map((product) => (
               <motion.div key={product.id} variants={itemVariants}>
                 <EnhancedCard
                   variant="medical"
@@ -357,6 +404,9 @@ export default function ProductGrid({
                         alt={product.name}
                         fill
                         className="object-cover transition-transform duration-300 hover:scale-110"
+                        onError={(e) => {
+                          e.currentTarget.src = "/assets/images/placeholder-product.svg";
+                        }}
                       />
                       <div className="absolute top-4 right-4">
                         <button
@@ -379,9 +429,17 @@ export default function ProductGrid({
                     <div>
                       <div className="flex items-start justify-between mb-3">
                         <div>
-                          <span className="inline-block px-3 py-1 bg-primary-100 text-primary-700 text-xs font-medium rounded-full mb-2">
-                            {product.category}
-                          </span>
+                          <div className="flex items-center gap-2 mb-2">
+                            <span className="inline-block px-3 py-1 bg-primary-100 text-primary-700 text-xs font-medium rounded-full">
+                              {product.category}
+                            </span>
+                            {product.is_featured && (
+                              <span className="px-3 py-1 bg-yellow-500 text-white text-xs font-medium rounded-full flex items-center gap-1">
+                                <Zap className="w-3 h-3" />
+                                Featured
+                              </span>
+                            )}
+                          </div>
                           <h3 className="text-2xl font-bold text-gray-900 mb-2">
                             {product.name}
                           </h3>
@@ -389,7 +447,7 @@ export default function ProductGrid({
                         <div className="text-right">
                           <div className="flex items-center justify-end gap-1 mt-1">
                             <span className="text-sm text-gray-600 ml-1">
-                              {product.inStock ? "Available" : "Contact"}
+                              Available
                             </span>
                           </div>
                         </div>
@@ -415,12 +473,8 @@ export default function ProductGrid({
 
                     <div className="flex items-center justify-between pt-4 border-t border-gray-200">
                       <div className="flex items-center gap-2">
-                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                          product.inStock 
-                            ? "bg-green-100 text-green-700" 
-                            : "bg-yellow-100 text-yellow-700"
-                        }`}>
-                          {product.inStock ? "Available" : "Contact"}
+                        <span className="px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-700">
+                          Available
                         </span>
                         <span className="text-sm text-gray-500">
                           SKU: {product.sku}
@@ -442,7 +496,7 @@ export default function ProductGrid({
                           size="sm"
                           icon={<ShoppingCart className="w-4 h-4" />}
                           onClick={() => {
-                            window.open("mailto:info@annapurnahospitals.com?subject=Inquiry about " + product.name, "_self");
+                            window.open("mailto:" + settings.contact.email + "?subject=Inquiry about " + product.name, "_self");
                           }}
                         >
                           Contact Us
@@ -454,6 +508,18 @@ export default function ProductGrid({
               </motion.div>
             ))}
           </motion.div>
+
+          {/* Pagination for List View */}
+          {totalPages > 1 && (
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+              totalItems={totalItems}
+              itemsPerPage={itemsPerPage}
+              className="mt-8"
+            />
+          )}
         </div>
       </section>
     );
@@ -462,8 +528,33 @@ export default function ProductGrid({
   return (
     <section className="py-6 bg-gradient-to-br from-white via-cyan-50 to-blue-100">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-          {filteredProducts.map((product) => (
+        {/* Results Header */}
+        {!loading && filteredProducts.length > 0 && (
+          <motion.div
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+          >
+            <div className="text-sm text-gray-600">
+              Found <span className="font-semibold text-gray-900">{totalItems}</span> products
+              {searchQuery && (
+                <span> matching "<span className="font-semibold text-gray-900">{searchQuery}</span>"</span>
+              )}
+              {selectedCategory && (
+                <span> in <span className="font-semibold text-gray-900">{selectedCategory}</span></span>
+              )}
+            </div>
+            {totalPages > 1 && (
+              <div className="text-sm text-gray-500">
+                Page {currentPage} of {totalPages}
+              </div>
+            )}
+          </motion.div>
+        )}
+
+              {/* Products Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
+          {currentProducts.map((product) => (
             <motion.div key={product.id} variants={itemVariants}>
                               <EnhancedCard
                 variant="medical"
@@ -487,7 +578,7 @@ export default function ProductGrid({
                     <span className="px-3 py-1 bg-primary-500 text-white text-xs font-medium rounded-full">
                       {product.category}
                     </span>
-                    {product.isFeatured && (
+                    {product.is_featured && (
                       <span className="px-3 py-1 bg-yellow-500 text-white text-xs font-medium rounded-full flex items-center gap-1">
                         <Zap className="w-3 h-3" />
                         Featured
@@ -537,7 +628,7 @@ export default function ProductGrid({
                     </h3>
 
                     <p className="text-gray-600 text-xs mb-3 line-clamp-2 flex-1">
-                      {product.shortDescription || product.description}
+                      {product.short_description || product.description}
                     </p>
                   </div>
 
@@ -545,7 +636,7 @@ export default function ProductGrid({
                   <div className="mt-auto pt-3 border-t border-gray-100">
                     <div className="flex items-center justify-center mb-2">
                       <div className="text-xs text-gray-500">
-                        {product.inStock ? "In Stock" : "Contact"}
+                        Available
                       </div>
                     </div>
 
@@ -580,6 +671,18 @@ export default function ProductGrid({
               Try adjusting your search criteria or browse all categories.
             </p>
           </motion.div>
+        )}
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={handlePageChange}
+            totalItems={totalItems}
+            itemsPerPage={itemsPerPage}
+            className="mt-8"
+          />
         )}
       </div>
     </section>

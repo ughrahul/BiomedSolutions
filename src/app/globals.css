@@ -56,6 +56,114 @@ img, video {
   height: auto;
 }
 
+/* Enhanced Responsive Typography */
+@media (max-width: 640px) {
+  h1 {
+    font-size: 2rem !important;
+    line-height: 2.5rem !important;
+  }
+  h2 {
+    font-size: 1.75rem !important;
+    line-height: 2.25rem !important;
+  }
+  h3 {
+    font-size: 1.5rem !important;
+    line-height: 2rem !important;
+  }
+  h4 {
+    font-size: 1.25rem !important;
+    line-height: 1.75rem !important;
+  }
+  h5 {
+    font-size: 1.125rem !important;
+    line-height: 1.75rem !important;
+  }
+  h6 {
+    font-size: 1rem !important;
+    line-height: 1.5rem !important;
+  }
+}
+
+@media (min-width: 641px) and (max-width: 1024px) {
+  h1 {
+    font-size: 3rem !important;
+    line-height: 3.5rem !important;
+  }
+  h2 {
+    font-size: 2.5rem !important;
+    line-height: 3rem !important;
+  }
+  h3 {
+    font-size: 2rem !important;
+    line-height: 2.5rem !important;
+  }
+}
+
+/* Mobile-first responsive containers */
+.container-responsive {
+  width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+@media (min-width: 640px) {
+  .container-responsive {
+    max-width: 640px;
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .container-responsive {
+    max-width: 768px;
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .container-responsive {
+    max-width: 1024px;
+    padding-left: 2.5rem;
+    padding-right: 2.5rem;
+  }
+}
+
+@media (min-width: 1280px) {
+  .container-responsive {
+    max-width: 1280px;
+    padding-left: 3rem;
+    padding-right: 3rem;
+  }
+}
+
+@media (min-width: 1536px) {
+  .container-responsive {
+    max-width: 1536px;
+    padding-left: 4rem;
+    padding-right: 4rem;
+  }
+}
+
+/* Enhanced mobile touch targets */
+@media (max-width: 768px) {
+  button, a, input, select, textarea {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+}
+
 /* Modern animations with better performance */
 @keyframes slideUp {
   from {
@@ -183,20 +291,54 @@ html, body {
   background: rgba(99, 102, 241, 0.5);
 }
 
-/* Layout utilities */
+/* Enhanced Layout utilities */
 .section-spacing {
-  padding: 3rem 0;
+  padding: 2rem 0;
 }
 
 @media (min-width: 768px) {
   .section-spacing {
-    padding: 4rem 0;
+    padding: 3rem 0;
   }
 }
 
 @media (min-width: 1024px) {
   .section-spacing {
+    padding: 4rem 0;
+  }
+}
+
+@media (min-width: 1280px) {
+  .section-spacing {
     padding: 5rem 0;
+  }
+}
+
+/* Mobile-first responsive grids */
+.responsive-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 1rem;
+}
+
+@media (min-width: 640px) {
+  .responsive-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1.5rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .responsive-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .responsive-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 2rem;
   }
 }
 
@@ -247,10 +389,16 @@ html, body {
   background-clip: text;
 }
 
-/* Focus styles */
+/* Enhanced Focus styles for mobile */
 .focus-modern:focus {
   outline: none;
   box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3);
+}
+
+@media (max-width: 768px) {
+  .focus-modern:focus {
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.4);
+  }
 }
 
 /* Button hover effects */
@@ -271,4 +419,55 @@ html, body {
 .card-hover:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 30px rgba(0, 0, 0, 0.12);
+}
+
+/* Mobile-specific improvements */
+@media (max-width: 768px) {
+  /* Prevent horizontal scroll */
+  .mobile-no-scroll {
+    overflow-x: hidden;
+  }
+  
+  /* Larger touch targets */
+  .mobile-touch-target {
+    min-height: 48px;
+    min-width: 48px;
+  }
+  
+  /* Better spacing for mobile */
+  .mobile-spacing {
+    padding: 1rem;
+  }
+  
+  /* Stack elements vertically on mobile */
+  .mobile-stack {
+    flex-direction: column;
+  }
+  
+  /* Full width on mobile */
+  .mobile-full-width {
+    width: 100%;
+  }
+}
+
+/* Tablet-specific improvements */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .tablet-optimized {
+    padding: 1.5rem;
+  }
+  
+  .tablet-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+/* Desktop enhancements */
+@media (min-width: 1025px) {
+  .desktop-enhanced {
+    padding: 2rem;
+  }
+  
+  .desktop-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }

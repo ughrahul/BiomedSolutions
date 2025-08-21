@@ -52,7 +52,7 @@ const enhancedCardVariants = cva(
 );
 
 export interface EnhancedCardProps
-  extends React.HTMLAttributes<HTMLDivElement>,
+  extends Omit<React.HTMLAttributes<HTMLDivElement>, 'onDrag' | 'onDragStart' | 'onDragEnd' | 'onAnimationStart' | 'onAnimationEnd'>,
     VariantProps<typeof enhancedCardVariants> {
   animated?: boolean;
   clickable?: boolean;

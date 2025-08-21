@@ -2,6 +2,8 @@
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { RealtimeProvider } from "@/contexts/RealtimeContext";
+import { AdminProfileProvider } from "@/contexts/AdminProfileContext";
+import { MessageProvider } from "@/contexts/MessageContext";
 import { useState } from "react";
 
 export default function Providers({ children }: { children: React.ReactNode }) {
@@ -19,7 +21,13 @@ export default function Providers({ children }: { children: React.ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <RealtimeProvider>{children}</RealtimeProvider>
+      <RealtimeProvider>
+        <AdminProfileProvider>
+          <MessageProvider>
+            {children}
+          </MessageProvider>
+        </AdminProfileProvider>
+      </RealtimeProvider>
     </QueryClientProvider>
   );
 }

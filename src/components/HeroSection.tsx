@@ -12,7 +12,8 @@ import {
   Star,
   Award,
   Users,
-  TrendingUp
+  TrendingUp,
+  ChevronDown
 } from "lucide-react";
 import Link from "next/link";
 import { EnhancedButton } from "@/components/ui/enhanced-button";
@@ -55,14 +56,23 @@ export default function HeroSection() {
   ];
 
   const stats = [
-    { label: "Hospitals Served", value: "150+", icon: Users },
-    { label: "Equipment Installed", value: "2500+", icon: Award },
-    { label: "Years Experience", value: "15+", icon: TrendingUp },
-    { label: "Client Satisfaction", value: "99%", icon: Star },
+    { label: "Years Established", value: "10+", icon: TrendingUp },
+    { label: "Hospitals Served", value: "50+", icon: Users },
+    { label: "Innovative Technologies", value: "4+", icon: Award },
+    { label: "Research & Development", value: "Active", icon: Star },
   ];
 
+  const scrollToNextSection = () => {
+    if (typeof document !== 'undefined') {
+      const nextSection = document.querySelector('#services-section');
+      if (nextSection) {
+        nextSection.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+  };
+
   return (
-    <section ref={ref} className="relative min-h-screen flex items-center justify-center overflow-hidden">
+    <section ref={ref} className="relative h-[85vh] md:h-[90vh] flex items-center justify-center overflow-hidden">
       {/* Dynamic Background */}
       <motion.div 
         className="absolute inset-0 bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900"
@@ -134,7 +144,7 @@ export default function HeroSection() {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: "easeOut" }}
-          className="mb-12"
+          className="mb-8"
         >
           <motion.div
             initial={{ opacity: 0, scale: 0.5 }}
@@ -144,17 +154,17 @@ export default function HeroSection() {
           >
             <span className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-cyan-500/20 to-purple-500/20 border border-cyan-300/30 rounded-full text-cyan-300 text-sm font-medium backdrop-blur-sm">
               <Sparkles className="w-4 h-4 mr-2" />
-              Leading Healthcare Technology in Nepal
+              A Wing of Annapurna Neurological Institute & Allied Sciences
             </span>
           </motion.div>
 
           <motion.h1
-            className="text-5xl md:text-8xl font-bold mb-8 text-white"
+            className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl xl:text-8xl font-bold mb-6 sm:mb-8 text-white text-center"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
           >
-            Advanced{" "}
+            Pioneering{" "}
             <motion.span 
               className="bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent"
               animate={{
@@ -169,28 +179,28 @@ export default function HeroSection() {
                 backgroundSize: "200% 200%",
               }}
             >
-              Medical
+              Healthcare
             </motion.span>
-            <br />
-            Equipment Solutions
+            <br className="hidden sm:block" />
+            <span className="block sm:inline">Innovation in Nepal</span>
           </motion.h1>
 
           <motion.p
-            className="text-xl md:text-2xl text-gray-300 max-w-4xl mx-auto leading-relaxed mb-10"
+            className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-300 max-w-4xl mx-auto leading-relaxed mb-8 sm:mb-10 px-4 sm:px-0 text-center"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.4 }}
           >
-            Transforming healthcare with cutting-edge medical technology. 
-            Serving Nepal's healthcare institutions with world-class equipment 
-            and unparalleled support since 2009.
+            Established in 2015 as a healthcare provider specializing in advanced medical technology. 
+            From Deep Brain Stimulation to 3D printed implants, we're revolutionizing 
+            healthcare delivery across Nepal with cutting-edge solutions.
           </motion.p>
 
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.8, delay: 0.6 }}
-            className="flex flex-col sm:flex-row gap-6 justify-center mb-16"
+            className="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center mb-8 sm:mb-12 px-4 sm:px-0"
           >
             <Link href="/products">
               <motion.div
@@ -230,7 +240,7 @@ export default function HeroSection() {
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, delay: 0.8 }}
-          className="grid grid-cols-2 lg:grid-cols-4 gap-6 mb-16"
+          className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8 sm:mb-12 px-4 sm:px-0"
         >
           {stats.map((stat, index) => (
             <motion.div
@@ -258,6 +268,47 @@ export default function HeroSection() {
               <div className="text-gray-300 text-sm font-medium">{stat.label}</div>
             </motion.div>
           ))}
+        </motion.div>
+
+        {/* Scroll to Explore - Functional */}
+        <motion.div
+          className="flex flex-col items-center justify-center"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8, delay: 1.0 }}
+        >
+          <motion.div
+            animate={{ y: [0, 10, 0] }}
+            transition={{ duration: 2, repeat: Infinity }}
+            className="flex flex-col items-center text-gray-400 cursor-pointer group"
+            onClick={scrollToNextSection}
+          >
+            <motion.span 
+              className="text-lg font-medium mb-4 group-hover:text-white transition-colors duration-300"
+              whileHover={{ scale: 1.05 }}
+            >
+              Explore Our Services
+            </motion.span>
+            <motion.div
+              className="w-12 h-12 rounded-full border-2 border-gray-400 flex items-center justify-center group-hover:border-white group-hover:bg-white/10 transition-all duration-300 backdrop-blur-sm"
+              whileHover={{ scale: 1.1 }}
+              animate={{
+                boxShadow: [
+                  "0 0 20px rgba(255,255,255,0.1)",
+                  "0 0 40px rgba(255,255,255,0.2)",
+                  "0 0 20px rgba(255,255,255,0.1)",
+                ]
+              }}
+              transition={{ duration: 2, repeat: Infinity }}
+            >
+              <motion.div
+                animate={{ y: [0, 3, 0] }}
+                transition={{ duration: 1.5, repeat: Infinity }}
+              >
+                <ChevronDown className="w-6 h-6" />
+              </motion.div>
+            </motion.div>
+          </motion.div>
         </motion.div>
       </div>
 

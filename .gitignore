@@ -3,7 +3,6 @@ node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-package-lock.json
 
 # Next.js
 .next/
@@ -92,4 +91,29 @@ jspm_packages/
 
 # Temporary folders
 tmp/
-temp/ 
+temp/
+
+# Local development files
+*.local
+.env*.local
+
+# Database dumps
+*.sql
+*.db
+*.sqlite
+
+# Large media files (keep only essential ones)
+*.mp4
+*.mov
+*.avi
+*.mkv
+*.wmv
+
+# Backup files
+*.bak
+*.backup
+*~
+
+# Test files
+test-*
+debug-* 

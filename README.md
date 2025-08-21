@@ -55,7 +55,7 @@
 ```bash
 # Clone the repository
 git clone <repository-url>
-cd biomed-nextjs✅
+cd biomed-nextjs
 
 # Run the setup script
 npm run setup-local
@@ -78,7 +78,7 @@ cp .env.example .env.local
 npm run dev
 ```
 
-**Open**: http://localhost:3001
+**Open**: http://localhost:3000
 
 ---
 
@@ -91,7 +91,7 @@ npm run dev
 
 ### 2. Run Database Schema
 1. Open Supabase SQL Editor
-2. Copy and paste contents of `scripts/quick-setup.sql`
+2. Copy and paste contents of `scripts/complete-database-setup.sql`
 3. Click "Run" - this creates all tables and sample data
 
 ### 3. Create Admin User
@@ -134,14 +134,12 @@ npm run build
 npm start
 ```
 
-**📋 See [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md) for detailed instructions**
-
 ---
 
 ## 📁 Project Structure
 
 ```
-biomed-nextjs✅/
+biomed-nextjs/
 ├── 📱 src/app/                 # Next.js App Router
 │   ├── api/                   # API Routes
 │   ├── admin/                 # Admin Panel Pages
@@ -157,8 +155,9 @@ biomed-nextjs✅/
 │   └── utils.ts               # Helper Functions
 ├── 📊 src/types/              # TypeScript Types
 ├── 🗄️ scripts/               # Setup Scripts
-│   ├── quick-setup.sql        # Database Schema
-│   └── setup-local.js         # Local Setup
+│   ├── complete-database-setup.sql  # Database Schema
+│   ├── setup-local.js         # Local Setup
+│   └── setup-production.js    # Production Setup
 └── 📚 docs/                   # Documentation
 ```
 

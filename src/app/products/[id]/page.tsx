@@ -61,14 +61,11 @@ export default function ProductDetailPage() {
         name: data.name,
         slug: data.name.toLowerCase().replace(/\s+/g, '-'),
         category: data.categories?.name || "Medical Equipment",
-        categoryId: data.category_id,
+        category_id: data.category_id,
         description: data.description,
-        shortDescription: data.short_description || data.description,
-        fullDescription: data.description,
-                 price: data.price,
+        short_description: data.short_description || data.description,
+        full_description: data.description,
         sku: data.sku,
-        inStock: data.stock_quantity > 0,
-        stockQuantity: data.stock_quantity,
         images: data.images?.map((url: string, index: number) => ({
           id: `${data.id}-${index}`,
           url,
@@ -94,10 +91,10 @@ export default function ProductDetailPage() {
         warranty: "1 year",
         certifications: ["CE Marked", "FDA Approved"],
         rating: 4.5,
-        reviewCount: 0,
+        review_count: 0,
         tags: data.features?.slice(0, 3) || [],
-        isActive: data.is_active,
-        isFeatured: data.is_featured,
+        is_active: data.is_active,
+        is_featured: data.is_featured,
         created_at: data.created_at,
         updated_at: data.updated_at,
       };
@@ -114,7 +111,7 @@ export default function ProductDetailPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center p-4">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -129,7 +126,7 @@ export default function ProductDetailPage() {
 
   if (error || !product) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 flex items-center justify-center p-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -179,24 +176,18 @@ export default function ProductDetailPage() {
       </div>
 
       {/* Back to Products Button */}
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.2 }}
-        className="relative z-10 pt-24 pb-6"
-      >
+      <div className="relative z-10 pt-4">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <Link href="/products">
-            <EnhancedButton 
-              variant="ghost" 
-              className="mb-6 hover:bg-white/50 transition-all duration-300"
+            <button 
+              className="inline-flex items-center text-sm text-gray-500 hover:text-gray-700 hover:bg-gray-100 px-3 py-2 rounded-lg transition-all duration-200"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Products
-            </EnhancedButton>
+            </button>
           </Link>
         </div>
-      </motion.div>
+      </div>
 
       {/* Product Content */}
       <motion.div

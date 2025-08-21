@@ -1,9 +1,10 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import { useState, useEffect } from "react";
 import Navbar from "@/components/navbar";
 import Footer from "@/components/footer";
-import FloatingContact from "@/components/floating-contact";
+
 import BackToTop from "@/components/back-to-top";
 import { Toaster } from "react-hot-toast";
 
@@ -15,8 +16,24 @@ export default function ConditionalLayout({
   children,
 }: ConditionalLayoutProps) {
   const pathname = usePathname();
+  const [mounted, setMounted] = useState(false);
+  
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+  
   const isAdminRoute = pathname?.startsWith("/admin");
   const isAuthRoute = pathname?.startsWith("/auth");
+
+  if (!mounted) {
+    return (
+      <div className="min-h-screen bg-white">
+        <div className="flex justify-center items-center h-screen">
+          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+        </div>
+      </div>
+    );
+  }
 
   if (isAdminRoute) {
     // Admin layout - no navbar, footer, floating elements
@@ -92,14 +109,15 @@ export default function ConditionalLayout({
 
   // Public layout - with navbar, footer, floating elements
   return (
-    <div className="min-h-screen bg-white">
-      <Navbar />
-      <main className="relative">{children}</main>
-      {/* Smooth Section Transition to Footer */}
-      <div className="relative h-24 bg-gradient-to-b from-indigo-200 via-cyan-100 to-blue-50"></div>
-      <Footer />
-      <FloatingContact />
-      <BackToTop />
+    <>
+      <div className="min-h-screen bg-white">
+        <Navbar />
+        <main className="relative">{children}</main>
+        {/* Smooth Section Transition to Footer */}
+        <div className="relative h-24 bg-gradient-to-b from-indigo-200 via-cyan-100 to-blue-50"></div>
+        <Footer />
+        <BackToTop />
+      </div>
       <Toaster
         position="top-right"
         toastOptions={{
@@ -126,6 +144,6 @@ export default function ConditionalLayout({
           },
         }}
       />
-    </div>
+    </>
   );
 }

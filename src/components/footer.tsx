@@ -8,12 +8,13 @@ import {
   Mail,
   Phone,
   MapPin,
-  ArrowUp,
   Code,
   Palette,
 } from "lucide-react";
+import { useWebsiteSettings } from "@/hooks/useWebsiteSettings";
 
 export default function Footer() {
+  const { settings } = useWebsiteSettings();
   const [currentYear, setCurrentYear] = useState<number>(2024);
   const [isClient, setIsClient] = useState(false);
 
@@ -21,13 +22,6 @@ export default function Footer() {
     setCurrentYear(new Date().getFullYear());
     setIsClient(true);
   }, []);
-
-  const scrollToTop = () => {
-    if (typeof window !== "undefined") {
-      // eslint-disable-next-line no-undef
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
-  };
 
   // Generate consistent star data on client side only
   const [starData, setStarData] = useState<Array<{
@@ -234,10 +228,10 @@ export default function Footer() {
       </div>
 
       {/* Main Content */}
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+      <div className="relative z-10 container-responsive py-8 sm:py-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-8 lg:gap-12">
           {/* Company Info */}
-          <div className="lg:col-span-2">
+          <div className="sm:col-span-2 lg:col-span-2">
             <Link href="/" className="inline-block mb-6">
               <div className="flex items-center space-x-3">
                 <div className="w-14 h-14 bg-gradient-to-br from-cyan-400/20 to-blue-500/20 rounded-xl backdrop-blur-sm border border-white/20 flex items-center justify-center">
@@ -255,18 +249,18 @@ export default function Footer() {
                     Biomed Solutions
                   </h3>
                   <p className="text-cyan-300 text-sm">
-                    Advanced Medical Technology
+                    For You, We Innovate
                   </p>
                 </div>
               </div>
             </Link>
 
             <p className="text-gray-300 text-sm leading-relaxed mb-6 max-w-md">
-              Cutting-edge medical equipment at{" "}
+              A wing of{" "}
               <span className="text-cyan-400 font-medium">
-                Annapurna Neuro Hospital
+                Annapurna Neurological Institute & Allied Sciences
               </span>
-              , Maitighar.
+              , pioneering healthcare innovation in Nepal since 2015.
             </p>
 
             {/* Contact Info */}
@@ -274,17 +268,25 @@ export default function Footer() {
               <div className="flex items-center space-x-3 text-sm">
                 <Mail className="w-4 h-4 text-cyan-400" />
                 <span className="text-gray-300">
-                  info@annapurnahospitals.com
+                  {settings.contact.email}
                 </span>
               </div>
               <div className="flex items-center space-x-3 text-sm">
                 <Phone className="w-4 h-4 text-purple-400" />
-                <span className="text-gray-300">980120335/61</span>
+                <span className="text-gray-300">{settings.contact.phone}</span>
+              </div>
+              <div className="flex items-center space-x-3 text-sm">
+                <Phone className="w-4 h-4 text-green-400" />
+                <span className="text-gray-300">Hospital: {settings.contact.hospitalPhone}</span>
+              </div>
+              <div className="flex items-center space-x-3 text-sm">
+                <Phone className="w-4 h-4 text-orange-400" />
+                <span className="text-gray-300">24/7 Support: {settings.contact.supportPhone}</span>
               </div>
               <div className="flex items-center space-x-3 text-sm">
                 <MapPin className="w-4 h-4 text-orange-400" />
                 <span className="text-gray-300">
-                  Maitighar Mandala-10, Kathmandu
+                  {settings.contact.address}
                 </span>
               </div>
             </div>
@@ -297,10 +299,10 @@ export default function Footer() {
             </h4>
             <ul className="space-y-2">
               {[
+                { name: "Home", href: "/" },
                 { name: "About Us", href: "/about" },
                 { name: "Products", href: "/products" },
                 { name: "Contact", href: "/contact" },
-                { name: "Support", href: "/support" },
               ].map((link) => (
                 <li key={link.name}>
                   <Link
@@ -333,9 +335,16 @@ export default function Footer() {
             </h4>
             <ul className="space-y-3">
               {[
-                "Medical Equipment",
-                "Healthcare Solutions",
-                "24/7 Support"
+                "Deep Brain Stimulation",
+                "Neuronavigation Systems",
+                "3D Printed Implants",
+                "Medical Device Maintenance",
+                "Surgical Tool Development",
+                "Equipment Installation",
+                "Technical Training",
+                "24/7 Support Services",
+                "Custom Medical Solutions",
+                "Quality Assurance Testing"
               ].map((service, index) => (
                 <motion.li 
                   key={service}
@@ -396,7 +405,7 @@ export default function Footer() {
                   Leading Healthcare Technology Provider
                 </motion.div>
                 <div className="text-xs text-gray-400 mt-1">
-                  Advancing Medical Excellence Since 2009
+                  Advancing Medical Excellence Since 2015
                 </div>
               </div>
               
@@ -428,7 +437,7 @@ export default function Footer() {
                   <div className="text-white font-semibold mb-1 bg-gradient-to-r from-cyan-300 to-purple-300 bg-clip-text text-transparent">
                     Crafted with Excellence
                   </div>
-                  <div className="text-xs text-gray-300 mb-2">Full-Stack Developer & UI/UX Designer</div>
+                  <div className="text-xs text-gray-400 mb-2">Full-Stack Developer & UI/UX Designer</div>
                   <div className="flex items-center space-x-3 text-gray-400">
                     <motion.a 
                       href="mailto:hingmang75@gmail.com" 
@@ -455,22 +464,12 @@ export default function Footer() {
                       >
                         <Phone className="w-3 h-3 group-hover:text-green-400" />
                       </motion.div>
-                      <span className="font-medium">+977 9808418877</span>
+                      <span className="text-sm font-medium">+977 9808418877</span>
                     </motion.a>
                   </div>
                 </div>
               </motion.div>
             </div>
-
-            {/* Back to Top */}
-            <motion.button
-              onClick={scrollToTop}
-              className="p-3 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-full text-white shadow-lg hover:shadow-xl transition-all duration-300"
-              whileHover={{ scale: 1.1, y: -2 }}
-              whileTap={{ scale: 0.95 }}
-            >
-              <ArrowUp className="w-5 h-5" />
-            </motion.button>
           </div>
           
           {/* Enhanced Mobile Developer Info */}

@@ -1,12 +1,18 @@
 import { createBrowserClient } from "@supabase/ssr";
 
-const supabaseUrl =
-  process.env.NEXT_PUBLIC_SUPABASE_URL || "https://placeholder.supabase.co";
-const supabaseAnonKey =
-  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || "placeholder-key";
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 // Client-side Supabase client with enhanced configuration
 export const createClientSupabase = () => {
+  // Return null if environment variables are not configured
+  if (!supabaseUrl || !supabaseAnonKey || 
+      supabaseUrl === "https://placeholder.supabase.co" || 
+      supabaseAnonKey === "placeholder-key") {
+    console.log("🎭 Demo mode: Supabase environment variables not configured");
+    return null;
+  }
+
   try {
     return createBrowserClient(supabaseUrl, supabaseAnonKey, {
       auth: {
@@ -23,7 +29,7 @@ export const createClientSupabase = () => {
     });
   } catch (error) {
     console.error("Failed to create Supabase client:", error);
-    throw error;
+    return null;
   }
 };
 
@@ -104,10 +110,7 @@ export type Database = {
           name: string;
           description: string;
           short_description: string | null;
-          price: number;
-          sale_price: number | null;
           sku: string;
-          stock_quantity: number;
           category_id: string;
           images: string[];
           specifications: Record<string, any> | null;
@@ -124,10 +127,7 @@ export type Database = {
           name: string;
           description: string;
           short_description?: string | null;
-          price: number;
-          sale_price?: number | null;
           sku: string;
-          stock_quantity?: number;
           category_id: string;
           images?: string[];
           specifications?: Record<string, any> | null;
@@ -144,10 +144,7 @@ export type Database = {
           name?: string;
           description?: string;
           short_description?: string | null;
-          price?: number;
-          sale_price?: number | null;
           sku?: string;
-          stock_quantity?: number;
           category_id?: string;
           images?: string[];
           specifications?: Record<string, any> | null;

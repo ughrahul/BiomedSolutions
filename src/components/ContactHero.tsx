@@ -13,7 +13,6 @@ import {
   Zap,
   Heart,
   Send,
-  User,
 } from "lucide-react";
 import { EnhancedButton } from "@/components/ui/enhanced-button";
 import { useWebsiteSettings } from "@/hooks/useWebsiteSettings";
@@ -31,7 +30,7 @@ export default function ContactHero() {
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
-    const handleMouseMove = (e: MouseEvent) => {
+    const handleMouseMove = (e: globalThis.MouseEvent) => {
       setMousePosition({ x: e.clientX, y: e.clientY });
     };
 
@@ -52,7 +51,7 @@ export default function ContactHero() {
 
   if (loading) {
     return (
-      <section className="relative min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 overflow-hidden flex items-center justify-center">
+      <section className="relative h-[60vh] md:h-[70vh] bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 overflow-hidden flex items-center justify-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-400"></div>
       </section>
     );
@@ -94,7 +93,7 @@ export default function ContactHero() {
   ];
 
   return (
-    <section ref={ref} className="relative min-h-screen flex items-center justify-center overflow-hidden">
+    <section ref={ref} className="relative h-[60vh] md:h-[70vh] flex items-center justify-center overflow-hidden">
       {/* Dynamic Background */}
       <motion.div 
         className="absolute inset-0 bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900"
@@ -161,8 +160,8 @@ export default function ContactHero() {
       </div>
 
       {/* Main Content */}
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+      <div className="relative z-10 container-responsive">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 lg:gap-16 items-center">
           {/* Left Content */}
           <motion.div
             initial={{ opacity: 0, x: -50 }}
@@ -183,7 +182,7 @@ export default function ContactHero() {
             </motion.div>
 
             <motion.h1
-              className="text-4xl md:text-6xl font-bold mb-6 text-white"
+              className="text-4xl md:text-7xl font-bold mb-6 text-white"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.2 }}
@@ -208,7 +207,7 @@ export default function ContactHero() {
             </motion.h1>
 
             <motion.p
-              className="text-lg md:text-xl text-gray-300 max-w-2xl leading-relaxed mb-10"
+              className="text-lg md:text-xl text-gray-300 max-w-2xl leading-relaxed mb-8"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.4 }}
@@ -230,9 +229,13 @@ export default function ContactHero() {
                 <EnhancedButton
                   variant="primary"
                   size="default"
-                  className="px-8 py-4 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 shadow-lg shadow-cyan-500/25"
+                  className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 shadow-lg shadow-cyan-500/25"
                   icon={<Phone className="w-5 h-5" />}
-                  onClick={() => window.open("tel:+977980120335", "_self")}
+                  onClick={() => {
+                    if (typeof window !== 'undefined') {
+                      window.open("tel:+977980120335", "_self");
+                    }
+                  }}
                 >
                   Contact Us
                 </EnhancedButton>
@@ -244,9 +247,13 @@ export default function ContactHero() {
                 <EnhancedButton
                   variant="glass"
                   size="default"
-                  className="px-8 py-4 border-2 border-white/30 backdrop-blur-sm"
+                  className="px-6 py-3 border-2 border-white/30 backdrop-blur-sm"
                   icon={<Mail className="w-5 h-5" />}
-                  onClick={() => window.open("mailto:info@annapurnahospitals.com", "_self")}
+                  onClick={() => {
+                    if (typeof window !== 'undefined') {
+                      window.open("mailto:info@annapurnahospitals.com", "_self");
+                    }
+                  }}
                 >
                   Email Us
                 </EnhancedButton>
@@ -259,7 +266,7 @@ export default function ContactHero() {
             initial={{ opacity: 0, x: 50 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, delay: 0.3 }}
-            className="grid grid-cols-1 sm:grid-cols-2 gap-6"
+            className="grid grid-cols-1 sm:grid-cols-2 gap-4"
           >
             {contactMethods.map((method, index) => (
               <motion.div
@@ -267,24 +274,24 @@ export default function ContactHero() {
                 initial={{ opacity: 0, y: 30 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 0.8 + index * 0.1 }}
-                className="group relative bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20 hover:border-cyan-400/50 transition-all duration-500 transform hover:scale-105 hover:shadow-2xl"
+                className="group relative bg-white/10 backdrop-blur-lg rounded-xl p-4 border border-white/20 hover:border-cyan-400/50 transition-all duration-500 transform hover:scale-105 hover:shadow-xl"
                 whileHover={{ y: -5 }}
               >
                 <motion.div
-                  className={`w-12 h-12 bg-gradient-to-br ${method.bgColor} rounded-xl flex items-center justify-center mb-4 group-hover:scale-110 transition-all duration-300 border border-white/20`}
+                  className={`w-10 h-10 bg-gradient-to-br ${method.bgColor} rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-all duration-300 border border-white/20`}
                   whileHover={{ rotate: 360 }}
                   transition={{ duration: 0.6 }}
                 >
-                  <method.icon className={`w-6 h-6 ${method.iconColor}`} />
+                  <method.icon className={`w-5 h-5 ${method.iconColor}`} />
                 </motion.div>
 
-                <h3 className="text-xl font-bold text-white mb-2">{method.title}</h3>
+                <h3 className="text-lg font-bold text-white mb-2">{method.title}</h3>
 
-                <p className="text-cyan-300 font-semibold mb-4">{method.info}</p>
+                <p className="text-cyan-300 font-semibold mb-3 text-sm">{method.info}</p>
                 
                 <EnhancedButton
                   size="sm"
-                  className="w-full bg-white/20 hover:bg-white/30 text-white border border-white/30"
+                  className="w-full bg-white/20 hover:bg-white/30 text-white border border-white/30 text-sm"
                   onClick={() => {
                     if (method.title === "Call Us") {
                       if (typeof window !== 'undefined') {
@@ -335,7 +342,7 @@ function ClientOnlyParticles() {
 
   useEffect(() => {
     const generateParticles = () => {
-      const newParticles = Array.from({ length: 25 }, (_, i) => ({
+      const newParticles = Array.from({ length: 15 }, (_, i) => ({
         id: i,
         x: Math.random() * 1000,
         y: Math.random() * 800,

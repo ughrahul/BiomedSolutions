@@ -34,7 +34,7 @@ export default function AboutHero() {
     // Generate particles only on client side to avoid hydration issues
     const generateParticles = () => {
       if (typeof window !== 'undefined') {
-        const newParticles = Array.from({ length: 20 }, (_, i) => ({
+        const newParticles = Array.from({ length: 15 }, (_, i) => ({
           id: i,
           x: Math.random() * window.innerWidth,
           y: Math.random() * window.innerHeight,
@@ -66,7 +66,7 @@ export default function AboutHero() {
   ];
 
   return (
-    <section ref={ref} className="relative min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 overflow-hidden">
+    <section ref={ref} className="relative h-[60vh] md:h-[70vh] flex items-center justify-center bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 overflow-hidden">
       {/* Enhanced Background */}
       <motion.div 
         className="absolute inset-0 bg-gradient-to-br from-slate-900/95 via-blue-900/90 to-indigo-900/95"
@@ -113,15 +113,15 @@ export default function AboutHero() {
       />
 
       {/* Main Content */}
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <div className="relative z-10 container-responsive text-center">
         <motion.div
           initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 1, delay: 0.2 }}
-          className="mb-8"
+          className="mb-6"
         >
           <motion.span
-            className="inline-flex items-center px-6 py-3 bg-white/10 backdrop-blur-md border border-white/20 rounded-full text-cyan-300 text-sm font-medium mb-8"
+            className="inline-flex items-center px-4 py-2 bg-gradient-to-r from-cyan-500/20 to-purple-500/20 border border-cyan-300/30 rounded-full text-cyan-300 text-sm font-medium backdrop-blur-sm mb-6"
             whileHover={{ scale: 1.05, backgroundColor: "rgba(255,255,255,0.15)" }}
             transition={{ duration: 0.3 }}
           >
@@ -130,12 +130,12 @@ export default function AboutHero() {
           </motion.span>
 
           <motion.h1
-            className="text-5xl md:text-6xl lg:text-7xl font-bold mb-8"
+            className="text-4xl md:text-7xl font-bold mb-6 text-white"
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, delay: 0.3 }}
           >
-            <span className="bg-gradient-to-r from-white via-cyan-200 to-blue-300 bg-clip-text text-transparent leading-tight">
+            <span className="bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent">
               Pioneering
             </span>
             <br />
@@ -151,27 +151,27 @@ export default function AboutHero() {
           </motion.h1>
 
           <motion.p
-            className="text-xl md:text-2xl text-gray-300 max-w-4xl mx-auto leading-relaxed mb-12"
+            className="text-lg md:text-xl text-gray-300 max-w-4xl mx-auto leading-relaxed mb-8"
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, delay: 0.5 }}
           >
-            Since 2009, we've been transforming healthcare in Nepal through cutting-edge medical technology, 
-            serving over 150 healthcare facilities with unwavering commitment to patient care and medical innovation.
+            Established in 2015 as a wing of Annapurna Neurological Institute & Allied Sciences, 
+            we pioneer advanced healthcare solutions through research, innovation, and international collaborations.
           </motion.p>
 
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, delay: 0.7 }}
-            className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-16"
+            className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8"
           >
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
               <Link href="/products">
                 <EnhancedButton
                   variant="primary"
                   size="default"
-                  className="px-8 py-4 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 shadow-lg shadow-cyan-500/25"
+                  className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 shadow-lg shadow-cyan-500/25"
                   icon={<Heart className="w-5 h-5" />}
                 >
                   Explore Our Solutions
@@ -183,7 +183,7 @@ export default function AboutHero() {
                 <EnhancedButton
                   variant="glass"
                   size="default"
-                  className="px-8 py-4 border-2 border-white/30 backdrop-blur-sm hover:bg-white/10"
+                  className="px-6 py-3 border-2 border-white/30 backdrop-blur-sm hover:bg-white/10"
                   icon={<Users className="w-5 h-5" />}
                 >
                   Get In Touch

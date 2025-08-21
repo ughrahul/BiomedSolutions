@@ -7,9 +7,10 @@ export interface WebsiteSettings {
     phone: string;
     email: string;
     address: string;
-    website: string;
     whatsapp: string;
     businessHours: string;
+    hospitalPhone: string;
+    supportPhone: string;
   };
   social: {
     facebook: string;
@@ -17,23 +18,18 @@ export interface WebsiteSettings {
     instagram: string;
     linkedin: string;
   };
-  company: {
-    name: string;
-    tagline: string;
-    description: string;
-    logo: string;
-  };
 }
 
 const defaultSettings: WebsiteSettings = {
   contact: {
     phone: "+977-980-120-335",
-    email: "info@annapurnahospitals.com",
-    address: "Annapurna Neurological Institute, Maitighar, Kathmandu, Nepal",
-    website: "https://annapurnahospitals.com",
+    email: "hingmang75@gmail.com",
+    address: "Annapurna Neurological Institute & Allied Sciences, Maitighar Mandala-10, Kathmandu 44600, Nepal",
     whatsapp: "+977-980-120-335",
     businessHours:
       "Monday - Friday: 8:00 AM - 6:00 PM, Saturday: 9:00 AM - 4:00 PM",
+    hospitalPhone: "01-5356568",
+    supportPhone: "980120335/61",
   },
   social: {
     facebook: "https://facebook.com/annapurnahospitals",
@@ -41,20 +37,15 @@ const defaultSettings: WebsiteSettings = {
     instagram: "https://instagram.com/annapurnahospitals",
     linkedin: "https://linkedin.com/company/annapurnahospitals",
   },
-  company: {
-    name: "Biomed Solutions",
-    tagline: "Advanced Medical Equipment for Healthcare Excellence",
-    description:
-      "Leading provider of cutting-edge medical equipment and healthcare solutions at Annapurna Neurological Institute.",
-    logo: "/assets/images/logo.png",
-  },
 };
 
 export function useWebsiteSettings() {
   const [settings, setSettings] = useState<WebsiteSettings>(defaultSettings);
   const [loading, setLoading] = useState(true);
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     loadSettings();
 
     // Listen for real-time updates from admin panel
@@ -87,20 +78,15 @@ export function useWebsiteSettings() {
         const localSocialSettings = localStorage.getItem(
           "website-social-settings"
         );
-        const localCompanySettings = localStorage.getItem(
-          "website-company-settings"
-        );
 
         if (
           localContactSettings &&
-          localSocialSettings &&
-          localCompanySettings
+          localSocialSettings
         ) {
           try {
             setSettings({
               contact: JSON.parse(localContactSettings),
               social: JSON.parse(localSocialSettings),
-              company: JSON.parse(localCompanySettings),
             });
           } catch (parseError) {
             console.warn("Error parsing localStorage settings:", parseError);
@@ -118,7 +104,6 @@ export function useWebsiteSettings() {
           ...data,
           contact: { ...prevSettings.contact, ...data.contact },
           social: { ...prevSettings.social, ...data.social },
-          company: { ...prevSettings.company, ...data.company },
         }));
       }
     } catch (error) {
@@ -130,5 +115,5 @@ export function useWebsiteSettings() {
     }
   };
 
-  return { settings, loading, refreshSettings: loadSettings };
+  return { settings, loading, mounted, refreshSettings: loadSettings };
 }

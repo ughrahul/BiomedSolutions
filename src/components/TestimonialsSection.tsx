@@ -6,41 +6,41 @@ import { Star, Quote } from "lucide-react";
 const testimonials = [
   {
     id: 1,
-    name: "Dr. Sarah Johnson",
-    role: "Chief Medical Officer",
-    hospital: "City General Hospital",
+    name: "Dr. Rajesh Kumar",
+    role: "Neurologist",
+    hospital: "ANIAS Hospital",
     content:
-      "The advanced monitoring equipment from Biomed Solutions has revolutionized our patient care. The AI-powered analytics provide insights we never had before, leading to better outcomes.",
+      "The Deep Brain Stimulation system from Biomed Solutions has transformed our treatment of movement disorders. Their expertise and support have been invaluable for our patients.",
     rating: 5,
     image: "/assets/images/logo.png",
   },
   {
     id: 2,
-    name: "Dr. Michael Chen",
-    role: "Cardiovascular Surgeon",
-    hospital: "Heart Institute",
+    name: "Dr. Priya Sharma",
+    role: "Neurosurgeon",
+    hospital: "Kathmandu Medical Center",
     content:
-      "The surgical robot system has increased our precision and reduced recovery times significantly. Biomed Solutions support team is exceptional and always available when we need them.",
+      "The Neuronavigation System has significantly improved our surgical precision. Biomed Solutions' collaboration with international partners brings world-class technology to Nepal.",
     rating: 5,
     image: "/assets/images/logo.png",
   },
   {
     id: 3,
-    name: "Dr. Emily Rodriguez",
-    role: "Emergency Medicine",
-    hospital: "Regional Medical Center",
+    name: "Dr. Amit Patel",
+    role: "Orthopedic Surgeon",
+    hospital: "Bir Hospital",
     content:
-      "The portable ultrasound has been a game-changer in our emergency department. Quick, accurate diagnostics that help us make critical decisions faster.",
+      "The 3D printed customized bone implants have revolutionized our approach to complex fractures. The local manufacturing capability is a game-changer for patient care.",
     rating: 5,
     image: "/assets/images/logo.png",
   },
   {
     id: 4,
-    name: "Dr. James Wilson",
-    role: "ICU Director",
-    hospital: "University Hospital",
+    name: "Dr. Sunita Thapa",
+    role: "Hospital Administrator",
+    hospital: "Provincial Hospital",
     content:
-      "The ventilator systems are incredibly reliable and the adaptive control technology has improved our patient outcomes. Biomed Solutions truly understands healthcare needs.",
+      "Biomed Solutions provides quality medical equipment at affordable costs. Their maintenance services ensure our devices work optimally, supporting healthcare delivery across Nepal.",
     rating: 5,
     image: "/assets/images/logo.png",
   },
@@ -65,8 +65,8 @@ export default function TestimonialsSection() {
             What Our <span className="gradient-text">Clients Say</span>
           </h2>
           <p className="text-xl text-secondary-300 max-w-3xl mx-auto">
-            Hear from healthcare professionals who trust our equipment to
-            deliver exceptional patient care.
+            Hear from healthcare professionals across Nepal who trust our innovative 
+            solutions to deliver advanced patient care.
           </p>
         </div>
 
@@ -138,7 +138,7 @@ export default function TestimonialsSection() {
 
         <div className="text-center mt-12">
           <p className="text-secondary-300 mb-6">
-            Join hundreds of healthcare professionals who trust our equipment
+            Join healthcare institutions across Nepal who trust our innovative solutions
           </p>
           <button className="button-secondary">Read More Testimonials</button>
         </div>

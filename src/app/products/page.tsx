@@ -204,6 +204,74 @@ export default function ProductsPage() {
               </div>
             </motion.div>
 
+            {/* Explore Buttons - Similar to About page "Discover Our Story" */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.7 }}
+              className="flex flex-col sm:flex-row items-center justify-center gap-4 max-w-4xl mx-auto mb-8"
+            >
+              <motion.button
+                onClick={() => {
+                  setSearchQuery("ECG");
+                  if (typeof document !== 'undefined') {
+                    const nextSection = document.querySelector('#products-grid');
+                    nextSection?.scrollIntoView({ behavior: 'smooth' });
+                  }
+                }}
+                className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-medium rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                Explore ECG Machines
+              </motion.button>
+              
+              <motion.button
+                onClick={() => {
+                  setSearchQuery("ultrasound");
+                  if (typeof document !== 'undefined') {
+                    const nextSection = document.querySelector('#products-grid');
+                    nextSection?.scrollIntoView({ behavior: 'smooth' });
+                  }
+                }}
+                className="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white font-medium rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                Explore Ultrasound
+              </motion.button>
+              
+              <motion.button
+                onClick={() => {
+                  setSearchQuery("monitor");
+                  if (typeof document !== 'undefined') {
+                    const nextSection = document.querySelector('#products-grid');
+                    nextSection?.scrollIntoView({ behavior: 'smooth' });
+                  }
+                }}
+                className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-medium rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                Explore Monitors
+              </motion.button>
+              
+              <motion.button
+                onClick={() => {
+                  setSearchQuery("");
+                  if (typeof document !== 'undefined') {
+                    const nextSection = document.querySelector('#products-grid');
+                    nextSection?.scrollIntoView({ behavior: 'smooth' });
+                  }
+                }}
+                className="px-6 py-3 bg-white/10 backdrop-blur-sm border-2 border-cyan-300/30 hover:bg-white/20 text-white font-medium rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                View All Products
+              </motion.button>
+            </motion.div>
+
             {/* Explore Categories - Similar to About page "Discover Our Story" */}
             <motion.div
               className="flex flex-col items-center justify-center"

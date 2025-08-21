@@ -1,11 +1,11 @@
 "use client";
 
 import { motion } from "framer-motion";
+import { useState, useEffect } from "react";
 import {
   Package,
   Users,
   ShoppingCart,
-  TrendingUp,
   DollarSign,
   Eye,
   Heart,
@@ -16,94 +16,130 @@ import {
   User,
   Settings,
 } from "lucide-react";
+import type { Product } from "@/types/product";
 import { EnhancedCard } from "@/components/ui/enhanced-card";
 import { EnhancedButton } from "@/components/ui/enhanced-button";
 import ContactMessages from "@/components/admin/ContactMessages";
-import FeaturedProductsFixer from "@/components/FeaturedProductsFixer";
+import AdminPageWrapper from "@/components/admin/AdminPageWrapper";
+import { useRealtime } from "@/contexts/RealtimeContext";
+import { useMessages } from "@/contexts/MessageContext";
+
+interface DashboardStats {
+  totalProducts: number;
+  totalMessages: number;
+}
 
 export default function AdminDashboard() {
-  const stats = [
+  const { messages, unreadCount, readCount, markAllAsRead } = useMessages();
+  const [stats, setStats] = useState<DashboardStats>({
+    totalProducts: 0,
+    totalMessages: 0,
+  });
+  const [loading, setLoading] = useState(true);
+  const [recentProducts, setRecentProducts] = useState<Product[]>([]);
+  const [productsLoading, setProductsLoading] = useState(true);
+  const { subscribeToTable, unsubscribeFromTable } = useRealtime();
+
+  // Fetch initial stats
+  const fetchStats = async () => {
+    try {
+      setLoading(true);
+      
+      // Fetch dashboard stats
+      const response = await fetch('/api/dashboard-stats');
+      const data = await response.json();
+      
+      if (data.error) {
+        throw new Error(data.error);
+      }
+
+      setStats({
+        totalProducts: data.totalProducts || 0,
+        totalMessages: data.totalMessages || 0,
+      });
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Fetch recent products
+  const fetchRecentProducts = async () => {
+    try {
+      setProductsLoading(true);
+      const response = await fetch('/api/products');
+      
+      if (response.ok) {
+        const data = await response.json();
+        // Sort by created_at in descending order and get the 3 most recent products
+        const sortedProducts = (data.products || []).sort((a: Product, b: Product) => 
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        );
+        const recent = sortedProducts.slice(0, 3);
+        setRecentProducts(recent);
+      } else {
+        console.error('Failed to fetch recent products');
+      }
+    } catch (error) {
+      console.error('Error fetching recent products:', error);
+    } finally {
+      setProductsLoading(false);
+    }
+  };
+
+  // No need for separate message stats - using MessageContext
+
+  // Setup real-time subscriptions
+  useEffect(() => {
+    fetchStats();
+    fetchRecentProducts();
+
+    // Subscribe to products table changes
+    const productsChannel = subscribeToTable('products', (payload) => {
+              // Products update received
+      if (payload.eventType === 'INSERT') {
+        setStats(prev => ({
+          ...prev,
+          totalProducts: prev.totalProducts + 1,
+        }));
+        // Refresh recent products when new product is added
+        fetchRecentProducts();
+      } else if (payload.eventType === 'DELETE') {
+        setStats(prev => ({
+          ...prev,
+          totalProducts: Math.max(0, prev.totalProducts - 1),
+        }));
+        // Refresh recent products when product is deleted
+        fetchRecentProducts();
+      }
+    });
+
+    // No need for separate messages subscription - MessageContext handles it
+
+    // Cleanup subscriptions
+    return () => {
+      if (productsChannel) unsubscribeFromTable(productsChannel);
+    };
+  }, [subscribeToTable, unsubscribeFromTable]);
+
+  const statsData = [
     {
       title: "Total Products",
-      value: "48",
-      change: "+12%",
-      changeType: "positive" as const,
+      value: loading ? "..." : stats.totalProducts.toString(),
       icon: Package,
       color: "from-blue-500 to-blue-600",
     },
     {
       title: "Contact Messages",
-      value: "156",
-      change: "+8%",
-      changeType: "positive" as const,
+      value: loading ? "..." : messages.length.toString(),
       icon: Mail,
       color: "from-purple-500 to-purple-600",
+      showMessageStats: true,
     },
   ];
 
-  const recentProducts = [
-    {
-      id: 1,
-      name: "Advanced Patient Monitor",
-      category: "Monitoring",
-      price: "$45,999",
-      status: "Active",
-      views: 1247,
-      favorites: 89,
-      rating: 4.9,
-    },
-    {
-      id: 2,
-      name: "Surgical Robot System",
-      category: "Surgery",
-      price: "$2,850,000",
-      status: "Active",
-      views: 892,
-      favorites: 156,
-      rating: 4.8,
-    },
-    {
-      id: 3,
-      name: "Portable Ultrasound",
-      category: "Imaging",
-      price: "$89,999",
-      status: "Active",
-      views: 2103,
-      favorites: 234,
-      rating: 4.7,
-    },
-  ];
 
-  const recentActivities = [
-    {
-      id: 1,
-      action: "New product added",
-      item: "Ventilator System Pro",
-      time: "2 hours ago",
-      type: "product",
-    },
-    {
-      id: 2,
-      action: "Order received",
-      item: "Advanced Patient Monitor",
-      time: "4 hours ago",
-      type: "order",
-    },
-    {
-      id: 3,
-      action: "User registered",
-      item: "Dr. Sarah Johnson",
-      time: "6 hours ago",
-      type: "user",
-    },
-    {
-      id: 4,
-      action: "Product updated",
-      item: "Surgical Robot System",
-      time: "1 day ago",
-      type: "product",
-    },
-  ];
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -126,17 +162,18 @@ export default function AdminDashboard() {
   };
 
   return (
-    <div className="space-y-8">
+    <AdminPageWrapper>
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.6 }}
+        className="mt-12"
       >
-        <h1 className="text-4xl font-bold text-gray-900 mb-2">
+        <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 mb-2">
           Dashboard Overview
         </h1>
-        <p className="text-xl text-gray-600">
+        <p className="text-lg sm:text-xl text-gray-600">
           Welcome back! Here's what's happening with your medical equipment
           business.
         </p>
@@ -144,38 +181,53 @@ export default function AdminDashboard() {
 
       {/* Stats Grid */}
       <motion.div
-        className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8"
+        className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6 mb-6 sm:mb-8"
         variants={containerVariants}
         initial="hidden"
         animate="visible"
       >
-        {stats.map((stat, index) => (
+        {statsData.map((stat, index) => (
           <motion.div key={stat.title} variants={itemVariants}>
             <EnhancedCard
               variant="medical"
               hover="lift"
               padding="lg"
-              className="relative overflow-hidden"
+              className="relative overflow-hidden h-full"
             >
-              <div className="flex items-center justify-between">
-                <div>
+              <div className="flex items-start justify-between h-full">
+                <div className="flex-1">
                   <p className="text-sm text-gray-600 mb-1">{stat.title}</p>
                   <p className="text-3xl font-bold text-gray-900">
                     {stat.value}
                   </p>
-                  <p
-                    className={`text-sm flex items-center mt-2 ${
-                      stat.changeType === "positive"
-                        ? "text-green-600"
-                        : "text-red-600"
-                    }`}
-                  >
-                    <ArrowUpRight className="w-4 h-4 mr-1" />
-                    {stat.change} from last month
-                  </p>
+                  {stat.showMessageStats && (
+                    <div className="mt-2">
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-4 text-sm">
+                          <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                            <span className="text-gray-600">{unreadCount} unread</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                            <span className="text-gray-600">{readCount} read</span>
+                          </div>
+                        </div>
+                        <button
+                          onClick={async () => {
+                            await markAllAsRead();
+                          }}
+                          disabled={unreadCount === 0}
+                          className="px-3 py-1 text-xs bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                        >
+                          Mark All Read
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
                 <div
-                  className={`p-3 rounded-xl bg-gradient-to-r ${stat.color}`}
+                  className={`p-3 rounded-xl bg-gradient-to-r ${stat.color} flex-shrink-0`}
                 >
                   <stat.icon className="w-8 h-8 text-white" />
                 </div>
@@ -185,10 +237,9 @@ export default function AdminDashboard() {
         ))}
       </motion.div>
 
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-8">
         {/* Recent Products */}
         <motion.div
-          className="xl:col-span-2"
           initial={{ opacity: 0, x: -20 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 0.8, delay: 0.3 }}
@@ -199,56 +250,77 @@ export default function AdminDashboard() {
                 <h2 className="text-2xl font-bold text-gray-900">
                   Recent Products
                 </h2>
-                <EnhancedButton variant="outline" size="sm">
+                <EnhancedButton 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => window.location.href = '/admin/products'}
+                >
                   View All
                 </EnhancedButton>
               </div>
             </div>
             <div className="divide-y divide-gray-200">
-              {recentProducts.map((product) => (
-                <div
-                  key={product.id}
-                  className="p-6 hover:bg-gray-50 transition-colors"
-                >
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h3 className="text-lg font-semibold text-gray-900">
-                          {product.name}
-                        </h3>
-                        <span className="px-2 py-1 bg-primary-100 text-primary-700 text-xs font-medium rounded-full">
-                          {product.category}
-                        </span>
+              {productsLoading ? (
+                <div className="p-6 text-center">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+                  <p className="text-gray-600 mt-2">Loading recent products...</p>
+                </div>
+              ) : recentProducts.length === 0 ? (
+                <div className="p-6 text-center">
+                  <Package className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-600">No products found</p>
+                </div>
+              ) : (
+                recentProducts.map((product) => (
+                  <div
+                    key={product.id}
+                    className="p-6 hover:bg-gray-50 transition-colors cursor-pointer"
+                    onClick={() => window.location.href = `/admin/products/${product.id}`}
+                  >
+                    <div className="flex items-start gap-4">
+                      {/* Product Image */}
+                      <div className="flex-shrink-0">
+                        <div className="w-16 h-16 rounded-lg overflow-hidden bg-gray-100">
+                          <img
+                            src={
+                              product.images && Array.isArray(product.images) && product.images.length > 0
+                                ? typeof product.images[0] === 'string'
+                                  ? product.images[0]
+                                  : (product.images[0] as any)?.url || (product.images[0] as any)?.src
+                                : "/assets/images/placeholder-product.svg"
+                            }
+                            alt={product.name}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              e.currentTarget.src = "/assets/images/placeholder-product.svg";
+                            }}
+                          />
+                        </div>
                       </div>
-                      <div className="flex items-center gap-6 text-sm text-gray-600">
-                        <span className="font-semibold text-lg text-primary-600">
-                          {product.price}
-                        </span>
-                        <div className="flex items-center gap-1">
-                          <Eye className="w-4 h-4" />
-                          {product.views} views
+                      
+                      {/* Product Info */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-3 mb-2">
+                          <h3 className="text-lg font-semibold text-gray-900 truncate hover:text-primary-600 transition-colors">
+                            {product.name}
+                          </h3>
+                          <span className="px-2 py-1 bg-primary-100 text-primary-700 text-xs font-medium rounded-full flex-shrink-0">
+                            {product.category}
+                          </span>
                         </div>
-                        <div className="flex items-center gap-1">
-                          <Heart className="w-4 h-4" />
-                          {product.favorites} favorites
-                        </div>
-                        <div className="flex items-center gap-1">
-                          <Star className="w-4 h-4 text-yellow-400 fill-current" />
-                          {product.rating}
-                        </div>
+                        <p className="text-sm text-gray-600 line-clamp-2">
+                          {product.description}
+                        </p>
                       </div>
                     </div>
-                    <span className="px-3 py-1 bg-green-100 text-green-700 text-sm font-medium rounded-full">
-                      {product.status}
-                    </span>
                   </div>
-                </div>
-              ))}
+                ))
+              )}
             </div>
           </EnhancedCard>
         </motion.div>
 
-        {/* Recent Activity */}
+        {/* Recent Contact Messages */}
         <motion.div
           initial={{ opacity: 0, x: 20 }}
           animate={{ opacity: 1, x: 0 }}
@@ -256,94 +328,25 @@ export default function AdminDashboard() {
         >
           <EnhancedCard variant="medical" padding="none">
             <div className="p-6 border-b border-gray-200">
-              <h2 className="text-2xl font-bold text-gray-900">
-                Recent Activity
-              </h2>
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-bold text-gray-900">
+                  Recent Contact Messages
+                </h2>
+                <EnhancedButton 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => window.location.href = '/admin/contact-messages'}
+                >
+                  View All Messages
+                </EnhancedButton>
+              </div>
             </div>
-            <div className="p-6 space-y-4">
-              {recentActivities.map((activity) => (
-                <div key={activity.id} className="flex items-start gap-3">
-                  <div
-                    className={`p-2 rounded-lg ${
-                      activity.type === "product"
-                        ? "bg-blue-100"
-                        : activity.type === "order"
-                        ? "bg-green-100"
-                        : "bg-purple-100"
-                    }`}
-                  >
-                    <Activity
-                      className={`w-4 h-4 ${
-                        activity.type === "product"
-                          ? "text-blue-600"
-                          : activity.type === "order"
-                          ? "text-green-600"
-                          : "text-purple-600"
-                      }`}
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <p className="text-sm text-gray-900">
-                      <span className="font-medium">{activity.action}</span>
-                      <br />
-                      <span className="text-gray-600">{activity.item}</span>
-                    </p>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {activity.time}
-                    </p>
-                  </div>
-                </div>
-              ))}
+            <div className="max-h-96 overflow-y-auto p-6">
+              <ContactMessages limit={3} />
             </div>
           </EnhancedCard>
         </motion.div>
       </div>
-
-      {/* Featured Products Issue Fixer */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, delay: 0.5 }}
-      >
-        <EnhancedCard variant="medical" padding="lg">
-          <div className="text-center mb-6">
-            <h2 className="text-2xl font-bold text-gray-900 mb-2">
-              🚀 Featured Products Status
-            </h2>
-            <p className="text-gray-600">
-              Monitor and fix your homepage featured products carousel
-            </p>
-          </div>
-          <FeaturedProductsFixer />
-        </EnhancedCard>
-      </motion.div>
-
-      {/* Recent Contact Messages */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, delay: 0.6 }}
-      >
-        <EnhancedCard variant="medical" padding="none">
-          <div className="p-6 border-b border-gray-200">
-            <div className="flex items-center justify-between">
-              <h2 className="text-2xl font-bold text-gray-900">
-                Recent Contact Messages
-              </h2>
-              <EnhancedButton 
-                variant="outline" 
-                size="sm"
-                onClick={() => window.location.href = '/admin/contact-messages'}
-              >
-                View All Messages
-              </EnhancedButton>
-            </div>
-          </div>
-          <div className="max-h-96 overflow-y-auto p-6">
-            <ContactMessages />
-          </div>
-        </EnhancedCard>
-      </motion.div>
 
       {/* Quick Actions */}
       <motion.div
@@ -360,20 +363,9 @@ export default function AdminDashboard() {
               <EnhancedButton
                 variant="primary"
                 icon={<Package className="w-5 h-5" />}
+                onClick={() => window.location.href = '/admin/products/new'}
               >
                 Add New Product
-              </EnhancedButton>
-              <EnhancedButton
-                variant="medical"
-                icon={<Users className="w-5 h-5" />}
-              >
-                Manage Users
-              </EnhancedButton>
-              <EnhancedButton
-                variant="outline"
-                icon={<TrendingUp className="w-5 h-5" />}
-              >
-                View Analytics
               </EnhancedButton>
               <EnhancedButton
                 variant="medical"
@@ -383,142 +375,18 @@ export default function AdminDashboard() {
                 Contact Messages
               </EnhancedButton>
               <EnhancedButton
-                variant="outline"
+                variant="medical"
                 icon={<Settings className="w-5 h-5" />}
                 onClick={() => window.location.href = '/admin/website-settings'}
               >
                 Website Settings
-              </EnhancedButton>
-              <EnhancedButton
-                variant="accent"
-                icon={<Package className="w-5 h-5" />}
-                onClick={async () => {
-                  try {
-                    const response = await fetch('/api/seed-products', { method: 'POST' });
-                    const result = await response.json();
-                    if (response.ok) {
-                      alert(`Success: ${result.message}\nAdded: ${result.added} products\nExisting: ${result.existing} products`);
-                      window.location.reload();
-                    } else {
-                      alert(`Error: ${result.error}`);
-                    }
-                  } catch (error) {
-                    alert('Failed to seed products');
-                  }
-                }}
-              >
-                Seed Featured Products
               </EnhancedButton>
             </div>
           </div>
         </EnhancedCard>
       </motion.div>
 
-      {/* Quick Stats Section */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8, delay: 0.6 }}
-      >
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <EnhancedCard variant="medical" padding="lg" hover="lift">
-            <div className="text-center">
-              <Package className="w-8 h-8 text-blue-600 mx-auto mb-3" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                Product Management
-              </h3>
-              <p className="text-gray-600 mb-4">
-                Full CRUD operations for your medical equipment inventory
-              </p>
-              <EnhancedButton
-                variant="primary"
-                size="sm"
-                onClick={() => window.location.href = '/admin/products'}
-              >
-                Manage Products
-              </EnhancedButton>
-            </div>
-          </EnhancedCard>
-          
-          <EnhancedCard variant="medical" padding="lg" hover="lift">
-            <div className="text-center">
-              <TrendingUp className="w-8 h-8 text-green-600 mx-auto mb-3" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                Inventory Tracking
-              </h3>
-              <p className="text-gray-600 mb-4">
-                Complete history of all inventory changes and updates
-              </p>
-              <EnhancedButton
-                variant="primary"
-                size="sm"
-                onClick={() => window.location.href = '/admin/inventory-history'}
-              >
-                View History
-              </EnhancedButton>
-            </div>
-          </EnhancedCard>
-          
-          <EnhancedCard variant="medical" padding="lg" hover="lift">
-            <div className="text-center">
-              <Mail className="w-8 h-8 text-purple-600 mx-auto mb-3" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                Contact Management
-              </h3>
-              <p className="text-gray-600 mb-4">
-                Manage customer inquiries and contact form submissions
-              </p>
-              <EnhancedButton
-                variant="primary"
-                size="sm"
-                onClick={() => window.location.href = '/admin/contact-messages'}
-              >
-                View Messages
-              </EnhancedButton>
-            </div>
-          </EnhancedCard>
-        </div>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-          <EnhancedCard variant="medical" padding="lg" hover="lift">
-            <div className="text-center">
-              <Settings className="w-8 h-8 text-cyan-600 mx-auto mb-3" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                Website Settings
-              </h3>
-              <p className="text-gray-600 mb-4">
-                Manage contact info, social media links, and company details
-              </p>
-              <EnhancedButton
-                variant="primary"
-                size="sm"
-                onClick={() => window.location.href = '/admin/website-settings'}
-              >
-                Manage Settings
-              </EnhancedButton>
-            </div>
-          </EnhancedCard>
-          
-          <EnhancedCard variant="medical" padding="lg" hover="lift">
-            <div className="text-center">
-              <User className="w-8 h-8 text-indigo-600 mx-auto mb-3" />
-              <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                Admin Profile
-              </h3>
-              <p className="text-gray-600 mb-4">
-                Update your account settings and preferences
-              </p>
-              <EnhancedButton
-                variant="primary"
-                size="sm"
-                onClick={() => window.location.href = '/admin/profile'}
-              >
-                Edit Profile
-              </EnhancedButton>
-            </div>
-          </EnhancedCard>
-        </div>
-      </motion.div>
-    </div>
+
+    </AdminPageWrapper>
   );
 }

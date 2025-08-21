@@ -101,7 +101,7 @@ export async function validateApiRequest(request: NextRequest): Promise<{
   }
 
   // Rate limiting per IP
-  const ip = request.ip || request.headers.get('x-forwarded-for') || 'unknown';
+  const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
   const rateLimitResult = await checkRateLimit(ip, request.url);
   
   if (!rateLimitResult.success) {

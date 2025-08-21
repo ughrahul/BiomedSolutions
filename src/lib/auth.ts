@@ -1,9 +1,15 @@
-import { createClientSupabase } from "./supabase";
+import { createClientSupabase } from "@/lib/supabase";
+import { createProfileWithAdmin, getProfileWithAdmin, upsertProfileWithAdmin } from "@/lib/auth-admin";
 
 // Client-side auth functions with session validation
 export async function getCurrentUser() {
   try {
     const supabase = createClientSupabase();
+    
+    if (!supabase) {
+      console.error("Supabase client not available");
+      return null;
+    }
     
     // First check if we have a valid session
     const { data: { session }, error: sessionError } = await supabase.auth.getSession();
@@ -45,6 +51,11 @@ export async function getUserProfile(userId: string) {
     }
 
     const supabase = createClientSupabase();
+    
+    if (!supabase) {
+      console.error("Supabase client not available");
+      return null;
+    }
     
     // Check session before making database queries
     const { data: { session } } = await supabase.auth.getSession();
@@ -97,6 +108,11 @@ export async function requireAuth() {
 
 export async function signOut() {
   const supabase = createClientSupabase();
+  
+  if (!supabase) {
+    console.error("Supabase client not available");
+    return;
+  }
 
   if (!supabase) {
     console.log("Supabase not configured - cannot sign out");
@@ -144,6 +160,11 @@ export async function signOut() {
 export async function signInWithEmail(email: string, password: string) {
   const supabase = createClientSupabase();
 
+  if (!supabase) {
+    console.error("Supabase client not available");
+    return { user: null, error: "Database connection not available", success: false };
+  }
+
   try {
     console.log(`🔐 Attempting to sign in user: ${email}`);
 
@@ -166,15 +187,24 @@ export async function signInWithEmail(email: string, password: string) {
       let profile = null;
       let profileError = null;
       try {
-        const { data: fetchedProfile, error: fetchError } = await supabase
+        // Use array fetch instead of single to handle multiple profiles
+        const { data: fetchedProfiles, error: fetchError } = await supabase
           .from("profiles")
           .select(
             "role, access_level, is_active, full_name, employee_id, department, position"
           )
-          .eq("user_id", data.user.id)
-          .single();
-        profile = fetchedProfile;
-        profileError = fetchError;
+          .eq("user_id", data.user.id);
+        
+        if (fetchError) {
+          profileError = fetchError;
+        } else if (fetchedProfiles && fetchedProfiles.length > 0) {
+          // If multiple profiles exist, use the first one (most recent)
+          profile = fetchedProfiles[0];
+          console.log(`✅ Found ${fetchedProfiles.length} profile(s) for ${email}, using first one`);
+        } else {
+          // No profile found
+          profileError = { code: "PGRST116", message: "No profile found" };
+        }
       } catch (e) {
         profileError = e;
       }
@@ -189,60 +219,129 @@ export async function signInWithEmail(email: string, password: string) {
         if ((profileError as any).code === "PGRST116") {
           console.log(`🔧 Creating missing profile for ${email}...`);
 
-          const { error: createError } = await supabase
+          // Try to create profile with a more robust approach
+          const profileData = {
+            user_id: data.user.id,
+            email: data.user.email,
+            full_name:
+              data.user.user_metadata?.full_name ||
+              data.user.email?.split("@")[0] ||
+              "User",
+            is_active: true,
+            role: "admin",
+            access_level: "primary",
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          };
+
+          let profileCreated = false;
+
+          // First try with upsert to handle any existing records
+          const { error: upsertError } = await supabase
             .from("profiles")
-            .insert({
-              user_id: data.user.id,
-              email: data.user.email,
-              full_name:
-                data.user.user_metadata?.full_name ||
-                data.user.email?.split("@")[0] ||
-                "User",
-              is_active: true,
-              role: "admin",
-              access_level: "primary",
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
+            .upsert(profileData, {
+              onConflict: 'user_id',
+              ignoreDuplicates: false
             });
 
-          if (createError) {
+          if (upsertError) {
             console.error(
-              `❌ Failed to create profile for ${email}:`,
-              createError.message
+              `❌ Failed to upsert profile for ${email}:`,
+              upsertError.message
             );
-            await supabase.auth.signOut();
-            return {
-              user: null,
-              error:
-                "Failed to create user profile. Please contact administrator.",
-              success: false,
-            };
+            
+            // If upsert fails, try direct insert
+            const { error: insertError } = await supabase
+              .from("profiles")
+              .insert(profileData);
+
+            if (insertError) {
+              console.error(
+                `❌ Failed to create profile for ${email}:`,
+                insertError.message
+              );
+              
+              // Final fallback: Use admin client to bypass RLS
+              try {
+                console.log(`🔧 Trying admin client fallback for ${email}...`);
+                const adminProfile = await upsertProfileWithAdmin(
+                  data.user.id,
+                  data.user.email || email,
+                  data.user.user_metadata
+                );
+                
+                if (adminProfile) {
+                  profile = adminProfile;
+                  profileCreated = true;
+                  console.log(`✅ Created profile using admin client for ${email}`);
+                }
+              } catch (adminError) {
+                console.error(
+                  `❌ Admin client fallback failed for ${email}:`,
+                  adminError
+                );
+                await supabase.auth.signOut();
+                return {
+                  user: null,
+                  error:
+                    "Failed to create user profile. Please contact administrator.",
+                  success: false,
+                };
+              }
+            } else {
+              profileCreated = true;
+            }
+          } else {
+            profileCreated = true;
           }
 
-          // Fetch the newly created profile
-          const { data: newProfile, error: fetchError } = await supabase
-            .from("profiles")
-            .select(
-              "role, access_level, is_active, full_name, employee_id, department, position"
-            )
-            .eq("user_id", data.user.id)
-            .single();
+          // If profile was created successfully, fetch it
+          if (profileCreated && !profile) {
+            // Try to fetch the newly created profile
+            const { data: newProfiles, error: fetchError } = await supabase
+              .from("profiles")
+              .select(
+                "role, access_level, is_active, full_name, employee_id, department, position"
+              )
+              .eq("user_id", data.user.id);
 
-          if (fetchError || !newProfile) {
-            console.error(
-              `❌ Failed to fetch new profile for ${email}:`,
-              fetchError?.message
-            );
-            await supabase.auth.signOut();
-            return {
-              user: null,
-              error: "Profile creation failed. Please contact administrator.",
-              success: false,
-            };
+            if (fetchError || !newProfiles || newProfiles.length === 0) {
+              console.error(
+                `❌ Failed to fetch new profile for ${email}:`,
+                fetchError?.message
+              );
+              
+              // Try admin client to fetch profile
+              try {
+                const adminProfile = await getProfileWithAdmin(data.user.id);
+                if (adminProfile) {
+                  profile = adminProfile;
+                  console.log(`✅ Fetched profile using admin client for ${email}`);
+                } else {
+                  await supabase.auth.signOut();
+                  return {
+                    user: null,
+                    error: "Profile creation failed. Please contact administrator.",
+                    success: false,
+                  };
+                }
+              } catch (adminError) {
+                console.error(
+                  `❌ Admin client fetch failed for ${email}:`,
+                  adminError
+                );
+                await supabase.auth.signOut();
+                return {
+                  user: null,
+                  error: "Profile creation failed. Please contact administrator.",
+                  success: false,
+                };
+              }
+            } else {
+              profile = newProfiles[0];
+              console.log(`✅ Created and fetched profile for ${email}`);
+            }
           }
-
-          profile = newProfile;
-          console.log(`✅ Created and fetched profile for ${email}`);
         } else {
           await supabase.auth.signOut();
           return {

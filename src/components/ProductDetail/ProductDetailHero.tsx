@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { motion } from "framer-motion";
+import Link from "next/link";
 import {
   Star,
   Heart,
@@ -14,6 +15,7 @@ import {
   Award,
   CheckCircle,
   Zap,
+  Phone,
 } from "lucide-react";
 import Image from "next/image";
 import { EnhancedButton } from "@/components/ui/enhanced-button";
@@ -55,9 +57,9 @@ export default function ProductDetailHero({ product }: ProductDetailHeroProps) {
 
 
   return (
-    <section className="py-12 bg-gradient-to-br from-cyan-50 via-blue-50 to-white">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
+    <section className="py-8 sm:py-12 bg-gradient-to-br from-cyan-50 via-blue-50 to-white">
+      <div className="container-responsive">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8 xl:gap-12">
           {/* Product Images */}
           <motion.div
             initial={{ opacity: 0, x: -50 }}
@@ -95,13 +97,13 @@ export default function ProductDetailHero({ product }: ProductDetailHeroProps) {
 
               {/* Badges */}
               <div className="absolute top-4 left-4 flex flex-col gap-2">
-                {product.isFeatured && (
-                  <span className="px-3 py-1 bg-gradient-to-r from-yellow-400 to-orange-500 text-white text-xs font-bold rounded-full flex items-center gap-1">
-                    <Star className="w-3 h-3" />
+                {product.is_featured && (
+                  <span className="px-3 py-1 bg-yellow-500 text-white text-xs font-bold rounded-full flex items-center gap-1 shadow-lg">
+                    <Zap className="w-3 h-3" />
                     Featured
                   </span>
                 )}
-                {product.isActive && (
+                {product.is_active && (
                   <span className="px-3 py-1 bg-gradient-to-r from-green-400 to-green-600 text-white text-xs font-bold rounded-full flex items-center gap-1">
                     <CheckCircle className="w-3 h-3" />
                     Available
@@ -176,6 +178,12 @@ export default function ProductDetailHero({ product }: ProductDetailHeroProps) {
                 <span className="px-3 py-1 bg-primary-100 text-primary-700 text-sm font-medium rounded-full">
                   {product.category}
                 </span>
+                {product.is_featured && (
+                  <span className="px-3 py-1 bg-yellow-500 text-white text-xs font-bold rounded-full flex items-center gap-1 shadow-lg">
+                    <Zap className="w-3 h-3" />
+                    Featured
+                  </span>
+                )}
                 {product.sku && (
                   <span className="text-sm text-gray-500">SKU: {product.sku}</span>
                 )}
@@ -201,13 +209,13 @@ export default function ProductDetailHero({ product }: ProductDetailHeroProps) {
                     ))}
                   </div>
                   <span className="text-sm text-gray-600">
-                    {product.rating} ({product.reviewCount || 0} reviews)
+                    {product.rating} ({product.review_count || 0} reviews)
                   </span>
                 </div>
               )}
 
               <p className="text-lg text-gray-600 leading-relaxed">
-                {product.fullDescription || product.description}
+                {product.full_description || product.description}
               </p>
             </div>
 
@@ -228,77 +236,90 @@ export default function ProductDetailHero({ product }: ProductDetailHeroProps) {
               </div>
             )}
 
+            {/* Feature Tags */}
+            {product.tags && product.tags.length > 0 && (
+              <div>
+                <h3 className="text-lg font-semibold text-gray-900 mb-3">
+                  Feature Tags
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  {product.tags.map((tag, index) => (
+                    <span
+                      key={index}
+                      className="px-3 py-1 bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-sm font-medium rounded-full shadow-sm hover:shadow-md transition-shadow"
+                    >
+                      {tag}
+                    </span>
+                  ))}
+                </div>
+              </div>
+            )}
+
             {/* Stock */}
-            <div className="bg-gray-50 rounded-xl p-6">
-              <div className="flex items-center justify-between mb-4">
+            <div className="bg-gray-50 rounded-xl p-4 sm:p-6">
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-4">
                 <div>
-                  <div className="text-3xl font-bold text-gray-900">
+                  <div className="text-2xl sm:text-3xl font-bold text-gray-900">
                     Contact for Information
                   </div>
-                  {product.stockQuantity !== undefined && (
-                    <div className="text-sm text-gray-600">
-                      {product.stockQuantity > 0
-                        ? `${product.stockQuantity} units available`
-                        : "Contact for availability"}
-                    </div>
-                  )}
+                  <div className="text-sm text-gray-600">
+                    Available for inquiry
+                  </div>
                 </div>
-                <div className="text-right">
-                  {product.inStock ? (
-                    <span className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-700 text-sm font-medium rounded-full">
-                      <CheckCircle className="w-4 h-4" />
-                      In Stock
-                    </span>
-                  ) : (
-                    <span className="inline-flex items-center gap-1 px-3 py-1 bg-orange-100 text-orange-700 text-sm font-medium rounded-full">
-                      <Zap className="w-4 h-4" />
-                      Contact for Availability
-                    </span>
-                  )}
+                <div className="text-left sm:text-right">
+                  <span className="inline-flex items-center gap-1 px-3 py-1 bg-green-100 text-green-700 text-sm font-medium rounded-full">
+                    <CheckCircle className="w-4 h-4" />
+                    Available
+                  </span>
                 </div>
               </div>
 
               {/* Action Buttons */}
-              <div className="flex gap-3">
-                <EnhancedButton
-                  variant="primary"
-                  size="default"
-                  className="flex-1"
-                  icon={<ShoppingCart className="w-5 h-5" />}
-                >
-                  Request Quote
-                </EnhancedButton>
-                <EnhancedButton
-                  variant="outline"
-                  size="default"
-                  className="flex-1"
-                >
-                  Contact Sales
-                </EnhancedButton>
+              <div className="flex flex-col sm:flex-row gap-3 w-full">
+                <Link href="/contact#contact-form" className="flex-1 w-full">
+                  <EnhancedButton
+                    variant="primary"
+                    size="default"
+                    className="w-full h-12 sm:h-auto text-sm sm:text-base font-semibold"
+                    icon={<ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5" />}
+                  >
+                    Request Quote
+                  </EnhancedButton>
+                </Link>
+                <a href="tel:+1234567890" className="flex-1 w-full">
+                  <EnhancedButton
+                    variant="outline"
+                    size="default"
+                    className="w-full h-12 sm:h-auto text-sm sm:text-base font-semibold"
+                    icon={<Phone className="w-4 h-4 sm:w-5 sm:h-5" />}
+                  >
+                    Contact Now
+                  </EnhancedButton>
+                </a>
               </div>
             </div>
 
             {/* Guarantees */}
-            <div className="grid grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
               <div className="text-center">
-                <div className="w-12 h-12 mx-auto mb-2 bg-blue-100 rounded-full flex items-center justify-center">
-                  <Shield className="w-6 h-6 text-blue-600" />
+                <div className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-2 bg-blue-100 rounded-full flex items-center justify-center">
+                  <Shield className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
                 </div>
-                <div className="text-sm font-medium text-gray-900">
+                <div className="text-xs sm:text-sm font-medium text-gray-900">
                   {product.warranty || "2 Year"} Warranty
                 </div>
               </div>
               <div className="text-center">
-                <div className="w-12 h-12 mx-auto mb-2 bg-green-100 rounded-full flex items-center justify-center">
-                  <Truck className="w-6 h-6 text-green-600" />
+                <div className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-2 bg-green-100 rounded-full flex items-center justify-center">
+                  <Truck className="w-5 h-5 sm:w-6 sm:h-6 text-green-600" />
                 </div>
-                <div className="text-sm font-medium text-gray-900">Free Delivery</div>
+                <div className="text-xs sm:text-sm font-medium text-gray-900">Free Delivery</div>
               </div>
               <div className="text-center">
-                <div className="w-12 h-12 mx-auto mb-2 bg-purple-100 rounded-full flex items-center justify-center">
-                  <Award className="w-6 h-6 text-purple-600" />
+                <div className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-2 bg-purple-100 rounded-full flex items-center justify-center">
+                  <Award className="w-5 h-5 sm:w-6 sm:h-6 text-purple-600" />
                 </div>
-                <div className="text-sm font-medium text-gray-900">24/7 Support</div>
+                <div className="text-xs sm:text-sm font-medium text-gray-900">24/7 Support</div>
               </div>
             </div>
 

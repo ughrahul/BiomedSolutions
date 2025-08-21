@@ -1,10 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import { motion, useScroll, useTransform } from "framer-motion";
+import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Eye, EyeOff, Mail, Lock, ArrowRight, Building2, Sparkles, Shield, Zap, Heart, Users, Award } from "lucide-react";
+import { Eye, EyeOff, Mail, Lock, ArrowRight, Building2, Sparkles, Shield, Zap, Heart, Users, Award, X, Phone, MessageCircle } from "lucide-react";
 import { EnhancedButton } from "@/components/ui/enhanced-button";
 import { EnhancedInput } from "@/components/ui/enhanced-input";
 import { EnhancedCard } from "@/components/ui/enhanced-card";
@@ -16,10 +16,11 @@ import { useEffect, useRef } from "react";
 export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [rememberMe, setRememberMe] = useState(false);
+
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
 
   const router = useRouter();
   const ref = useRef(null);
@@ -84,19 +85,17 @@ export default function LoginPage() {
       const result = await signInWithEmail(email, password);
 
       if (result.success) {
-        // Handle remember me functionality
-        if (rememberMe) {
-          localStorage.setItem('rememberMe', 'true');
-          localStorage.setItem('lastEmail', email);
-        } else {
-          localStorage.removeItem('rememberMe');
-          localStorage.removeItem('lastEmail');
-        }
 
         toast.success(
           `Welcome back, ${
             result.profile?.full_name || "Admin"
-          }! Redirecting to dashboard...`
+          }! Redirecting to dashboard...`,
+          {
+            style: {
+              marginTop: '60px',
+            },
+            duration: 4000,
+          }
         );
         router.push("/admin");
       } else {
@@ -110,19 +109,10 @@ export default function LoginPage() {
     }
   };
 
-  // Load remembered email on component mount
-  useEffect(() => {
-    const remembered = localStorage.getItem('rememberMe');
-    const lastEmail = localStorage.getItem('lastEmail');
-    
-    if (remembered === 'true' && lastEmail) {
-      setEmail(lastEmail);
-      setRememberMe(true);
-    }
-  }, []);
+
 
   return (
-    <div ref={ref} className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 flex items-center justify-center p-4 relative overflow-hidden">
+    <div ref={ref} className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 flex items-start justify-center p-4 pt-8 lg:pt-16 relative overflow-hidden">
       {/* Enhanced Background Effects */}
       <motion.div 
         className="absolute inset-0"
@@ -222,9 +212,9 @@ export default function LoginPage() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8, delay: 0.6 }}
             >
-              Welcome to{" "}
+              Secure{" "}
               <span className="bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent">
-                Admin Dashboard
+                Admin Access
               </span>
             </motion.h2>
           </motion.div>
@@ -243,37 +233,47 @@ export default function LoginPage() {
             className="backdrop-blur-xl border-white/20 shadow-2xl"
           >
             {/* Mobile Header */}
-            <motion.div 
-              className="flex lg:hidden items-center justify-center gap-3 mb-8"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.4 }}
-            >
-              <motion.div 
-                className="w-12 h-12 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-xl flex items-center justify-center shadow-lg"
-                whileHover={{ scale: 1.05 }}
+                          <motion.div 
+                className="flex lg:hidden items-center justify-center gap-3 mb-8"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.4 }}
               >
-                <Building2 className="w-6 h-6 text-white" />
+                <motion.div 
+                  className="w-12 h-12 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-xl flex items-center justify-center shadow-lg"
+                  whileHover={{ scale: 1.05 }}
+                >
+                  <Building2 className="w-6 h-6 text-white" />
+                </motion.div>
+                <div className="text-center">
+                  <h1 className="text-xl font-bold text-white">
+                    Biomed Solutions
+                  </h1>
+                  <p className="text-cyan-300 text-sm">Admin Access</p>
+                </div>
               </motion.div>
-              <div className="text-center">
-                <h1 className="text-xl font-bold text-white">
-                  Biomed Solutions
-                </h1>
-                <p className="text-cyan-300 text-sm">Admin Portal</p>
-              </div>
-            </motion.div>
 
             {/* Form Header */}
-            <motion.div 
+            <motion.div
               className="text-center mb-8"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.6 }}
             >
-              <h3 className="text-2xl lg:text-3xl font-bold text-white mb-2">
-                Admin Login
-              </h3>
-              <p className="text-gray-300">Enter your credentials</p>
+              <motion.h3
+                className="text-3xl lg:text-4xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent mb-3"
+                whileHover={{ scale: 1.02 }}
+                transition={{ duration: 0.2 }}
+              >
+                Sign In
+              </motion.h3>
+              <motion.p
+                className="text-slate-600 text-base font-medium tracking-wide"
+                whileHover={{ color: "#374151" }}
+                transition={{ duration: 0.2 }}
+              >
+                Access your admin dashboard
+              </motion.p>
             </motion.div>
 
             {/* Enhanced Form */}
@@ -325,29 +325,22 @@ export default function LoginPage() {
                 />
               </motion.div>
 
-              <motion.div 
-                className="flex items-center justify-between"
+              <motion.div
+                className="flex justify-end"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.6, delay: 1.2 }}
               >
-                <label className="flex items-center group cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={rememberMe}
-                    onChange={(e) => setRememberMe(e.target.checked)}
-                    className="w-4 h-4 rounded border-white/20 bg-white/10 text-primary-500 focus:ring-primary-500 focus:ring-offset-0 transition-all duration-200"
-                  />
-                  <span className="ml-2 text-sm text-gray-300 group-hover:text-white transition-colors">
-                    Remember me
-                  </span>
-                </label>
-                <Link
-                  href="/auth/forgot-password"
+                <button
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setShowForgotPassword(true);
+                  }}
                   className="text-sm text-cyan-400 hover:text-cyan-300 transition-colors hover:underline"
                 >
                   Forgot password?
-                </Link>
+                </button>
               </motion.div>
 
               <motion.div
@@ -374,6 +367,109 @@ export default function LoginPage() {
           </EnhancedCard>
         </motion.div>
       </div>
+
+      {/* Forgot Password Modal */}
+      {showForgotPassword && (
+        <div className="fixed inset-0 z-50 flex items-start justify-center p-4 pt-16">
+          <div
+            className="absolute inset-0 bg-black/50 backdrop-blur-sm"
+            onClick={() => setShowForgotPassword(false)}
+          />
+          <div className="relative w-full max-w-md bg-gradient-to-br from-slate-900 to-blue-900 rounded-2xl p-6 shadow-2xl border border-white/20">
+            {/* Close Button */}
+            <button
+              onClick={() => setShowForgotPassword(false)}
+              className="absolute top-4 right-4 p-2 rounded-full bg-white/10 hover:bg-white/20 transition-colors text-white"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {/* Header */}
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-full flex items-center justify-center mx-auto mb-4 shadow-lg">
+                <Lock className="w-8 h-8 text-white" />
+              </div>
+              <h3 className="text-2xl font-bold text-white mb-2">
+                Forgot Password?
+              </h3>
+              <p className="text-gray-300">
+                Contact our administrator to reset your password
+              </p>
+            </div>
+
+            {/* Contact Options */}
+            <div className="space-y-4 mb-6">
+              <div className="bg-white/10 rounded-xl p-4 border border-white/20">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center">
+                      <Phone className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-white font-medium">Call Administrator</p>
+                      <p className="text-gray-300 text-sm">+977 9808418877</p>
+                    </div>
+                  </div>
+                  <a
+                    href="tel:+9779808418877"
+                    className="px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg font-medium hover:from-green-600 hover:to-emerald-700 transition-all duration-300 transform hover:scale-105"
+                  >
+                    Call Now
+                  </a>
+                </div>
+              </div>
+
+              <div className="bg-white/10 rounded-xl p-4 border border-white/20">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-full flex items-center justify-center">
+                      <MessageCircle className="w-5 h-5 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-white font-medium">WhatsApp</p>
+                      <p className="text-gray-300 text-sm">Send a message</p>
+                    </div>
+                  </div>
+                  <a
+                    href="https://wa.me/9779808418877"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-4 py-2 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-lg font-medium hover:from-green-600 hover:to-emerald-700 transition-all duration-300 transform hover:scale-105"
+                  >
+                    WhatsApp
+                  </a>
+                </div>
+              </div>
+            </div>
+
+            {/* Additional Info */}
+            <div className="bg-cyan-500/10 border border-cyan-500/20 rounded-xl p-4 mb-6">
+              <div className="flex items-start gap-3">
+                <div className="w-6 h-6 bg-cyan-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                  <span className="text-white text-xs font-bold">i</span>
+                </div>
+                <div>
+                  <p className="text-cyan-300 font-medium text-sm mb-1">
+                    Password Reset Process
+                  </p>
+                  <p className="text-gray-300 text-sm">
+                    Our administrator will verify your identity and reset your password securely. 
+                    Please have your account details ready when contacting us.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Close Button */}
+            <button
+              onClick={() => setShowForgotPassword(false)}
+              className="w-full px-4 py-3 bg-white/10 border border-white/30 text-white rounded-lg font-medium hover:bg-white/20 transition-all duration-300"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

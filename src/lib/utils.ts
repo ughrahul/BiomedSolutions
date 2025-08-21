@@ -124,3 +124,111 @@ export function getFileSize(bytes: number): string {
   const i = Math.floor(Math.log(bytes) / Math.log(1024));
   return Math.round((bytes / Math.pow(1024, i)) * 100) / 100 + " " + sizes[i];
 }
+
+// Suppress console errors and warnings for browser extensions and development tools
+export function suppressMapsErrors() {
+  if (typeof window !== 'undefined') {
+    // Override console.error to suppress common development errors
+    const originalError = console.error;
+    console.error = function(...args) {
+      // Check if any argument contains the error message
+      const hasSuppressibleError = args.some(arg => {
+        if (typeof arg === 'string') {
+          const errorMessage = arg.toLowerCase();
+          return errorMessage.includes('runtime.lasterror') ||
+                 errorMessage.includes('runtime.lasterror') ||
+                 errorMessage.includes('err_blocked_by_client') ||
+                 errorMessage.includes('maps.googleapis.com') ||
+                 errorMessage.includes('message port closed') ||
+                 errorMessage.includes('the message port closed before a response was received') ||
+                 errorMessage.includes('unchecked runtime.lasterror') ||
+                 errorMessage.includes('google maps') ||
+                 errorMessage.includes('maps.google') ||
+                 errorMessage.includes('chrome-extension') ||
+                 errorMessage.includes('moz-extension') ||
+                 errorMessage.includes('safari-extension') ||
+                 errorMessage.includes('extension') ||
+                 errorMessage.includes('port closed');
+        }
+        return false;
+      });
+      
+      if (hasSuppressibleError) {
+        return; // Suppress these errors
+      }
+      
+      originalError.apply(console, args);
+    };
+
+    // Override console.warn to suppress common development warnings
+    const originalWarn = console.warn;
+    console.warn = function(...args) {
+      // Check if any argument contains the warning message
+      const hasSuppressibleWarning = args.some(arg => {
+        if (typeof arg === 'string') {
+          const warnMessage = arg.toLowerCase();
+          return warnMessage.includes('google maps') ||
+                 warnMessage.includes('maps.google') ||
+                 warnMessage.includes('embed') ||
+                 warnMessage.includes('maps api') ||
+                 warnMessage.includes('chrome-extension') ||
+                 warnMessage.includes('moz-extension') ||
+                 warnMessage.includes('safari-extension') ||
+                 warnMessage.includes('extension') ||
+                 warnMessage.includes('port closed');
+        }
+        return false;
+      });
+      
+      if (hasSuppressibleWarning) {
+        return; // Suppress these warnings
+      }
+      
+      originalWarn.apply(console, args);
+    };
+
+    // Add global error event listener to catch unhandled errors
+    const originalOnError = window.onerror;
+    window.onerror = function(message, source, lineno, colno, error) {
+      if (typeof message === 'string') {
+        const errorMessage = message.toLowerCase();
+        if (errorMessage.includes('runtime.lasterror') ||
+            errorMessage.includes('message port closed') ||
+            errorMessage.includes('the message port closed before a response was received') ||
+            errorMessage.includes('unchecked runtime.lasterror') ||
+            errorMessage.includes('extension') ||
+            errorMessage.includes('port closed')) {
+          return true; // Prevent default error handling
+        }
+      }
+      
+      // Call original error handler if it exists
+      if (originalOnError) {
+        return originalOnError(message, source, lineno, colno, error);
+      }
+      return false;
+    };
+
+    // Add unhandled promise rejection handler
+    const originalOnUnhandledRejection = window.onunhandledrejection;
+    window.onunhandledrejection = function(event) {
+      if (event.reason && typeof event.reason === 'string') {
+        const errorMessage = event.reason.toLowerCase();
+        if (errorMessage.includes('runtime.lasterror') ||
+            errorMessage.includes('message port closed') ||
+            errorMessage.includes('the message port closed before a response was received') ||
+            errorMessage.includes('unchecked runtime.lasterror') ||
+            errorMessage.includes('extension') ||
+            errorMessage.includes('port closed')) {
+          event.preventDefault(); // Prevent default handling
+          return;
+        }
+      }
+      
+      // Call original handler if it exists
+      if (originalOnUnhandledRejection) {
+        originalOnUnhandledRejection.call(window, event);
+      }
+    };
+  }
+}

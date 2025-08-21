@@ -67,13 +67,13 @@ export default function ContactInfo() {
   const features = [
     {
       icon: Shield,
-      title: "Reliable Support",
-      description: "24/7 technical assistance and emergency response for all medical equipment.",
+      title: "Research & Development",
+      description: "Local development of surgical tools and medical devices with our team of doctors and engineers.",
     },
     {
       icon: Zap,
-      title: "Quick Response",
-      description: "Fast installation, maintenance, and repair services to minimize downtime.",
+      title: "International Partnerships",
+      description: "Collaboration with global manufacturers to bring advanced healthcare technology to Nepal.",
     },
   ];
 
@@ -81,7 +81,7 @@ export default function ContactInfo() {
     <section className="py-16 bg-gradient-to-br from-gray-50 to-blue-50/30 relative">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         {/* Contact Methods Grid - More Compact */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-16">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 mb-12 sm:mb-16">
           {contactMethods.map((method, index) => (
             <motion.div
               key={method.title}
@@ -127,7 +127,7 @@ export default function ContactInfo() {
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.4 }}
           viewport={{ once: true }}
-          className="grid grid-cols-1 md:grid-cols-2 gap-8"
+                      className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8"
         >
           {features.map((feature, index) => (
             <motion.div

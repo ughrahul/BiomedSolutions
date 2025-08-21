@@ -59,6 +59,7 @@ export default function AdminLogin() {
                   value={formData.username}
                   onChange={handleChange}
                   required
+                  autoComplete="username"
                   className="w-full px-4 py-3 pl-12 bg-secondary-700 border border-secondary-600 rounded-lg text-white placeholder-secondary-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   placeholder="Enter your username"
                 />
@@ -81,6 +82,7 @@ export default function AdminLogin() {
                   value={formData.password}
                   onChange={handleChange}
                   required
+                  autoComplete="current-password"
                   className="w-full px-4 py-3 pl-12 pr-12 bg-secondary-700 border border-secondary-600 rounded-lg text-white placeholder-secondary-400 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
                   placeholder="Enter your password"
                 />
@@ -103,6 +105,9 @@ export default function AdminLogin() {
               <label className="flex items-center">
                 <input
                   type="checkbox"
+                  id="remember-me"
+                  name="remember-me"
+                  autoComplete="off"
                   className="w-4 h-4 text-primary-600 bg-secondary-700 border-secondary-600 rounded focus:ring-primary-500 focus:ring-2"
                 />
                 <span className="ml-2 text-sm text-secondary-300">

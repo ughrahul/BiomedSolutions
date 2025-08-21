@@ -64,7 +64,7 @@ const enhancedButtonVariants = cva(
 );
 
 export interface EnhancedButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement>,
+  extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'onDrag' | 'onDragStart' | 'onDragEnd'>,
     VariantProps<typeof enhancedButtonVariants> {
   asChild?: boolean;
   loading?: boolean;
@@ -130,17 +130,20 @@ const EnhancedButton = React.forwardRef<HTMLButtonElement, EnhancedButtonProps>(
     }
 
     return (
-      <motion.button
-        className={buttonClassName}
-        ref={ref}
-        disabled={disabled || loading}
+      <motion.div
         whileHover={{ scale: animation?.includes("scale") ? 1.05 : 1 }}
         whileTap={{ scale: animation?.includes("scale") ? 0.95 : 1 }}
         transition={{ duration: 0.2, ease: "easeInOut" }}
-        {...props}
       >
-        {buttonContent}
-      </motion.button>
+        <button
+          className={buttonClassName}
+          ref={ref}
+          disabled={disabled || loading}
+          {...props}
+        >
+          {buttonContent}
+        </button>
+      </motion.div>
     );
   }
 );

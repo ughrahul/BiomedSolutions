@@ -1,58 +1,62 @@
-import { Heart, Shield, Zap, Users, Settings, Award } from "lucide-react";
+import { Brain, Navigation, Printer, Wrench, Package, Award } from "lucide-react";
 
 const services = [
   {
-    icon: Heart,
-    title: "Patient Care Equipment",
+    icon: Brain,
+    title: "Deep Brain Stimulation",
     description:
-      "Advanced monitoring and life support systems designed for optimal patient care and safety.",
+      "Leading the introduction and implementation of DBS systems in Nepal in collaboration with Sceneray Co., LTD, China.",
     features: [
-      "Vital Signs Monitoring",
-      "Life Support Systems",
-      "Patient Comfort",
+      "DBS System Installation",
+      "Surgical Support",
+      "Post-operative Care",
     ],
   },
   {
-    icon: Shield,
-    title: "Safety & Compliance",
+    icon: Navigation,
+    title: "Neuronavigation Systems",
     description:
-      "Equipment that meets the highest safety standards and regulatory compliance requirements.",
-    features: ["FDA Approved", "ISO Certified", "Safety Protocols"],
+      "Advanced neuronavigation technology for precise surgical procedures in collaboration with Happy Reliable Surgical, India.",
+    features: ["Surgical Navigation", "Precision Guidance", "Real-time Imaging"],
   },
   {
-    icon: Zap,
-    title: "Advanced Technology",
+    icon: Printer,
+    title: "3D Printed Implants",
     description:
-      "Cutting-edge medical technology with AI integration and smart monitoring capabilities.",
-    features: ["AI Integration", "Smart Monitoring", "Predictive Analytics"],
-  },
-  {
-    icon: Users,
-    title: "Training & Support",
-    description:
-      "Comprehensive training programs and 24/7 technical support for healthcare professionals.",
-    features: ["On-site Training", "24/7 Support", "Expert Consultation"],
-  },
-  {
-    icon: Settings,
-    title: "Maintenance Services",
-    description:
-      "Preventive maintenance and repair services to ensure optimal equipment performance.",
+      "Manufacturing customized bone implants using cutting-edge 3D printing technology for personalized patient care.",
     features: [
-      "Preventive Maintenance",
-      "Quick Repairs",
-      "Performance Optimization",
+      "Customized Implants",
+      "3D Printing Technology",
+      "Patient-specific Solutions",
+    ],
+  },
+  {
+    icon: Wrench,
+    title: "Research & Development",
+    description:
+      "Local research and development of surgical tools with a team of doctors and engineers focused on innovation.",
+    features: ["Surgical Tool Development", "Medical Device Innovation", "Local Manufacturing"],
+  },
+  {
+    icon: Package,
+    title: "Medical Equipment Supply",
+    description:
+      "Import and supply of medical tools and devices across Nepal at affordable costs for healthcare institutions.",
+    features: [
+      "Equipment Import",
+      "Nationwide Supply",
+      "Affordable Solutions",
     ],
   },
   {
     icon: Award,
-    title: "Quality Assurance",
+    title: "Maintenance Services",
     description:
-      "Rigorous quality control processes to ensure reliability and performance excellence.",
+      "Comprehensive repair and maintenance services for medical devices ensuring optimal performance and longevity.",
     features: [
-      "Quality Testing",
-      "Performance Validation",
-      "Reliability Assurance",
+      "Device Repair",
+      "Preventive Maintenance",
+      "Technical Support",
     ],
   },
 ];
@@ -66,9 +70,9 @@ export default function ServicesSection() {
             Our <span className="gradient-text">Services</span>
           </h2>
           <p className="text-xl text-secondary-300 max-w-3xl mx-auto">
-            Comprehensive medical equipment solutions designed to enhance
-            healthcare delivery and improve patient outcomes through innovative
-            technology and expert support.
+            From pioneering Deep Brain Stimulation to manufacturing 3D printed implants, 
+            we deliver cutting-edge healthcare solutions across Nepal through research, 
+            innovation, and international partnerships.
           </p>
         </div>
 
@@ -104,8 +108,7 @@ export default function ServicesSection() {
 
         <div className="text-center mt-12">
           <p className="text-secondary-300 mb-6">
-            Ready to transform your healthcare facility with our advanced
-            equipment?
+            Ready to explore innovative healthcare solutions for your medical facility?
           </p>
           <button className="button-primary">Get Started Today</button>
         </div>

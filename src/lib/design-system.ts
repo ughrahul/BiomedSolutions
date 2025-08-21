@@ -257,7 +257,7 @@ export const getColor = (color: string, shade: number = 500) => {
     : [color, shade.toString()];
   return (
     designSystem.colors[colorName as keyof typeof designSystem.colors]?.[
-      colorShade as keyof typeof designSystem.colors.primary
+      colorShade as unknown as keyof (typeof designSystem.colors.primary)
     ] || color
   );
 };
@@ -275,7 +275,7 @@ export const getTypography = (
 ) => {
   return (
     designSystem.typography[property][
-      value as keyof typeof designSystem.typography.fontSize
+      value as unknown as keyof (typeof designSystem.typography)[typeof property]
     ] || value
   );
 };

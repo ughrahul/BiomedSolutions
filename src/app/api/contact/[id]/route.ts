@@ -20,7 +20,7 @@ export async function PATCH(
     }
 
     const { data, error } = await supabase
-      .from("inquiries")
+      .from("contact_messages")
       .update({ status, notes, updated_at: new Date().toISOString() })
       .eq("id", id)
       .select()
@@ -64,7 +64,7 @@ export async function DELETE(
     }
 
     const { error } = await supabase
-      .from("inquiries")
+      .from("contact_messages")
       .delete()
       .eq("id", id);
 

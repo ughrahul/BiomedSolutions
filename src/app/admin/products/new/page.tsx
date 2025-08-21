@@ -1,20 +1,16 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useRouter } from "next/navigation";
 import { createClientSupabase } from "@/lib/supabase";
-import { EnhancedButton } from "@/components/ui/enhanced-button";
-import { EnhancedInput } from "@/components/ui/enhanced-input";
-import { EnhancedCard } from "@/components/ui/enhanced-card";
-import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Upload, X, Plus, Trash2, Save } from "lucide-react";
+import { ArrowLeft, Upload, X, Plus, Save, Package } from "lucide-react";
 import toast from "react-hot-toast";
 import Link from "next/link";
 import { generateSKU } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import AdminPageWrapper from "@/components/admin/AdminPageWrapper";
 
 // Simple input sanitization function
 const sanitizeInput = (input: string): string => {
@@ -30,9 +26,6 @@ const validateProductData = (data: ProductFormData) => {
   }
   if (!data.description.trim()) {
     errors.push("Product description is required");
-  }
-  if (!data.price || data.price <= 0) {
-    errors.push("Valid price is required");
   }
   if (!data.sku.trim()) {
     errors.push("SKU is required");
@@ -51,18 +44,20 @@ interface ProductFormData {
   name: string;
   description: string;
   short_description: string;
-  price: number;
-  sale_price?: number;
+  full_description: string;
   sku: string;
-  stock_quantity: number;
   category_id: string;
   images: string[];
   specifications: Record<string, string>;
   features: string[];
+  benefits: string[];
+  warranty: string;
+  certifications: string[];
+  rating: number;
+  review_count: number;
+  tags: string[];
   is_active: boolean;
   is_featured: boolean;
-  meta_title?: string;
-  meta_description?: string;
 }
 
 export default function NewProductPage() {
@@ -73,23 +68,28 @@ export default function NewProductPage() {
   const [newFeature, setNewFeature] = useState("");
   const [newSpecKey, setNewSpecKey] = useState("");
   const [newSpecValue, setNewSpecValue] = useState("");
+  const [newBenefit, setNewBenefit] = useState("");
+  const [newCertification, setNewCertification] = useState("");
+  const [newTag, setNewTag] = useState("");
 
   const [formData, setFormData] = useState<ProductFormData>({
     name: "",
     description: "",
     short_description: "",
-    price: 0,
-    sale_price: undefined,
+    full_description: "",
     sku: "",
-    stock_quantity: 0,
     category_id: "",
     images: [],
     specifications: {},
     features: [],
+    benefits: [],
+    warranty: "1 year",
+    certifications: [],
+    rating: 4.5,
+    review_count: 0,
+    tags: [],
     is_active: true,
     is_featured: false,
-    meta_title: "",
-    meta_description: "",
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -144,6 +144,11 @@ export default function NewProductPage() {
   const handleImageUpload = async (
     event: React.ChangeEvent<HTMLInputElement>
   ) => {
+    if (!supabase) {
+      toast.error("Database connection not available");
+      return;
+    }
+    
     const files = event.target.files;
     if (!files || files.length === 0) return;
 
@@ -244,6 +249,57 @@ export default function NewProductPage() {
     }));
   };
 
+  const addBenefit = () => {
+    if (newBenefit.trim()) {
+      setFormData((prev) => ({
+        ...prev,
+        benefits: [...prev.benefits, newBenefit.trim()],
+      }));
+      setNewBenefit("");
+    }
+  };
+
+  const removeBenefit = (index: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      benefits: prev.benefits.filter((_, i) => i !== index),
+    }));
+  };
+
+  const addCertification = () => {
+    if (newCertification.trim()) {
+      setFormData((prev) => ({
+        ...prev,
+        certifications: [...prev.certifications, newCertification.trim()],
+      }));
+      setNewCertification("");
+    }
+  };
+
+  const removeCertification = (index: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      certifications: prev.certifications.filter((_, i) => i !== index),
+    }));
+  };
+
+  const addTag = () => {
+    if (newTag.trim()) {
+      setFormData((prev) => ({
+        ...prev,
+        tags: [...prev.tags, newTag.trim()],
+      }));
+      setNewTag("");
+    }
+  };
+
+  const removeTag = (index: number) => {
+    setFormData((prev) => ({
+      ...prev,
+      tags: prev.tags.filter((_, i) => i !== index),
+    }));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -256,12 +312,8 @@ export default function NewProductPage() {
           ? "name"
           : error.toLowerCase().includes("description")
           ? "description"
-          : error.toLowerCase().includes("price")
-          ? "price"
           : error.toLowerCase().includes("sku")
           ? "sku"
-          : error.toLowerCase().includes("stock")
-          ? "stock_quantity"
           : error.toLowerCase().includes("category")
           ? "category_id"
           : "general";
@@ -275,31 +327,43 @@ export default function NewProductPage() {
     setIsLoading(true);
 
     try {
+      console.log("Submitting form data:", formData);
+
       // Sanitize string inputs
       const sanitizedData = {
         ...formData,
         name: sanitizeInput(formData.name),
         description: sanitizeInput(formData.description),
         short_description: sanitizeInput(formData.short_description),
+        full_description: sanitizeInput(formData.full_description),
         sku: sanitizeInput(formData.sku),
-        meta_title: formData.meta_title
-          ? sanitizeInput(formData.meta_title)
-          : null,
-        meta_description: formData.meta_description
-          ? sanitizeInput(formData.meta_description)
-          : null,
+        warranty: sanitizeInput(formData.warranty),
       };
 
-      const { data, error } = await supabase
-        .from("products")
-        .insert([sanitizedData])
-        .select()
-        .single();
+      console.log("Sanitized data:", sanitizedData);
 
-      if (error) throw error;
+      // Submit to API endpoint
+      const response = await fetch('/api/products', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(sanitizedData),
+      });
+
+      const result = await response.json();
+
+      if (!response.ok) {
+        const errorMessage = result.error || result.details || 'Failed to create product';
+        const errorDetails = result.missingFields ? `Missing fields: ${result.missingFields.join(', ')}` : '';
+        const fullError = errorDetails ? `${errorMessage}. ${errorDetails}` : errorMessage;
+        throw new Error(fullError);
+      }
+
+      console.log("Product created successfully:", result);
 
       toast.success("Product created successfully!");
-      router.push(`/admin/products/${data.id}`);
+      router.push(`/admin/products/${result.data.id}`);
     } catch (error: any) {
       console.error("Error creating product:", error);
       toast.error(error.message || "Failed to create product");
@@ -309,27 +373,27 @@ export default function NewProductPage() {
   };
 
   return (
-    <div className="space-y-8">
+    <AdminPageWrapper>
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="flex items-center justify-between"
+        className="flex items-center justify-between bg-white rounded-2xl p-6 border border-gray-200 shadow-sm mt-4"
       >
         <div className="flex items-center gap-4">
           <Link href="/admin/products">
-            <Button variant="ghost" size="sm">
+            <Button variant="ghost" size="sm" className="text-yellow-700 hover:bg-yellow-50 border border-yellow-200 hover:border-yellow-300">
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Products
             </Button>
           </Link>
           <div>
-            <h1 className="text-4xl font-bold text-white mb-2">
+            <h1 className="text-4xl font-bold text-gray-900 mb-2">
               Add New Product
             </h1>
-            <p className="text-secondary-400">
-              Create a new medical equipment product
+            <p className="text-gray-600">
+              Create a comprehensive medical equipment product listing
             </p>
           </div>
         </div>
@@ -342,162 +406,141 @@ export default function NewProductPage() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
         >
-          <Card className="glass border-white/10">
-            <CardHeader>
-              <CardTitle className="text-white">Basic Information</CardTitle>
-              <CardDescription>
-                Enter the basic details of your product
+          <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300">
+            <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-lg border-b border-gray-100">
+              <CardTitle className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+                <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+                  <Package className="w-5 h-5 text-white" />
+                </div>
+                Basic Information
+              </CardTitle>
+              <CardDescription className="text-gray-600 text-lg">
+                Enter the essential details of your medical equipment product
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-6 p-6">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Input
-                  label="Product Name"
-                  placeholder="Enter product name"
-                  value={formData.name}
-                  onChange={(e) => handleInputChange("name", e.target.value)}
-                  error={errors.name}
-                  required
-                />
-                <div>
-                  <label className="block text-sm font-medium text-secondary-400 mb-2">
-                    Category
+                <div className="space-y-2">
+                  <label className="block text-lg font-bold text-gray-900">
+                    Product Name <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="text"
+                    id="product-name"
+                    name="product-name"
+                    placeholder="Enter product name"
+                    value={formData.name}
+                    onChange={(e) => handleInputChange("name", e.target.value)}
+                    className={`w-full h-14 rounded-xl border-2 bg-white px-4 text-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-4 transition-all duration-300 ${
+                      errors.name
+                        ? "border-red-500 focus:ring-red-500/30"
+                        : "border-gray-200 focus:border-blue-400 focus:ring-blue-500/30"
+                    }`}
+                    required
+                    autoComplete="off"
+                  />
+                  {errors.name && (
+                    <p className="text-red-500 font-medium text-sm">{errors.name}</p>
+                  )}
+                </div>
+                <div className="space-y-2">
+                  <label className="block text-lg font-bold text-gray-900">
+                    Category <span className="text-red-500">*</span>
                   </label>
                   <select
+                    id="product-category"
+                    name="product-category"
                     value={formData.category_id}
                     onChange={(e) =>
                       handleInputChange("category_id", e.target.value)
                     }
-                    className={`h-14 w-full rounded-lg border bg-secondary-800/50 backdrop-blur-sm px-4 text-sm text-white focus:outline-none focus:ring-2 transition-all duration-300 ${
+                    className={`h-14 w-full rounded-xl border-2 bg-white px-4 text-lg text-gray-900 focus:outline-none focus:ring-4 transition-all duration-300 ${
                       errors.category_id
-                        ? "border-red-500 focus:ring-red-500"
-                        : "border-secondary-600 focus:ring-primary-500"
+                        ? "border-red-500 focus:ring-red-500/30"
+                        : "border-gray-200 focus:border-blue-400 focus:ring-blue-500/30"
                     }`}
                     required
+                    autoComplete="off"
                   >
-                    <option value="">Select a category</option>
+                    <option value="" className="bg-white text-gray-900">Select a category</option>
                     {categories.map((category) => (
-                      <option key={category.id} value={category.id}>
+                      <option key={category.id} value={category.id} className="bg-white text-gray-900">
                         {category.name}
                       </option>
                     ))}
                   </select>
                   {errors.category_id && (
-                    <p className="text-sm text-red-500 font-medium mt-2">
-                      {errors.category_id}
-                    </p>
+                    <p className="text-red-500 font-medium text-sm">{errors.category_id}</p>
                   )}
                 </div>
               </div>
 
-              <Input
-                label="SKU (Stock Keeping Unit)"
-                placeholder="Auto-generated or enter custom SKU"
-                value={formData.sku}
-                onChange={(e) => handleInputChange("sku", e.target.value)}
-                error={errors.sku}
-                required
-              />
+              <div className="space-y-2">
+                <label className="block text-lg font-bold text-gray-900">
+                  SKU (Stock Keeping Unit) <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  id="product-sku"
+                  name="product-sku"
+                  placeholder="Auto-generated SKU"
+                  value={formData.sku}
+                  onChange={(e) => handleInputChange("sku", e.target.value)}
+                  className={`w-full h-14 rounded-xl border-2 bg-gray-50 px-4 text-lg text-gray-700 placeholder-gray-500 focus:outline-none focus:ring-4 transition-all duration-300 ${
+                    errors.sku
+                      ? "border-red-500 focus:ring-red-500/30"
+                      : "border-gray-200 focus:border-blue-400 focus:ring-blue-500/30"
+                  }`}
+                  required
+                  readOnly
+                  autoComplete="off"
+                />
+                <p className="text-sm text-gray-600">SKU is automatically generated based on product name and category</p>
+                {errors.sku && (
+                  <p className="text-red-500 font-medium text-sm">{errors.sku}</p>
+                )}
+              </div>
 
-              <div>
-                <label className="block text-sm font-medium text-secondary-400 mb-2">
+              <div className="space-y-2">
+                <label className="block text-lg font-bold text-gray-900">
                   Short Description
                 </label>
                 <textarea
+                  id="product-short-description"
+                  name="product-short-description"
                   placeholder="Brief product description (max 500 characters)"
                   value={formData.short_description}
                   onChange={(e) =>
                     handleInputChange("short_description", e.target.value)
                   }
-                  className="w-full h-24 rounded-lg border border-secondary-600 bg-secondary-800/50 backdrop-blur-sm px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all duration-300 resize-none"
+                  className="w-full h-24 rounded-xl border-2 border-gray-200 bg-white px-4 py-3 text-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-4 focus:border-blue-400 focus:ring-blue-500/30 transition-all duration-300 resize-none"
                   maxLength={500}
+                  autoComplete="off"
                 />
               </div>
 
-              <div>
-                <label className="block text-sm font-medium text-secondary-400 mb-2">
-                  Description *
+              <div className="space-y-2">
+                <label className="block text-lg font-bold text-gray-900">
+                  Description <span className="text-red-500">*</span>
                 </label>
                 <textarea
+                  id="product-description"
+                  name="product-description"
                   placeholder="Detailed product description"
                   value={formData.description}
                   onChange={(e) =>
                     handleInputChange("description", e.target.value)
                   }
-                  className={`w-full h-32 rounded-lg border bg-secondary-800/50 backdrop-blur-sm px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 transition-all duration-300 resize-none ${
+                  className={`w-full h-32 rounded-xl border-2 bg-white px-4 py-3 text-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-4 transition-all duration-300 resize-none ${
                     errors.description
-                      ? "border-red-500 focus:ring-red-500"
-                      : "border-secondary-600 focus:ring-primary-500"
+                      ? "border-red-500 focus:ring-red-500/30"
+                      : "border-gray-200 focus:border-blue-400 focus:ring-blue-500/30"
                   }`}
                   required
                 />
                 {errors.description && (
-                  <p className="text-sm text-red-500 font-medium mt-2">
-                    {errors.description}
-                  </p>
+                  <p className="text-red-500 font-medium text-sm">{errors.description}</p>
                 )}
-              </div>
-            </CardContent>
-          </Card>
-        </motion.div>
-
-        {/* Pricing & Inventory */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-        >
-          <Card className="glass border-white/10">
-            <CardHeader>
-              <CardTitle className="text-white">Pricing & Inventory</CardTitle>
-              <CardDescription>
-                Set pricing and stock information
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <Input
-                  label="Regular Price"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  placeholder="0.00"
-                  value={formData.price || ""}
-                  onChange={(e) =>
-                    handleInputChange("price", parseFloat(e.target.value) || 0)
-                  }
-                  error={errors.price}
-                  required
-                />
-                <Input
-                  label="Sale Price (Optional)"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  placeholder="0.00"
-                  value={formData.sale_price || ""}
-                  onChange={(e) =>
-                    handleInputChange(
-                      "sale_price",
-                      parseFloat(e.target.value) || undefined
-                    )
-                  }
-                />
-                <Input
-                  label="Stock Quantity"
-                  type="number"
-                  min="0"
-                  placeholder="0"
-                  value={formData.stock_quantity || ""}
-                  onChange={(e) =>
-                    handleInputChange(
-                      "stock_quantity",
-                      parseInt(e.target.value) || 0
-                    )
-                  }
-                  error={errors.stock_quantity}
-                  required
-                />
               </div>
             </CardContent>
           </Card>
@@ -507,17 +550,22 @@ export default function NewProductPage() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.3 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
         >
-          <Card className="glass border-white/10">
-            <CardHeader>
-              <CardTitle className="text-white">Product Images</CardTitle>
-              <CardDescription>
+          <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300">
+            <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-lg border-b border-gray-100">
+              <CardTitle className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+                <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+                  <Upload className="w-5 h-5 text-white" />
+                </div>
+                Product Images
+              </CardTitle>
+              <CardDescription className="text-gray-600 text-lg">
                 Upload high-quality images of your product
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="border-2 border-dashed border-secondary-600 rounded-lg p-8 text-center">
+            <CardContent className="space-y-6 p-6">
+              <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-400 transition-colors">
                 <input
                   type="file"
                   multiple
@@ -525,14 +573,16 @@ export default function NewProductPage() {
                   onChange={handleImageUpload}
                   className="hidden"
                   id="image-upload"
+                  name="image-upload"
                   disabled={imageUploading}
+                  autoComplete="off"
                 />
                 <label htmlFor="image-upload" className="cursor-pointer">
-                  <Upload className="w-12 h-12 text-secondary-400 mx-auto mb-4" />
-                  <p className="text-white mb-2">
+                  <Upload className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-900 mb-2 font-medium">
                     {imageUploading ? "Uploading..." : "Click to upload images"}
                   </p>
-                  <p className="text-sm text-secondary-400">
+                  <p className="text-sm text-gray-600">
                     Supports JPEG, PNG, WebP. Max 5MB each.
                   </p>
                 </label>
@@ -545,7 +595,7 @@ export default function NewProductPage() {
                       <img
                         src={image}
                         alt={`Product ${index + 1}`}
-                        className="w-full h-32 object-cover rounded-lg"
+                        className="w-full h-32 object-cover rounded-lg border border-gray-200"
                       />
                       <button
                         type="button"
@@ -566,34 +616,38 @@ export default function NewProductPage() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.4 }}
+          transition={{ duration: 0.5, delay: 0.3 }}
         >
-          <Card className="glass border-white/10">
-            <CardHeader>
-              <CardTitle className="text-white">
+          <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300">
+            <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-lg border-b border-gray-100">
+              <CardTitle className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+                <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+                  <Package className="w-5 h-5 text-white" />
+                </div>
                 Features & Specifications
               </CardTitle>
-              <CardDescription>
+              <CardDescription className="text-gray-600 text-lg">
                 Add key features and technical specifications
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-6 p-6">
               {/* Features */}
               <div>
-                <h4 className="text-lg font-medium text-white mb-4">
+                <h4 className="text-lg font-medium text-gray-900 mb-4">
                   Features
                 </h4>
                 <div className="flex gap-2 mb-4">
-                  <Input
+                  <input
+                    type="text"
                     placeholder="Add a feature"
                     value={newFeature}
                     onChange={(e) => setNewFeature(e.target.value)}
                     onKeyPress={(e) =>
                       e.key === "Enter" && (e.preventDefault(), addFeature())
                     }
-                    className="flex-1"
+                    className="flex-1 h-12 rounded-lg border border-gray-200 bg-white px-4 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400"
                   />
-                  <Button type="button" onClick={addFeature} variant="outline">
+                  <Button type="button" onClick={addFeature} variant="outline" className="h-12">
                     <Plus className="w-4 h-4" />
                   </Button>
                 </div>
@@ -601,15 +655,15 @@ export default function NewProductPage() {
                   {formData.features.map((feature, index) => (
                     <div
                       key={index}
-                      className="flex items-center justify-between p-3 bg-secondary-800/30 rounded-lg"
+                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200"
                     >
-                      <span className="text-white">{feature}</span>
+                      <span className="text-gray-900">{feature}</span>
                       <Button
                         type="button"
                         variant="ghost"
                         size="sm"
                         onClick={() => removeFeature(index)}
-                        className="text-red-400 hover:text-red-300"
+                        className="text-red-500 hover:text-red-700 hover:bg-red-50"
                       >
                         <X className="w-4 h-4" />
                       </Button>
@@ -620,17 +674,25 @@ export default function NewProductPage() {
 
               {/* Specifications */}
               <div>
-                <h4 className="text-lg font-medium text-white mb-4">
+                <h4 className="text-lg font-medium text-gray-900 mb-4">
                   Specifications
                 </h4>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-4">
-                  <Input
+                  <input
+                    type="text"
+                    id="spec-name"
+                    name="spec-name"
                     placeholder="Specification name"
                     value={newSpecKey}
                     onChange={(e) => setNewSpecKey(e.target.value)}
+                    className="h-12 rounded-lg border border-gray-200 bg-white px-4 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400"
+                    autoComplete="off"
                   />
                   <div className="flex gap-2">
-                    <Input
+                    <input
+                      type="text"
+                      id="spec-value"
+                      name="spec-value"
                       placeholder="Specification value"
                       value={newSpecValue}
                       onChange={(e) => setNewSpecValue(e.target.value)}
@@ -638,12 +700,14 @@ export default function NewProductPage() {
                         e.key === "Enter" &&
                         (e.preventDefault(), addSpecification())
                       }
-                      className="flex-1"
+                      className="flex-1 h-12 rounded-lg border border-gray-200 bg-white px-4 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400"
+                      autoComplete="off"
                     />
                     <Button
                       type="button"
                       onClick={addSpecification}
                       variant="outline"
+                      className="h-12"
                     >
                       <Plus className="w-4 h-4" />
                     </Button>
@@ -654,20 +718,20 @@ export default function NewProductPage() {
                     ([key, value]) => (
                       <div
                         key={key}
-                        className="flex items-center justify-between p-3 bg-secondary-800/30 rounded-lg"
+                        className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200"
                       >
                         <div>
-                          <span className="text-secondary-400 text-sm">
+                          <span className="text-gray-600 text-sm font-medium">
                             {key}
                           </span>
-                          <span className="text-white ml-4">{value}</span>
+                          <span className="text-gray-900 ml-4">{value}</span>
                         </div>
                         <Button
                           type="button"
                           variant="ghost"
                           size="sm"
                           onClick={() => removeSpecification(key)}
-                          className="text-red-400 hover:text-red-300"
+                          className="text-red-500 hover:text-red-700 hover:bg-red-50"
                         >
                           <X className="w-4 h-4" />
                         </Button>
@@ -680,84 +744,357 @@ export default function NewProductPage() {
           </Card>
         </motion.div>
 
-        {/* Settings */}
+        {/* Additional Product Information */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
+        >
+          <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300">
+            <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-lg border-b border-gray-100">
+              <CardTitle className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+                <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+                  <Package className="w-5 h-5 text-white" />
+                </div>
+                Additional Information
+              </CardTitle>
+              <CardDescription className="text-gray-600 text-lg">
+                Add benefits, certifications, and other details
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6 p-6">
+              {/* Full Description */}
+              <div>
+                <label className="block text-lg font-bold text-gray-900 mb-2">
+                  Full Description *
+                </label>
+                <textarea
+                  id="product-full-description"
+                  name="product-full-description"
+                  placeholder="Comprehensive product description for detail page"
+                  value={formData.full_description}
+                  onChange={(e) =>
+                    handleInputChange("full_description", e.target.value)
+                  }
+                  className="w-full h-32 rounded-xl border-2 border-gray-200 bg-white px-4 py-3 text-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-4 focus:border-blue-400 focus:ring-blue-500/30 transition-all duration-300 resize-none"
+                  required
+                  autoComplete="off"
+                />
+              </div>
+
+              {/* Benefits */}
+              <div>
+                <h4 className="text-lg font-medium text-gray-900 mb-4">
+                  Product Benefits
+                </h4>
+                <div className="flex gap-2 mb-4">
+                  <input
+                    type="text"
+                    id="product-benefit"
+                    name="product-benefit"
+                    placeholder="Add a benefit"
+                    value={newBenefit}
+                    onChange={(e) => setNewBenefit(e.target.value)}
+                    onKeyPress={(e) =>
+                      e.key === "Enter" && (e.preventDefault(), addBenefit())
+                    }
+                    className="flex-1 h-12 rounded-lg border border-gray-200 bg-white px-4 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400"
+                    autoComplete="off"
+                  />
+                  <Button type="button" onClick={addBenefit} variant="outline" className="h-12">
+                    <Plus className="w-4 h-4" />
+                  </Button>
+                </div>
+                <div className="space-y-2">
+                  {formData.benefits.map((benefit, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200"
+                    >
+                      <span className="text-gray-900">{benefit}</span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeBenefit(index)}
+                        className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Certifications */}
+              <div>
+                <h4 className="text-lg font-medium text-gray-900 mb-4">
+                  Certifications
+                </h4>
+                <div className="flex gap-2 mb-4">
+                  <input
+                    type="text"
+                    id="product-certification"
+                    name="product-certification"
+                    placeholder="Add certification (e.g., CE Marked, FDA Approved)"
+                    value={newCertification}
+                    onChange={(e) => setNewCertification(e.target.value)}
+                    onKeyPress={(e) =>
+                      e.key === "Enter" && (e.preventDefault(), addCertification())
+                    }
+                    className="flex-1 h-12 rounded-lg border border-gray-200 bg-white px-4 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400"
+                    autoComplete="off"
+                  />
+                  <Button type="button" onClick={addCertification} variant="outline" className="h-12">
+                    <Plus className="w-4 h-4" />
+                  </Button>
+                </div>
+                <div className="space-y-2">
+                  {formData.certifications.map((certification, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center justify-between p-3 bg-gray-50 rounded-lg border border-gray-200"
+                    >
+                      <span className="text-gray-900">{certification}</span>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => removeCertification(index)}
+                        className="text-red-500 hover:text-red-700 hover:bg-red-50"
+                      >
+                        <X className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Tags */}
+              <div>
+                <h4 className="text-lg font-medium text-gray-900 mb-4">
+                  Product Tags
+                </h4>
+                <div className="flex gap-2 mb-4">
+                  <input
+                    type="text"
+                    placeholder="Add a tag"
+                    value={newTag}
+                    onChange={(e) => setNewTag(e.target.value)}
+                    onKeyPress={(e) =>
+                      e.key === "Enter" && (e.preventDefault(), addTag())
+                    }
+                    className="flex-1 h-12 rounded-lg border border-gray-200 bg-white px-4 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400"
+                  />
+                  <Button type="button" onClick={addTag} variant="outline" className="h-12">
+                    <Plus className="w-4 h-4" />
+                  </Button>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  {formData.tags.map((tag, index) => (
+                    <div
+                      key={index}
+                      className="flex items-center gap-2 bg-blue-100 text-blue-700 px-3 py-1 rounded-full border border-blue-200"
+                    >
+                      <span className="text-sm font-medium">{tag}</span>
+                      <button
+                        type="button"
+                        onClick={() => removeTag(index)}
+                        className="text-blue-500 hover:text-blue-700"
+                      >
+                        <X className="w-3 h-3" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Product Ratings & Reviews */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.5 }}
         >
-          <Card className="glass border-white/10">
-            <CardHeader>
-              <CardTitle className="text-white">Product Settings</CardTitle>
-              <CardDescription>
-                Configure product visibility and SEO
+          <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300">
+            <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-lg border-b border-gray-100">
+              <CardTitle className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+                <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+                  <Package className="w-5 h-5 text-white" />
+                </div>
+                Ratings & Reviews
+              </CardTitle>
+              <CardDescription className="text-gray-600 text-lg">
+                Set initial rating and review count
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="flex items-center justify-between">
+            <CardContent className="space-y-6 p-6">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
-                  <h4 className="text-white font-medium">Active Product</h4>
-                  <p className="text-sm text-secondary-400">
-                    Product will be visible to customers
-                  </p>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={formData.is_active}
-                    onChange={(e) =>
-                      handleInputChange("is_active", e.target.checked)
-                    }
-                    className="sr-only peer"
-                  />
-                  <div className="w-11 h-6 bg-secondary-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-500"></div>
-                </label>
-              </div>
-
-              <div className="flex items-center justify-between">
-                <div>
-                  <h4 className="text-white font-medium">Featured Product</h4>
-                  <p className="text-sm text-secondary-400">
-                    Product will appear in featured sections
-                  </p>
-                </div>
-                <label className="relative inline-flex items-center cursor-pointer">
-                  <input
-                    type="checkbox"
-                    checked={formData.is_featured}
-                    onChange={(e) =>
-                      handleInputChange("is_featured", e.target.checked)
-                    }
-                    className="sr-only peer"
-                  />
-                  <div className="w-11 h-6 bg-secondary-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary-500"></div>
-                </label>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <Input
-                  label="SEO Title (Optional)"
-                  placeholder="Custom page title for SEO"
-                  value={formData.meta_title || ""}
-                  onChange={(e) =>
-                    handleInputChange("meta_title", e.target.value)
-                  }
-                />
-                <div>
-                  <label className="block text-sm font-medium text-secondary-400 mb-2">
-                    SEO Description (Optional)
+                  <label className="block text-lg font-bold text-gray-900 mb-2">
+                    Rating (1-5)
                   </label>
-                  <textarea
-                    placeholder="Meta description for search engines"
-                    value={formData.meta_description || ""}
+                  <input
+                    type="number"
+                    min="1"
+                    max="5"
+                    step="0.1"
+                    placeholder="4.5"
+                    value={formData.rating || ""}
                     onChange={(e) =>
-                      handleInputChange("meta_description", e.target.value)
+                      handleInputChange("rating", parseFloat(e.target.value) || 0)
                     }
-                    className="w-full h-24 rounded-lg border border-secondary-600 bg-secondary-800/50 backdrop-blur-sm px-4 py-3 text-sm text-white focus:outline-none focus:ring-2 focus:ring-primary-500 transition-all duration-300 resize-none"
-                    maxLength={160}
+                    className="w-full h-14 rounded-xl border-2 border-gray-200 bg-white px-4 text-lg text-gray-900 focus:outline-none focus:ring-4 focus:border-blue-400 focus:ring-blue-500/30 transition-all duration-300"
+                  />
+                </div>
+                <div>
+                  <label className="block text-lg font-bold text-gray-900 mb-2">
+                    Review Count
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    placeholder="0"
+                    value={formData.review_count || ""}
+                    onChange={(e) =>
+                      handleInputChange("review_count", parseInt(e.target.value) || 0)
+                    }
+                    className="w-full h-14 rounded-xl border-2 border-gray-200 bg-white px-4 text-lg text-gray-900 focus:outline-none focus:ring-4 focus:border-blue-400 focus:ring-blue-500/30 transition-all duration-300"
+                  />
+                </div>
+                <div>
+                  <label className="block text-lg font-bold text-gray-900 mb-2">
+                    Warranty
+                  </label>
+                  <input
+                    type="text"
+                    placeholder="1 year"
+                    value={formData.warranty}
+                    onChange={(e) =>
+                      handleInputChange("warranty", e.target.value)
+                    }
+                    className="w-full h-14 rounded-xl border-2 border-gray-200 bg-white px-4 text-lg text-gray-900 focus:outline-none focus:ring-4 focus:border-blue-400 focus:ring-blue-500/30 transition-all duration-300"
                   />
                 </div>
               </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+
+        {/* Product Status & Settings */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.5 }}
+        >
+          <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300">
+            <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-lg border-b border-gray-100">
+              <CardTitle className="text-2xl font-bold text-gray-900 flex items-center gap-3">
+                <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+                  <Package className="w-5 h-5 text-white" />
+                </div>
+                Product Status & Settings
+              </CardTitle>
+              <CardDescription className="text-gray-600 text-lg">
+                Configure product visibility and featured status
+              </CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6 p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Active Status */}
+                <div className="space-y-4">
+                  <label className="block text-lg font-bold text-gray-900">
+                    Product Status
+                  </label>
+                  <div className="flex items-center space-x-4">
+                    <label className="flex items-center space-x-3 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="is_active"
+                        value="true"
+                        checked={formData.is_active === true}
+                        onChange={(e) => handleInputChange("is_active", e.target.value === "true")}
+                        className="w-5 h-5 text-blue-600 border-gray-300 focus:ring-blue-500"
+                      />
+                      <div className="flex items-center space-x-2">
+                        <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                        <span className="text-gray-900 font-medium">Active</span>
+                      </div>
+                    </label>
+                    <label className="flex items-center space-x-3 cursor-pointer">
+                      <input
+                        type="radio"
+                        name="is_active"
+                        value="false"
+                        checked={formData.is_active === false}
+                        onChange={(e) => handleInputChange("is_active", e.target.value === "true")}
+                        className="w-5 h-5 text-blue-600 border-gray-300 focus:ring-blue-500"
+                      />
+                      <div className="flex items-center space-x-2">
+                        <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
+                        <span className="text-gray-900 font-medium">Inactive</span>
+                      </div>
+                    </label>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    Active products are visible to customers, inactive products are hidden
+                  </p>
+                </div>
+
+                {/* Featured Status */}
+                <div className="space-y-4">
+                  <label className="block text-lg font-bold text-gray-900">
+                    Featured Product
+                  </label>
+                  <div className="flex items-center space-x-4">
+                    <label className="flex items-center space-x-3 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={formData.is_featured}
+                        onChange={(e) => handleInputChange("is_featured", e.target.checked)}
+                        className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                      />
+                      <div className="flex items-center space-x-2">
+                        <div className="w-4 h-4 bg-yellow-500 rounded-full flex items-center justify-center">
+                          <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                          </svg>
+                        </div>
+                        <span className="text-gray-900 font-medium">Mark as Featured</span>
+                      </div>
+                    </label>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    Featured products appear prominently on the homepage and in featured sections
+                  </p>
+                </div>
+              </div>
+
+              {/* Featured Product Benefits */}
+              {formData.is_featured && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                  <div className="flex items-start space-x-3">
+                    <div className="w-6 h-6 bg-yellow-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
+                      <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                      </svg>
+                    </div>
+                    <div>
+                      <h4 className="text-sm font-semibold text-yellow-800 mb-1">
+                        Featured Product Benefits
+                      </h4>
+                      <ul className="text-sm text-yellow-700 space-y-1">
+                        <li>• Appears on the homepage featured section</li>
+                        <li>• Highlighted in product listings</li>
+                        <li>• Increased visibility to customers</li>
+                        <li>• Priority placement in search results</li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              )}
             </CardContent>
           </Card>
         </motion.div>
@@ -767,23 +1104,37 @@ export default function NewProductPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.6 }}
-          className="flex justify-end gap-4"
+          className="flex justify-center gap-6 pt-8"
         >
           <Link href="/admin/products">
-            <Button variant="outline" type="button">
+            <button
+              type="button"
+              className="px-8 py-4 bg-white border-2 border-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all duration-300 text-lg shadow-sm"
+            >
               Cancel
-            </Button>
+            </button>
           </Link>
-          <Button
+          <button
             type="submit"
-            loading={isLoading}
-            icon={<Save className="w-4 h-4" />}
-            iconPosition="left"
+            disabled={isLoading}
+            className={`px-12 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 text-lg shadow-lg hover:shadow-xl transform hover:scale-105 ${
+              isLoading ? 'opacity-50 cursor-not-allowed' : ''
+            }`}
           >
-            {isLoading ? "Creating Product..." : "Create Product"}
-          </Button>
+            {isLoading ? (
+              <div className="flex items-center gap-3">
+                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                Creating Product...
+              </div>
+            ) : (
+              <div className="flex items-center gap-3">
+                <Save className="w-5 h-5" />
+                Create Product
+              </div>
+            )}
+          </button>
         </motion.div>
       </form>
-    </div>
+    </AdminPageWrapper>
   );
 }

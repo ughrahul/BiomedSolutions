@@ -4,7 +4,7 @@ import { createSecurityAuditLog, sanitizeInput } from "./security-enhanced";
 // Enhanced authentication with comprehensive security
 export interface AuthUser {
   id: string;
-  email: string;
+  email?: string;
   user_metadata?: any;
   app_metadata?: any;
   created_at?: string;
@@ -530,11 +530,11 @@ export async function signInWithEmail(
 // Session cleanup
 export function cleanupExpiredSessions(): void {
   const now = new Date();
-  for (const [sessionId, session] of sessions) {
+  Array.from(sessions.entries()).forEach(([sessionId, session]) => {
     if (session.expiresAt < now) {
       sessions.delete(sessionId);
     }
-  }
+  });
 }
 
 // Initialize cleanup interval

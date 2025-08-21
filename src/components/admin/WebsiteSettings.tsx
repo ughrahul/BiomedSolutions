@@ -30,9 +30,10 @@ interface ContactSettings {
   phone: string;
   email: string;
   address: string;
-  website: string;
   whatsapp: string;
   businessHours: string;
+  hospitalPhone: string;
+  supportPhone: string;
 }
 
 interface SocialMediaSettings {
@@ -42,12 +43,7 @@ interface SocialMediaSettings {
   linkedin: string;
 }
 
-interface CompanySettings {
-  name: string;
-  tagline: string;
-  description: string;
-  logo: string;
-}
+
 
 export default function WebsiteSettings({ className = "" }: WebsiteSettingsProps) {
   const [loading, setLoading] = useState(true);
@@ -57,11 +53,12 @@ export default function WebsiteSettings({ className = "" }: WebsiteSettingsProps
 
   const [contactSettings, setContactSettings] = useState<ContactSettings>({
     phone: '+977-980-120-335',
-    email: 'info@annapurnahospitals.com',
-    address: 'Annapurna Neurological Institute, Maitighar, Kathmandu, Nepal',
-    website: 'https://annapurnahospitals.com',
+    email: 'hingmang75@gmail.com',
+    address: 'Annapurna Neurological Institute & Allied Sciences, Maitighar Mandala-10, Kathmandu 44600, Nepal',
     whatsapp: '+977-980-120-335',
-    businessHours: 'Monday - Friday: 8:00 AM - 6:00 PM, Saturday: 9:00 AM - 4:00 PM'
+    businessHours: 'Monday - Friday: 8:00 AM - 6:00 PM, Saturday: 9:00 AM - 4:00 PM',
+    hospitalPhone: '01-5356568',
+    supportPhone: '980120335/61'
   });
 
   const [socialSettings, setSocialSettings] = useState<SocialMediaSettings>({
@@ -71,17 +68,11 @@ export default function WebsiteSettings({ className = "" }: WebsiteSettingsProps
     linkedin: 'https://linkedin.com/company/annapurnahospitals'
   });
 
-  const [companySettings, setCompanySettings] = useState<CompanySettings>({
-    name: 'Biomed Solutions',
-    tagline: 'Advanced Medical Equipment for Healthcare Excellence',
-    description: 'Leading provider of cutting-edge medical equipment and healthcare solutions at Annapurna Neurological Institute.',
-    logo: '/assets/images/logo.png'
-  });
+
 
   const tabs = [
     { id: 'contact', label: 'Contact Info', icon: Phone },
     { id: 'social', label: 'Social Media', icon: Globe },
-    { id: 'company', label: 'Company Info', icon: Building },
   ];
 
   useEffect(() => {
@@ -95,16 +86,29 @@ export default function WebsiteSettings({ className = "" }: WebsiteSettingsProps
       // Load settings from localStorage or API
       const savedContactSettings = localStorage.getItem('website-contact-settings');
       const savedSocialSettings = localStorage.getItem('website-social-settings');
-      const savedCompanySettings = localStorage.getItem('website-company-settings');
       
       if (savedContactSettings) {
-        setContactSettings(JSON.parse(savedContactSettings));
+        try {
+          const parsedContact = JSON.parse(savedContactSettings);
+          setContactSettings(prev => ({
+            ...prev,
+            ...parsedContact
+          }));
+        } catch (parseError) {
+          console.error('Error parsing contact settings:', parseError);
+        }
       }
+      
       if (savedSocialSettings) {
-        setSocialSettings(JSON.parse(savedSocialSettings));
-      }
-      if (savedCompanySettings) {
-        setCompanySettings(JSON.parse(savedCompanySettings));
+        try {
+          const parsedSocial = JSON.parse(savedSocialSettings);
+          setSocialSettings(prev => ({
+            ...prev,
+            ...parsedSocial
+          }));
+        } catch (parseError) {
+          console.error('Error parsing social settings:', parseError);
+        }
       }
     } catch (error) {
       console.error('Error loading settings:', error);
@@ -119,7 +123,6 @@ export default function WebsiteSettings({ className = "" }: WebsiteSettingsProps
       // Save to localStorage and API
       localStorage.setItem('website-contact-settings', JSON.stringify(contactSettings));
       localStorage.setItem('website-social-settings', JSON.stringify(socialSettings));
-      localStorage.setItem('website-company-settings', JSON.stringify(companySettings));
 
       // Save to API for real-time frontend updates
       await fetch('/api/website-settings', {
@@ -129,8 +132,7 @@ export default function WebsiteSettings({ className = "" }: WebsiteSettingsProps
         },
         body: JSON.stringify({
           contact: contactSettings,
-          social: socialSettings,
-          company: companySettings
+          social: socialSettings
         }),
       });
 
@@ -141,8 +143,7 @@ export default function WebsiteSettings({ className = "" }: WebsiteSettingsProps
         window.dispatchEvent(new CustomEvent('websiteSettingsUpdated', {
           detail: {
             contact: contactSettings,
-            social: socialSettings,
-            company: companySettings
+            social: socialSettings
           }
         }));
       }
@@ -167,12 +168,7 @@ export default function WebsiteSettings({ className = "" }: WebsiteSettingsProps
     }));
   };
 
-  const updateCompanySetting = (field: keyof CompanySettings, value: string) => {
-    setCompanySettings(prev => ({
-      ...prev,
-      [field]: value
-    }));
-  };
+
 
   if (loading) {
     return (
@@ -188,7 +184,6 @@ export default function WebsiteSettings({ className = "" }: WebsiteSettingsProps
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-gray-900">Website Settings</h2>
           <p className="text-gray-600">Manage contact information and company details that appear on your website</p>
           {lastSaved && (
             <div className="flex items-center gap-2 mt-2 text-sm text-green-600">
@@ -261,7 +256,7 @@ export default function WebsiteSettings({ className = "" }: WebsiteSettingsProps
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <EnhancedInput
                     label="Phone Number"
-                    value={contactSettings.phone}
+                    value={contactSettings.phone || ''}
                     onChange={(e) => updateContactSetting('phone', e.target.value)}
                     icon={<Phone className="w-4 h-4" />}
                     placeholder="+977-980-120-335"
@@ -270,23 +265,31 @@ export default function WebsiteSettings({ className = "" }: WebsiteSettingsProps
                   <EnhancedInput
                     label="Email Address"
                     type="email"
-                    value={contactSettings.email}
+                    value={contactSettings.email || ''}
                     onChange={(e) => updateContactSetting('email', e.target.value)}
                     icon={<Mail className="w-4 h-4" />}
-                    placeholder="info@annapurnahospitals.com"
+                    placeholder="hingmang75@gmail.com"
                   />
                   
                   <EnhancedInput
-                    label="Website URL"
-                    value={contactSettings.website}
-                    onChange={(e) => updateContactSetting('website', e.target.value)}
-                    icon={<Globe className="w-4 h-4" />}
-                    placeholder="https://annapurnahospitals.com"
+                    label="Hospital Phone"
+                    value={contactSettings.hospitalPhone || ''}
+                    onChange={(e) => updateContactSetting('hospitalPhone', e.target.value)}
+                    icon={<Building className="w-4 h-4" />}
+                    placeholder="01-5356568"
+                  />
+
+                  <EnhancedInput
+                    label="24/7 Support Phone"
+                    value={contactSettings.supportPhone || ''}
+                    onChange={(e) => updateContactSetting('supportPhone', e.target.value)}
+                    icon={<Phone className="w-4 h-4" />}
+                    placeholder="980120335/61"
                   />
                   
                   <EnhancedInput
                     label="WhatsApp Number"
-                    value={contactSettings.whatsapp}
+                    value={contactSettings.whatsapp || ''}
                     onChange={(e) => updateContactSetting('whatsapp', e.target.value)}
                     icon={<MessageCircle className="w-4 h-4" />}
                     placeholder="+977-980-120-335"
@@ -299,7 +302,7 @@ export default function WebsiteSettings({ className = "" }: WebsiteSettingsProps
                     Address
                   </label>
                   <textarea
-                    value={contactSettings.address}
+                    value={contactSettings.address || ''}
                     onChange={(e) => updateContactSetting('address', e.target.value)}
                     rows={3}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -313,7 +316,7 @@ export default function WebsiteSettings({ className = "" }: WebsiteSettingsProps
                     Business Hours
                   </label>
                   <textarea
-                    value={contactSettings.businessHours}
+                    value={contactSettings.businessHours || ''}
                     onChange={(e) => updateContactSetting('businessHours', e.target.value)}
                     rows={2}
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -333,7 +336,7 @@ export default function WebsiteSettings({ className = "" }: WebsiteSettingsProps
                 <div className="space-y-4">
                   <EnhancedInput
                     label="Facebook"
-                    value={socialSettings.facebook}
+                    value={socialSettings.facebook || ''}
                     onChange={(e) => updateSocialSetting('facebook', e.target.value)}
                     icon={<Facebook className="w-4 h-4" />}
                     placeholder="https://facebook.com/annapurnahospitals"
@@ -341,7 +344,7 @@ export default function WebsiteSettings({ className = "" }: WebsiteSettingsProps
                   
                   <EnhancedInput
                     label="Twitter"
-                    value={socialSettings.twitter}
+                    value={socialSettings.twitter || ''}
                     onChange={(e) => updateSocialSetting('twitter', e.target.value)}
                     icon={<Twitter className="w-4 h-4" />}
                     placeholder="https://twitter.com/annapurnahospitals"
@@ -349,7 +352,7 @@ export default function WebsiteSettings({ className = "" }: WebsiteSettingsProps
                   
                   <EnhancedInput
                     label="Instagram"
-                    value={socialSettings.instagram}
+                    value={socialSettings.instagram || ''}
                     onChange={(e) => updateSocialSetting('instagram', e.target.value)}
                     icon={<Instagram className="w-4 h-4" />}
                     placeholder="https://instagram.com/annapurnahospitals"
@@ -357,7 +360,7 @@ export default function WebsiteSettings({ className = "" }: WebsiteSettingsProps
                   
                   <EnhancedInput
                     label="LinkedIn"
-                    value={socialSettings.linkedin}
+                    value={socialSettings.linkedin || ''}
                     onChange={(e) => updateSocialSetting('linkedin', e.target.value)}
                     icon={<Linkedin className="w-4 h-4" />}
                     placeholder="https://linkedin.com/company/annapurnahospitals"
@@ -366,51 +369,7 @@ export default function WebsiteSettings({ className = "" }: WebsiteSettingsProps
               </div>
             )}
 
-            {activeTab === 'company' && (
-              <div className="space-y-6">
-                <div className="flex items-center gap-3 mb-6">
-                  <Building className="w-6 h-6 text-blue-600" />
-                  <h3 className="text-lg font-semibold text-gray-900">Company Information</h3>
-                </div>
-                
-                <div className="space-y-4">
-                  <EnhancedInput
-                    label="Company Name"
-                    value={companySettings.name}
-                    onChange={(e) => updateCompanySetting('name', e.target.value)}
-                    icon={<Building className="w-4 h-4" />}
-                    placeholder="Biomed Solutions"
-                  />
-                  
-                  <EnhancedInput
-                    label="Company Tagline"
-                    value={companySettings.tagline}
-                    onChange={(e) => updateCompanySetting('tagline', e.target.value)}
-                    placeholder="Advanced Medical Equipment for Healthcare Excellence"
-                  />
-                  
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Company Description
-                    </label>
-                    <textarea
-                      value={companySettings.description}
-                      onChange={(e) => updateCompanySetting('description', e.target.value)}
-                      rows={4}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      placeholder="Leading provider of cutting-edge medical equipment and healthcare solutions."
-                    />
-                  </div>
-                  
-                  <EnhancedInput
-                    label="Logo URL"
-                    value={companySettings.logo}
-                    onChange={(e) => updateCompanySetting('logo', e.target.value)}
-                    placeholder="/assets/images/logo.png"
-                  />
-                </div>
-              </div>
-            )}
+
           </EnhancedCard>
         </div>
       </div>

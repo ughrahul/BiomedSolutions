@@ -5,6 +5,7 @@ import Providers from "@/components/providers";
 import ConditionalLayout from "@/components/ConditionalLayout";
 import DemoModeBanner from "@/components/DemoModeBanner";
 import React from "react";
+import { suppressMapsErrors } from "@/lib/utils";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
@@ -63,6 +64,11 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  // Suppress console errors for browser extensions and development tools
+  if (typeof window !== 'undefined') {
+    suppressMapsErrors();
+  }
+  
   return (
     <html lang="en" className="scroll-smooth" data-scroll-behavior="smooth">
       <head>
@@ -77,7 +83,7 @@ export default function RootLayout({
           crossOrigin=""
         />
       </head>
-      <body className={`${inter.variable} font-sans antialiased`}>
+      <body className={`${inter.variable} font-sans antialiased`} suppressHydrationWarning={true}>
         <Providers>
           <DemoModeBanner />
           <ConditionalLayout>{children}</ConditionalLayout>
