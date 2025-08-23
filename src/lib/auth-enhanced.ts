@@ -1,5 +1,6 @@
-import { createClientSupabase } from "./supabase";
-import { createSecurityAuditLog, sanitizeInput } from "./security-enhanced";
+import { createClientSupabase } from "@/lib/supabase";
+import { createProfileWithAdmin } from "@/lib/auth-admin";
+import { sanitizeInput, createSecurityAuditLog } from "@/lib/security-enhanced";
 
 // Enhanced authentication with comprehensive security
 export interface AuthUser {
@@ -334,55 +335,36 @@ export async function signInWithEmail(
         `✅ User authenticated: ${data.user.email} (ID: ${data.user.id})`
       );
 
-      // Check if user profile exists and is active
+      // Check if user profile exists
       let profile = null;
-      let profileError = null;
       
       try {
+        // Get single profile for user
         const { data: fetchedProfile, error: fetchError } = await supabase
           .from("profiles")
           .select("*")
           .eq("user_id", data.user.id)
           .single();
-        profile = fetchedProfile;
-        profileError = fetchError;
-      } catch (e) {
-        profileError = e;
-      }
-
-      if (profileError) {
-        console.error(
-          `❌ Profile error for ${sanitizedEmail}:`,
-          (profileError as any).message
-        );
-
-        // If profile doesn't exist, try to create one
-        if ((profileError as any).code === "PGRST116") {
-          console.log(`🔧 Creating missing profile for ${sanitizedEmail}...`);
-
-          const { error: createError } = await supabase
-            .from("profiles")
-            .insert({
-              user_id: data.user.id,
-              email: data.user.email,
-              full_name:
-                data.user.user_metadata?.full_name ||
-                data.user.email?.split("@")[0] ||
-                "User",
-              is_active: true,
-              role: "admin",
-              access_level: "primary",
-              login_count: 1,
-              last_login: new Date().toISOString(),
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
-            });
-
-          if (createError) {
-            console.error(
-              `❌ Failed to create profile for ${sanitizedEmail}:`,
-              createError.message
+        
+        if (fetchError) {
+          console.log(`🔧 No profile found for ${sanitizedEmail}, creating one...`);
+          
+          // Create profile with admin client to bypass RLS
+          try {
+            const adminProfile = await createProfileWithAdmin(
+              data.user.id,
+              data.user.email || sanitizedEmail,
+              data.user.user_metadata
             );
+            
+            if (adminProfile) {
+              profile = adminProfile;
+              console.log(`✅ Created profile for ${sanitizedEmail}`);
+            } else {
+              throw new Error("Failed to create profile");
+            }
+          } catch (adminError) {
+            console.error(`❌ Failed to create profile for ${sanitizedEmail}:`, adminError);
             await supabase.auth.signOut();
             return {
               user: null,
@@ -390,37 +372,18 @@ export async function signInWithEmail(
               success: false,
             };
           }
-
-          // Fetch the newly created profile
-          const { data: newProfile, error: fetchError } = await supabase
-            .from("profiles")
-            .select("*")
-            .eq("user_id", data.user.id)
-            .single();
-
-          if (fetchError || !newProfile) {
-            console.error(
-              `❌ Failed to fetch new profile for ${sanitizedEmail}:`,
-              fetchError?.message
-            );
-            await supabase.auth.signOut();
-            return {
-              user: null,
-              error: "Profile creation failed. Please contact administrator.",
-              success: false,
-            };
-          }
-
-          profile = newProfile;
-          console.log(`✅ Created and fetched profile for ${sanitizedEmail}`);
         } else {
-          await supabase.auth.signOut();
-          return {
-            user: null,
-            error: "Profile error: " + (profileError as any).message,
-            success: false,
-          };
+          profile = fetchedProfile;
+          console.log(`✅ Found profile for ${sanitizedEmail}`);
         }
+      } catch (e) {
+        console.error(`❌ Profile error for ${sanitizedEmail}:`, e);
+        await supabase.auth.signOut();
+        return {
+          user: null,
+          error: "Profile error. Please contact administrator.",
+          success: false,
+        };
       }
 
       if (!profile) {

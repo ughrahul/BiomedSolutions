@@ -25,11 +25,17 @@ html {
   scrollbar-width: thin;
   scrollbar-color: rgba(99, 102, 241, 0.4) transparent;
   overflow-x: hidden;
+  /* GPU acceleration */
+  -webkit-transform: translateZ(0);
+  -moz-transform: translateZ(0);
+  transform: translateZ(0);
 }
 
 * {
   scroll-behavior: auto;
   scroll-snap-align: none;
+  /* Box-sizing reset for better layout performance */
+  box-sizing: border-box;
 }
 
 body {
@@ -42,19 +48,51 @@ body {
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Performance optimizations */
   will-change: scroll-position;
   transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  -moz-transform: translateZ(0);
+  /* Better font loading */
+  font-display: swap;
 }
 
 /* Performance optimizations */
-* {
-  box-sizing: border-box;
-}
-
 img, video {
   max-width: 100%;
   height: auto;
+  /* Hardware acceleration for media elements */
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
 }
+
+/* Hardware acceleration for animations */
+.gpu-accelerated {
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  will-change: transform;
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* Smooth animations */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Remove duplicate img/video rule - already defined above */
 
 /* Enhanced Responsive Typography */
 @media (max-width: 640px) {

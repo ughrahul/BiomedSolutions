@@ -542,6 +542,8 @@ export default function NewProductPage() {
                   <p className="text-red-500 font-medium text-sm">{errors.description}</p>
                 )}
               </div>
+
+
             </CardContent>
           </Card>
         </motion.div>

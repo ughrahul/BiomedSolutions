@@ -1,6 +1,11 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
+
+// Browser globals type declarations
+declare const window: Window & typeof globalThis;
+declare const document: Document;
+declare const console: Console;
 import { useRouter, usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import {
@@ -8,24 +13,17 @@ import {
   X,
   Home,
   Package,
-  Users,
   Settings,
   LogOut,
   Bell,
-  Search,
   User,
   MessageSquare,
-  Shield,
-  Crown,
-  Building,
   ChevronDown,
   ExternalLink,
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
-import { EnhancedButton } from "@/components/ui/enhanced-button";
 import { getCurrentUser, signOut, getUserProfile } from "@/lib/auth";
-import { createClientSupabase } from "@/lib/supabase";
 import toast from "react-hot-toast";
 import RealTimeNotifications from "@/components/admin/RealTimeNotifications";
 import { useAdminProfile } from "@/contexts/AdminProfileContext";
@@ -74,30 +72,15 @@ export default function AdminLayout({
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
   const [notificationDropdownOpen, setNotificationDropdownOpen] = useState(false);
-  const [user, setUser] = useState<any>(null);
-  const [profile, setProfile] = useState<any>(null);
+  const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
+  const [profile, setProfile] = useState<{ full_name?: string } | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
   const pathname = usePathname();
   const dropdownRef = useRef<HTMLDivElement>(null);
   const notificationRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    // Temporarily bypass authentication for testing
-    setLoading(false);
-    setUser({ email: "admin@biomed.com", id: "temp-admin" });
-    setProfile({ 
-      full_name: adminProfile.full_name, 
-      role: "admin", 
-      is_active: true,
-      avatar_url: adminProfile.avatar_url
-    });
-    
-    // Uncomment the line below to restore authentication
-    // checkAuth();
-  }, [adminProfile]);
-
-  const checkAuth = async () => {
+  const checkAuth = useCallback(async () => {
     try {
       const currentUser = await getCurrentUser();
       if (!currentUser) {
@@ -111,6 +94,9 @@ export default function AdminLayout({
       const userProfile = await getUserProfile(currentUser.id);
       if (userProfile) {
         setProfile(userProfile);
+      } else {
+        console.error("No profile found for user");
+        router.push("/auth/login");
       }
     } catch (error) {
       console.error("Auth check failed:", error);
@@ -118,7 +104,33 @@ export default function AdminLayout({
     } finally {
       setLoading(false);
     }
-  };
+  }, [router]);
+
+  useEffect(() => {
+    // Check authentication properly
+    checkAuth();
+  }, [adminProfile, checkAuth]);
+
+  // Set sidebar open by default on desktop
+  useEffect(() => {
+    const checkScreenSize = () => {
+      if (typeof window !== 'undefined' && window.innerWidth >= 1024) { // lg breakpoint
+        setSidebarOpen(true);
+      } else {
+        setSidebarOpen(false);
+      }
+    };
+
+    // Check initial screen size
+    checkScreenSize();
+
+    // Add resize listener
+    if (typeof window !== 'undefined') {
+      window.addEventListener('resize', checkScreenSize);
+
+      return () => window.removeEventListener('resize', checkScreenSize);
+    }
+  }, []);
 
   const handleSignOut = async () => {
     try {
@@ -134,24 +146,26 @@ export default function AdminLayout({
 
   // Close dropdown when clicking outside
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+    const handleClickOutside = (event: Event) => {
+      if (dropdownRef.current && event.target instanceof Node && !dropdownRef.current.contains(event.target)) {
         setUserDropdownOpen(false);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
+    if (typeof document !== 'undefined') {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }
   }, []);
 
   // Close sidebar when clicking outside (mobile only)
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
+    const handleClickOutside = (event: Event) => {
       const target = event.target as HTMLElement;
       const sidebar = document.querySelector('[data-sidebar]') as HTMLElement;
-      
+
       // Only close if sidebar is open and click is outside sidebar
       if (sidebarOpen && sidebar && !sidebar.contains(target)) {
         setSidebarOpen(false);
@@ -159,35 +173,39 @@ export default function AdminLayout({
     };
 
     // Only add listener on mobile screens
-    if (window.innerWidth < 1024) {
+    if (typeof window !== 'undefined' && typeof document !== 'undefined' && window.innerWidth < 1024) {
       document.addEventListener('mousedown', handleClickOutside);
     }
 
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      if (typeof document !== 'undefined') {
+        document.removeEventListener('mousedown', handleClickOutside);
+      }
     };
   }, [sidebarOpen]);
 
   // Close dropdowns when clicking outside
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
+    const handleClickOutside = (event: Event) => {
       const target = event.target as HTMLElement;
-      
+
       // Close user dropdown
       if (dropdownRef.current && !dropdownRef.current.contains(target)) {
         setUserDropdownOpen(false);
       }
-      
+
       // Close notification dropdown
       if (notificationRef.current && !notificationRef.current.contains(target)) {
         setNotificationDropdownOpen(false);
       }
     };
 
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
+    if (typeof document !== 'undefined') {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside);
+      };
+    }
   }, []);
 
   // No need for separate notification fetching - using MessageContext
@@ -210,7 +228,7 @@ export default function AdminLayout({
       {/* Sidebar */}
       <motion.div
         data-sidebar
-        className={`fixed inset-y-0 left-0 z-30 w-72 sm:w-80 bg-white shadow-lg border-r border-gray-200 transform transition-transform duration-300 ease-in-out lg:translate-x-0 mobile-no-scroll ${
+        className={`fixed inset-y-0 left-0 z-40 w-72 sm:w-80 bg-white shadow-lg border-r border-gray-200 transform transition-transform duration-300 ease-in-out lg:translate-x-0 mobile-no-scroll ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
         initial={false}
@@ -295,7 +313,7 @@ export default function AdminLayout({
       </motion.div>
 
       {/* Main content area */}
-      <div className="lg:pl-80 pl-0 w-full">
+      <div className="lg:pl-80 pl-0 w-full min-h-screen">
         {/* Top bar - Static Position with Dynamic Content */}
         <header className="fixed left-0 lg:left-80 right-0 top-0 bg-white shadow-sm border-b border-gray-200 z-20 h-16">
           <div className="flex items-center justify-between px-4 sm:px-6 h-full">
@@ -531,7 +549,7 @@ export default function AdminLayout({
         </header>
 
         {/* Page content */}
-        <main className="admin-main pt-36 p-4 sm:p-6 min-h-[calc(100vh-64px)]">
+        <main className="admin-main pt-20 p-4 sm:p-6 min-h-[calc(100vh-64px)]">
           {children}
         </main>
       </div>

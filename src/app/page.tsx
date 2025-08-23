@@ -1,29 +1,16 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
-import { suppressMapsErrors } from "@/lib/utils";
-import {
-  motion,
-  useInView,
-  useScroll,
-  useTransform,
-  AnimatePresence,
-} from "framer-motion";
-import {
+import { motion, useScroll, useTransform, useInView } from "framer-motion";
+import { useState, useEffect, useRef } from "react";
+import Link from "next/link";
+import { 
   ArrowRight,
-  Award,
-  Users,
   Globe,
   Shield,
   Star,
-  CheckCircle,
-  Phone,
-  Sparkles,
   Zap,
   Heart,
-  Target,
   TrendingUp,
-  Play,
   ChevronDown,
   Truck,
   Wrench,
@@ -38,11 +25,28 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import Link from "next/link";
-import Image from "next/image";
-import FeaturedProducts from "@/components/FeaturedProducts";
+import { EnhancedButton } from "@/components/ui/enhanced-button";
+import { EnhancedInput } from "@/components/ui/enhanced-input";
+import { EnhancedCard } from "@/components/ui/enhanced-card";
+import { Badge } from "@/components/ui/badge";
 import { useWebsiteSettings } from "@/hooks/useWebsiteSettings";
 import ClientOnly from "@/components/ClientOnly";
+import VideoBackground from "@/components/VideoBackground";
+import HeroSection from "@/components/HeroSection";
+import ServicesSection from "@/components/ServicesSection";
+import StatsSection from "@/components/StatsSection";
+import FeaturedProducts from "@/components/FeaturedProducts";
+import TestimonialsSection from "@/components/TestimonialsSection";
+import CTASection from "@/components/CTASection";
+import SectionDivider from "@/components/SectionDivider";
+import CompanyStory from "@/components/CompanyStory";
+import ValuesSection from "@/components/ValuesSection";
+import WhyChooseUs from "@/components/WhyChooseUs";
+import TeamSection from "@/components/TeamSection";
+import InteractiveCard from "@/components/InteractiveCard";
+import DemoModeBanner from "@/components/DemoModeBanner";
+import Image from "next/image";
+import React from "react";
 
 
 // Floating animation variants
@@ -200,7 +204,7 @@ export default function HomePage() {
     setLastScrollTime(Date.now());
 
     // Suppress Google Maps API console errors
-    suppressMapsErrors();
+    // suppressMapsErrors(); // This function is no longer imported
   }, []);
 
   useEffect(() => {
@@ -338,8 +342,8 @@ export default function HomePage() {
           id: i,
           left: Math.random() * 100,
           top: Math.random() * 100,
-          duration: Math.random() * 3 + 2,
-          delay: Math.random() * 2,
+          duration: Math.random() * 15 + 10,
+          delay: Math.random() * 5,
         }));
         setParticles(newParticles);
       };
@@ -373,6 +377,94 @@ export default function HomePage() {
     );
   };
 
+  // Enhanced Video Background Component
+  const EnhancedVideoBackground = () => {
+    const [videoLoaded, setVideoLoaded] = useState(false);
+    const [videoError, setVideoError] = useState(false);
+    const videoRef = useRef<HTMLVideoElement>(null);
+
+    useEffect(() => {
+      const video = videoRef.current;
+      if (!video) return;
+
+      const handleLoadedData = () => {
+        setVideoLoaded(true);
+        // Add a small delay to ensure smooth transition
+        setTimeout(() => {
+          video.style.opacity = '1';
+        }, 100);
+      };
+
+      const handleError = () => {
+        setVideoError(true);
+        console.warn('Video failed to load, using poster image');
+      };
+
+      const handleCanPlay = () => {
+        // Video is ready to play
+        setVideoLoaded(true);
+      };
+
+      video.addEventListener('loadeddata', handleLoadedData);
+      video.addEventListener('error', handleError);
+      video.addEventListener('canplay', handleCanPlay);
+
+      return () => {
+        video.removeEventListener('loadeddata', handleLoadedData);
+        video.removeEventListener('error', handleError);
+        video.removeEventListener('canplay', handleCanPlay);
+      };
+    }, []);
+
+    return (
+      <motion.div style={{ y: heroY }} className="absolute inset-0 z-0">
+        {/* Poster Image - Always visible first */}
+        <div 
+          className="absolute inset-0 w-full h-full object-cover opacity-90 transition-opacity duration-1000"
+          style={{
+            backgroundImage: 'url(/assets/images/wall3_poster.jpg)',
+            backgroundSize: 'cover',
+            backgroundPosition: 'center',
+            filter: "contrast(1.3) brightness(0.7) saturate(1.4) hue-rotate(5deg)",
+            opacity: videoLoaded ? 0 : 1,
+          }}
+        />
+        
+        {/* Video - Fades in when loaded */}
+        <video
+          ref={videoRef}
+          autoPlay
+          muted
+          loop
+          playsInline
+          preload="auto"
+          className="absolute inset-0 w-full h-full object-cover opacity-90 transition-opacity duration-1000"
+          poster="/assets/images/wall3_poster.jpg"
+          style={{
+            filter: "contrast(1.3) brightness(0.7) saturate(1.4) hue-rotate(5deg)",
+            opacity: videoLoaded ? 1 : 0,
+          }}
+        >
+          <source src="/assets/images/wall3.mp4" type="video/mp4" />
+          {/* Fallback text if video fails completely */}
+          <p className="sr-only">Video not supported</p>
+        </video>
+        
+        {/* Overlay gradients */}
+        <div className="absolute inset-0 bg-gradient-to-br from-cyan-900/40 via-blue-900/30 to-purple-900/40" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/30" />
+        <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 via-transparent to-blue-500/20" />
+        
+        {/* Loading indicator (optional) */}
+        {!videoLoaded && !videoError && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-16 h-16 border-4 border-white/30 border-t-white rounded-full animate-spin opacity-50" />
+          </div>
+        )}
+      </motion.div>
+    );
+  };
+
   return (
     <div className="min-h-screen overflow-hidden">
       {/* Hero Section with Enhanced Video Background */}
@@ -382,22 +474,14 @@ export default function HomePage() {
       >
         {/* Enhanced Video Background */}
         <motion.div style={{ y: heroY }} className="absolute inset-0 z-0">
-          <video
-            autoPlay
-            muted
-            loop
-            playsInline
+          <VideoBackground
+            videoSrc="/assets/images/wall3.mp4"
+            posterSrc="/assets/images/wall3_poster.jpg"
             className="absolute inset-0 w-full h-full object-cover opacity-90"
-            poster="/assets/images/wall3_poster.jpg"
-            style={{
-              filter: "contrast(1.3) brightness(0.7) saturate(1.4) hue-rotate(5deg)",
-            }}
-          >
-            <source src="/assets/images/wall3.mp4" type="video/mp4" />
-          </video>
-          <div className="absolute inset-0 bg-gradient-to-br from-cyan-900/40 via-blue-900/30 to-purple-900/40" />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/30" />
-          <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 via-transparent to-blue-500/20" />
+            showLoadingIndicator={true}
+            onVideoLoad={() => console.log('Video loaded successfully')}
+            onVideoError={() => console.warn('Video failed to load, using poster')}
+          />
         </motion.div>
 
         {/* Floating Orbs Animation */}
@@ -831,7 +915,7 @@ export default function HomePage() {
                         transition: { duration: 0.6 },
                       }}
                     >
-                      <stat.icon className="w-10 h-10 text-white" />
+                      {React.createElement(stat.icon, { className: "w-10 h-10 text-white" })}
                     </motion.div>
 
                     <motion.h3

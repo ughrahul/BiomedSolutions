@@ -81,15 +81,15 @@ export interface ProductFilter {
   category?: string;
   categories?: string[];
   search?: string;
-  inStock?: boolean;
   isFeatured?: boolean;
   priceRange?: {
-    min: number;
-    max: number;
+    min?: number;
+    max?: number;
   };
+  inStock?: boolean;
 }
 
 export interface ProductSort {
-  field: 'name' | 'created_at' | 'price';
+  field: 'name' | 'created_at';
   direction: 'asc' | 'desc';
 }

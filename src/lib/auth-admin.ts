@@ -9,7 +9,19 @@ export async function createProfileWithAdmin(userId: string, email: string, user
   }
 
   try {
-    // Use admin client to create profile (bypasses RLS)
+    // First check if profile already exists
+    const { data: existingProfile, error: checkError } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("user_id", userId)
+      .single();
+
+    if (existingProfile) {
+      console.log(`✅ Profile already exists for user ${userId}`);
+      return existingProfile;
+    }
+
+    // Create new profile with admin client (bypasses RLS)
     const { data, error } = await supabase
       .from("profiles")
       .insert({
@@ -19,6 +31,8 @@ export async function createProfileWithAdmin(userId: string, email: string, user
         is_active: true,
         role: "admin",
         access_level: "primary",
+        login_count: 0,
+        last_login: null,
         created_at: new Date().toISOString(),
         updated_at: new Date().toISOString(),
       })
@@ -30,6 +44,7 @@ export async function createProfileWithAdmin(userId: string, email: string, user
       throw new Error(`Failed to create profile: ${error.message}`);
     }
 
+    console.log(`✅ Created profile for user ${userId}`);
     return data;
   } catch (error) {
     console.error("Admin profile creation failed:", error);

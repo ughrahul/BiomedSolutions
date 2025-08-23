@@ -56,26 +56,41 @@ async function createAdminUsers() {
           console.log(
             `⚠️  User ${admin.email} might already exist: ${userError.message}`
           );
+          // Try to get existing user
+          const { data: existingUser } = await supabase.auth.admin.listUsers();
+          const foundUser = existingUser.users.find(u => u.email === admin.email);
+          if (foundUser) {
+            console.log(`✅ Found existing user ${admin.email}`);
+            user = foundUser;
+          }
         } else {
           console.log(`✅ User ${admin.email} created successfully`);
         }
 
-        // Update profile with basic information
+        // Create or update profile
         if (user) {
           const { error: profileError } = await supabase
             .from("profiles")
-            .update({
+            .upsert({
+              user_id: user.id,
+              email: admin.email,
               full_name: admin.full_name,
               is_active: true,
-            })
-            .eq("user_id", user.id);
+              role: "admin",
+              access_level: "primary",
+              login_count: 0,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            }, {
+              onConflict: 'user_id'
+            });
 
           if (profileError) {
             console.log(
-              `⚠️  Profile update error for ${admin.email}: ${profileError.message}`
+              `⚠️  Profile error for ${admin.email}: ${profileError.message}`
             );
           } else {
-            console.log(`✅ Profile updated for ${admin.email}`);
+            console.log(`✅ Profile created/updated for ${admin.email}`);
           }
         }
       } catch (error) {

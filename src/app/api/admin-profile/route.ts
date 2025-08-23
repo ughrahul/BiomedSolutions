@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createAdminSupabaseClient } from '@/lib/supabase-admin';
 
+// Add console for logging
+const console = globalThis.console;
+
 export async function GET() {
   try {
     const supabase = createAdminSupabaseClient();
@@ -8,16 +11,32 @@ export async function GET() {
       return NextResponse.json({ error: 'Database connection failed' }, { status: 500 });
     }
 
-    // Get current admin profile from profiles table
+    // Get the current user's session to determine which admin profile to return
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
+      console.error('Error getting current user:', authError);
+      return NextResponse.json({ 
+        error: 'User not authenticated', 
+        details: 'Please login to access admin features' 
+      }, { status: 401 });
+    }
+
+    console.log('Current user:', user.email);
+
+    // Get the specific profile for the current user
     const { data: profile, error } = await supabase
       .from('profiles')
       .select('*')
-      .eq('role', 'admin')
+      .eq('user_id', user.id)
       .single();
 
     if (error) {
-      console.error('Error fetching admin profile:', error);
-      return NextResponse.json({ error: 'Failed to fetch profile' }, { status: 500 });
+      console.error('Error fetching user profile:', error);
+      return NextResponse.json({ 
+        error: 'Failed to fetch profile',
+        details: 'Profile not found for this user'
+      }, { status: 500 });
     }
 
     return NextResponse.json({ profile });
@@ -42,7 +61,20 @@ export async function PUT(request: NextRequest) {
       return NextResponse.json({ error: 'Full name is required' }, { status: 400 });
     }
 
-    // Update admin profile in database
+    // Get the current user's session
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
+      console.error('Error getting current user:', authError);
+      return NextResponse.json({ 
+        error: 'User not authenticated',
+        details: 'Please login to update your profile'
+      }, { status: 401 });
+    }
+
+    console.log('Updating profile for:', user.email);
+
+    // Update the specific user's profile
     const { data, error } = await supabase
       .from('profiles')
       .update({
@@ -50,13 +82,16 @@ export async function PUT(request: NextRequest) {
         avatar_url: avatar_url || null,
         updated_at: new Date().toISOString()
       })
-      .eq('role', 'admin')
+      .eq('user_id', user.id)
       .select()
       .single();
 
     if (error) {
-      console.error('Error updating admin profile:', error);
-      return NextResponse.json({ error: 'Failed to update profile' }, { status: 500 });
+      console.error('Error updating user profile:', error);
+      return NextResponse.json({ 
+        error: 'Failed to update profile',
+        details: 'Profile update failed. Please try again.'
+      }, { status: 500 });
     }
 
     return NextResponse.json({ 

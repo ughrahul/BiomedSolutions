@@ -85,7 +85,7 @@ export async function POST(request: NextRequest) {
     // Validate required fields
     const requiredFields = { name, description, category_id };
     const missingFields = Object.entries(requiredFields)
-      .filter(([key, value]) => !value || (typeof value === 'string' && !value.trim()))
+      .filter(([key, value]) => value === undefined || value === null || (typeof value === 'string' && !value.trim()))
       .map(([key]) => key);
 
     if (missingFields.length > 0) {
@@ -159,7 +159,6 @@ export async function POST(request: NextRequest) {
       tags: Array.isArray(tags) ? tags : [],
       is_active: typeof is_active === 'boolean' ? is_active : true,
       is_featured: typeof is_featured === 'boolean' ? is_featured : false,
-      // Price and stock fields are now optional - not included in product creation
     };
 
     console.log("📝 Prepared product data:", JSON.stringify(productData, null, 2));

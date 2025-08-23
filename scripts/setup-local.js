@@ -5,95 +5,269 @@
  * This script helps set up the project for local development
  */
 
-const fs = require('fs');
-const path = require('path');
-const { execSync } = require('child_process');
+const { createClient } = require("@supabase/supabase-js");
+const path = require("path");
 
-console.log('🚀 Biomed Solutions - Quick Local Setup\n');
+// Load environment variables
+require("dotenv").config({ path: path.join(__dirname, "..", ".env.local") });
 
-// Check if we're in the right directory
-const packageJsonPath = path.join(process.cwd(), 'package.json');
-if (!fs.existsSync(packageJsonPath)) {
-  console.error('❌ Please run this script from the project root directory');
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+if (!supabaseUrl || !supabaseServiceKey) {
+  console.error("❌ Missing required environment variables:");
+  console.error("   - NEXT_PUBLIC_SUPABASE_URL");
+  console.error("   - SUPABASE_SERVICE_ROLE_KEY");
+  console.error("\nPlease check your .env.local file");
   process.exit(1);
 }
 
-// Check if .env.local exists
-const envPath = path.join(process.cwd(), '.env.local');
-if (!fs.existsSync(envPath)) {
-  console.log('📝 Creating .env.local file...');
-  
-  const envContent = `# Biomed Solutions - Local Development
-# Replace with your actual Supabase credentials
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-# Your Supabase project URL
-NEXT_PUBLIC_SUPABASE_URL=https://your-project-id.supabase.co
+async function setupLocal() {
+  try {
+    console.log("🚀 Setting up local development environment...");
 
-# Your Supabase anon/public key
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key-here
+    // Step 1: Clean up duplicate profiles
+    console.log("\n📋 Step 1: Cleaning up duplicate profiles...");
+    
+    // Get all profiles
+    const { data: allProfiles, error: fetchError } = await supabase
+      .from("profiles")
+      .select("*");
 
-# Service role key for server-side operations (keep secret)
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key-here
+    if (fetchError) {
+      console.error("❌ Error fetching profiles:", fetchError.message);
+      return;
+    }
 
-# Database Mode Configuration
-NEXT_PUBLIC_DATABASE_MODE=full
+    if (allProfiles && allProfiles.length > 0) {
+      console.log(`Found ${allProfiles.length} total profiles`);
+      
+      // Group by user_id to find duplicates
+      const profileGroups = {};
+      allProfiles.forEach(profile => {
+        if (!profileGroups[profile.user_id]) {
+          profileGroups[profile.user_id] = [];
+        }
+        profileGroups[profile.user_id].push(profile);
+      });
 
-# Application Settings
-NEXT_PUBLIC_APP_URL=http://localhost:3001
-NEXT_PUBLIC_APP_NAME="Biomed Solutions"
+      // Find users with multiple profiles
+      const usersWithDuplicates = Object.keys(profileGroups).filter(
+        userId => profileGroups[userId].length > 1
+      );
 
-# Remove demo banner for production
-NEXT_PUBLIC_DISABLE_DEMO_BANNER=true
-`;
+      if (usersWithDuplicates.length > 0) {
+        console.log(`Found ${usersWithDuplicates.length} users with duplicate profiles`);
+        
+        // Keep only the most recent profile for each user
+        for (const userId of usersWithDuplicates) {
+          const profiles = profileGroups[userId];
+          profiles.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+          
+          // Delete all but the most recent profile
+          const profilesToDelete = profiles.slice(1);
+          for (const profile of profilesToDelete) {
+            const { error: deleteError } = await supabase
+              .from("profiles")
+              .delete()
+              .eq("id", profile.id);
+            
+            if (deleteError) {
+              console.error(`❌ Error deleting profile ${profile.id}:`, deleteError.message);
+            } else {
+              console.log(`✅ Deleted duplicate profile for user ${userId}`);
+            }
+          }
+        }
+      } else {
+        console.log("✅ No duplicate profiles found");
+      }
+    }
 
-  fs.writeFileSync(envPath, envContent);
-  console.log('✅ Created .env.local file');
-} else {
-  console.log('✅ .env.local already exists');
+    // Step 2: Ensure all profiles have required fields
+    console.log("\n📋 Step 2: Ensuring all profiles have required fields...");
+    
+    const { data: profiles, error: profilesError } = await supabase
+      .from("profiles")
+      .select("*");
+
+    if (profilesError) {
+      console.error("❌ Error fetching profiles:", profilesError.message);
+      return;
+    }
+
+    if (profiles && profiles.length > 0) {
+      for (const profile of profiles) {
+        const updates = {};
+        let needsUpdate = false;
+
+        if (!profile.is_active) {
+          updates.is_active = true;
+          needsUpdate = true;
+        }
+        if (!profile.role) {
+          updates.role = "admin";
+          needsUpdate = true;
+        }
+        if (!profile.access_level) {
+          updates.access_level = "primary";
+          needsUpdate = true;
+        }
+        if (profile.login_count === null || profile.login_count === undefined) {
+          updates.login_count = 0;
+          needsUpdate = true;
+        }
+        if (!profile.created_at) {
+          updates.created_at = new Date().toISOString();
+          needsUpdate = true;
+        }
+
+        if (needsUpdate) {
+          updates.updated_at = new Date().toISOString();
+          
+          const { error: updateError } = await supabase
+            .from("profiles")
+            .update(updates)
+            .eq("id", profile.id);
+
+          if (updateError) {
+            console.error(`❌ Error updating profile ${profile.id}:`, updateError.message);
+          } else {
+            console.log(`✅ Updated profile for user ${profile.user_id}`);
+          }
+        }
+      }
+    }
+
+    // Step 3: Create admin users if they don't exist
+    console.log("\n📋 Step 3: Creating admin users...");
+    
+    const adminUsers = [
+      {
+        email: "admin1@biomed.com",
+        password: "admin123",
+        full_name: "Admin User 1",
+      },
+      {
+        email: "admin2@biomed.com",
+        password: "admin123",
+        full_name: "Admin User 2",
+      },
+      {
+        email: "admin3@biomed.com",
+        password: "admin123",
+        full_name: "Admin User 3",
+      },
+    ];
+
+    for (const admin of adminUsers) {
+      try {
+        // Check if user exists
+        const { data: existingUsers } = await supabase.auth.admin.listUsers();
+        const existingUser = existingUsers.users.find(u => u.email === admin.email);
+
+        let user = existingUser;
+
+        if (!existingUser) {
+          // Create user in auth
+          const { data: newUser, error: userError } =
+            await supabase.auth.admin.createUser({
+              email: admin.email,
+              password: admin.password,
+              email_confirm: true,
+              user_metadata: {
+                full_name: admin.full_name,
+              },
+            });
+
+          if (userError) {
+            console.log(
+              `⚠️  Error creating user ${admin.email}: ${userError.message}`
+            );
+            continue;
+          } else {
+            user = newUser;
+            console.log(`✅ User ${admin.email} created successfully`);
+          }
+        } else {
+          console.log(`✅ User ${admin.email} already exists`);
+        }
+
+        // Create or update profile
+        if (user) {
+          const { error: profileError } = await supabase
+            .from("profiles")
+            .upsert({
+              user_id: user.id,
+              email: admin.email,
+              full_name: admin.full_name,
+              is_active: true,
+              role: "admin",
+              access_level: "primary",
+              login_count: 0,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            }, {
+              onConflict: 'user_id'
+            });
+
+          if (profileError) {
+            console.log(
+              `⚠️  Profile error for ${admin.email}: ${profileError.message}`
+            );
+          } else {
+            console.log(`✅ Profile created/updated for ${admin.email}`);
+          }
+        }
+      } catch (error) {
+        console.log(`⚠️  Error processing user ${admin.email}: ${error.message}`);
+      }
+    }
+
+    // Step 4: Final verification
+    console.log("\n📋 Step 4: Final verification...");
+    
+    const { data: finalProfiles, error: finalError } = await supabase
+      .from("profiles")
+      .select("*");
+
+    if (finalError) {
+      console.error("❌ Error fetching final profiles:", finalError.message);
+    } else {
+      console.log(`✅ Setup completed! Total profiles: ${finalProfiles.length}`);
+      
+      // Show profile summary
+      console.log("\n📊 Profile Summary:");
+      finalProfiles.forEach(profile => {
+        console.log(`   - ${profile.email} (${profile.full_name}) - ${profile.role}`);
+      });
+    }
+
+    console.log("\n✅ Local setup completed successfully!");
+    console.log("\n📋 Admin Login Credentials:");
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    console.log("👤 Admin 1:");
+    console.log("   Email: admin1@biomed.com");
+    console.log("   Password: admin123");
+    console.log("");
+    console.log("👤 Admin 2:");
+    console.log("   Email: admin2@biomed.com");
+    console.log("   Password: admin123");
+    console.log("");
+    console.log("👤 Admin 3:");
+    console.log("   Email: admin3@biomed.com");
+    console.log("   Password: admin123");
+    console.log("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+    console.log("\n🌐 You can now login at: http://localhost:3000/auth/login");
+    console.log("💡 All users have equal admin rights - single profile per user.");
+
+  } catch (error) {
+    console.error("❌ Error during setup:", error.message);
+    process.exit(1);
+  }
 }
 
-// Install dependencies
-console.log('\n📦 Installing dependencies...');
-try {
-  execSync('npm install', { stdio: 'inherit' });
-  console.log('✅ Dependencies installed');
-} catch (error) {
-  console.error('❌ Failed to install dependencies');
-  process.exit(1);
-}
-
-// Check if node_modules exists and has required packages
-const nodeModulesPath = path.join(process.cwd(), 'node_modules');
-if (!fs.existsSync(nodeModulesPath)) {
-  console.error('❌ node_modules not found. Please run npm install manually.');
-  process.exit(1);
-}
-
-console.log('\n🎉 Setup Complete!\n');
-
-console.log('📋 Next Steps:');
-console.log('1. Update .env.local with your Supabase credentials');
-console.log('2. Set up your Supabase database using scripts/quick-setup.sql');
-console.log('3. Run: npm run dev');
-console.log('4. Open: http://localhost:3001\n');
-
-console.log('📚 Documentation:');
-console.log('- Quick Setup: ./scripts/quick-setup.sql');
-console.log('- Deployment: ./DEPLOYMENT_GUIDE.md');
-console.log('- Database Setup: ./DATABASE_SETUP_GUIDE.md\n');
-
-console.log('🔧 Commands:');
-console.log('- Start dev server: npm run dev');
-console.log('- Build for production: npm run build');
-console.log('- Start production: npm start');
-console.log('- Run linter: npm run lint\n');
-
-console.log('🌟 Features Available:');
-console.log('- ✅ Modern medical equipment catalog');
-console.log('- ✅ Admin panel for product management');
-console.log('- ✅ Contact form with database storage');
-console.log('- ✅ Responsive design for all devices');
-console.log('- ✅ SEO optimized');
-console.log('- ✅ Fast performance with Next.js 15\n');
-
-console.log('Happy coding! 🎯'); 
+// Run the setup
+setupLocal(); 
