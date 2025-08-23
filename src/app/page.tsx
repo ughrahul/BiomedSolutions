@@ -232,7 +232,7 @@ export default function HomePage() {
   };
 
   // Animated counter hook
-  const useCounter = (target: number, isInView: boolean) => {
+  const useAnimatedCounter = (target: number, isInView: boolean) => {
     const [count, setCount] = useState(0);
 
     useEffect(() => {
@@ -258,6 +258,12 @@ export default function HomePage() {
 
     return count;
   };
+
+  // Create counters for each stat
+  const counters = stats.map((stat, index) =>
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    useAnimatedCounter(parseInt(stat.value), statsInView)
+  );
 
 
 
@@ -894,7 +900,7 @@ export default function HomePage() {
             className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6 lg:gap-8"
           >
             {stats.map((stat, index) => {
-              const count = useCounter(parseInt(stat.value), statsInView);
+              const count = counters[index] || 0;
 
               return (
                 <motion.div

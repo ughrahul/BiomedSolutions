@@ -81,7 +81,9 @@
       "statusCode": 200
     }
   ],
+  "buildCommand": "npm run build",
+  "installCommand": "npm install --legacy-peer-deps",
   "env": {
-    "NODE_OPTIONS": "--max-old-space-size=4096 --enable-source-maps"
+    "NODE_OPTIONS": "--max-old-space-size=4096"
   }
 }
