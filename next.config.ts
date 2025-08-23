@@ -4,7 +4,6 @@ const nextConfig: NextConfig = {
   /* Production-ready configuration */
   experimental: {
     optimizePackageImports: ["lucide-react", "framer-motion"],
-    optimizeCss: true,
     scrollRestoration: true,
   },
 
@@ -75,29 +74,8 @@ const nextConfig: NextConfig = {
     NEXT_PUBLIC_SUPABASE_ANON_KEY: process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
   },
 
-  // Webpack optimizations
-  webpack: (config, { dev, isServer }) => {
-    // Optimize bundle size
-    if (!dev && !isServer) {
-      config.optimization.splitChunks.cacheGroups = {
-        ...config.optimization.splitChunks.cacheGroups,
-        vendor: {
-          test: /[\\/]node_modules[\\/]/,
-          name: "vendors",
-          chunks: "all",
-          priority: 10,
-        },
-      };
-    }
-
-    // Add custom loaders for performance
-    config.module.rules.push({
-      test: /\.svg$/,
-      use: ["@svgr/webpack"],
-    });
-
-    return config;
-  },
+  // Note: Turbopack is enabled, webpack configuration removed to avoid conflicts
+  // Turbopack provides automatic optimizations and doesn't use webpack config
 };
 
 export default nextConfig;

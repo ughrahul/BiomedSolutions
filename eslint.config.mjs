@@ -1,5 +1,5 @@
 import js from "@eslint/js";
-import typescriptPlugin from "@typescript-eslint/eslint-plugin";
+import typescriptEslint from "@typescript-eslint/eslint-plugin";
 import typescriptParser from "@typescript-eslint/parser";
 import reactPlugin from "eslint-plugin-react";
 import reactHooksPlugin from "eslint-plugin-react-hooks";
@@ -60,10 +60,16 @@ export default [
         IntersectionObserver: "readonly",
         NodeJS: "readonly",
         crypto: "readonly",
+        // Node.js globals
+        require: "readonly",
+        module: "readonly",
+        exports: "readonly",
+        __dirname: "readonly",
+        __filename: "readonly",
       },
     },
     plugins: {
-      "@typescript-eslint": typescriptPlugin,
+      "@typescript-eslint": typescriptEslint,
       react: reactPlugin,
       "react-hooks": reactHooksPlugin,
       "jsx-a11y": jsxA11yPlugin,
@@ -99,16 +105,10 @@ export default [
     },
   },
   {
-    files: ["**/*.{js,jsx,ts,tsx}"],
-    rules: {
-      // Disable React import requirement for JSX files
-      "react/react-in-jsx-scope": "off",
-    },
-  },
-  {
     files: ["**/*.js"],
     rules: {
       "@typescript-eslint/no-var-requires": "off",
+      "@typescript-eslint/no-unused-vars": "off",
     },
   },
 ];

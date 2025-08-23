@@ -6,6 +6,43 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Mobile-specific optimizations */
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    -webkit-text-size-adjust: 100%;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Improve touch targets on mobile */
+  @media (max-width: 768px) {
+    button,
+    a[role="button"],
+    input,
+    select,
+    textarea {
+      min-height: 44px;
+      min-width: 44px;
+    }
+
+    /* Reduce motion for performance on mobile */
+    @media (prefers-reduced-motion: reduce) {
+      *,
+      *::before,
+      *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  }
+}
+
 :root {
   --background: #ffffff;
   --foreground: #171717;
@@ -144,6 +181,37 @@ img, video {
   margin-right: auto;
   padding-left: 1rem;
   padding-right: 1rem;
+}
+
+/* Mobile-specific utility classes */
+@layer utilities {
+  .mobile-spacing {
+    @apply px-4 py-3;
+  }
+
+  .touch-target {
+    @apply min-h-[44px] min-w-[44px];
+  }
+
+  .mobile-hero {
+    @apply px-4 sm:px-6 lg:px-8 -mt-4 sm:-mt-8 md:-mt-10;
+  }
+
+  .mobile-grid {
+    @apply grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-3 md:gap-4;
+  }
+
+  .mobile-card {
+    @apply p-2 sm:p-3 md:p-4 rounded-lg sm:rounded-xl md:rounded-2xl touch-manipulation;
+  }
+
+  .mobile-text {
+    @apply text-sm xs:text-base sm:text-lg md:text-xl leading-relaxed;
+  }
+
+  .mobile-button {
+    @apply px-4 sm:px-6 py-3 sm:py-4 text-sm sm:text-base min-h-[48px] w-full sm:w-auto touch-manipulation;
+  }
 }
 
 @media (min-width: 640px) {

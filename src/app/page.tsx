@@ -470,7 +470,7 @@ export default function HomePage() {
       {/* Hero Section with Enhanced Video Background */}
       <section
         ref={heroRef}
-        className="relative h-[90vh] flex items-center justify-center pt-20 bg-gradient-to-br from-white via-cyan-50 to-blue-100"
+        className="relative h-[100vh] sm:h-[90vh] flex items-center justify-center pt-16 sm:pt-20 pb-8 sm:pb-0 bg-gradient-to-br from-white via-cyan-50 to-blue-100"
       >
         {/* Enhanced Video Background */}
         <motion.div style={{ y: heroY }} className="absolute inset-0 z-0">
@@ -489,11 +489,11 @@ export default function HomePage() {
           <FloatingParticles />
         </ClientOnly>
 
-        <div className="relative z-10 container-responsive text-center -mt-10 sm:-mt-20">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center -mt-4 sm:-mt-10 md:-mt-20">
           <motion.div
-            initial={{ opacity: 0, y: 100 }}
+            initial={{ opacity: 0, y: 50 }}
             animate={heroInView ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 1, ease: "easeOut" }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
           >
             {/* Main Heading with Glassy Effect */}
             <motion.div
@@ -520,13 +520,13 @@ export default function HomePage() {
                   transition={{ duration: 4, repeat: Infinity }}
                 />
                 <motion.h1
-                  className="relative text-2xl sm:text-3xl md:text-5xl lg:text-6xl xl:text-7xl font-black bg-gradient-to-r from-white via-cyan-200 to-blue-200 bg-clip-text text-transparent leading-tight"
+                  className="relative text-3xl xs:text-4xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-black bg-gradient-to-r from-white via-cyan-200 to-blue-200 bg-clip-text text-transparent leading-[1.1] sm:leading-tight tracking-tight"
                   animate={{
                     backgroundPosition: ["0%", "100%", "0%"],
                     textShadow: [
-                      "0 0 30px rgba(255, 255, 255, 0.5)",
-                      "0 0 60px rgba(6, 182, 212, 0.8)",
-                      "0 0 30px rgba(255, 255, 255, 0.5)",
+                      "0 0 20px rgba(255, 255, 255, 0.4)",
+                      "0 0 40px rgba(6, 182, 212, 0.6)",
+                      "0 0 20px rgba(255, 255, 255, 0.4)",
                     ],
                   }}
                   transition={{ duration: 8, repeat: Infinity }}
@@ -538,24 +538,24 @@ export default function HomePage() {
 
             {/* Subtitle */}
             <motion.p
-              initial={{ opacity: 0, y: 30 }}
+              initial={{ opacity: 0, y: 20 }}
               animate={heroInView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.8, delay: 0.4 }}
-              className="text-base md:text-lg text-white font-medium mb-6 max-w-2xl mx-auto leading-relaxed drop-shadow-lg"
+              className="text-sm xs:text-base sm:text-lg md:text-xl text-white font-medium mb-4 sm:mb-6 max-w-2xl mx-auto leading-relaxed drop-shadow-lg px-2 sm:px-0"
             >
-              <span className="bg-gradient-to-r from-cyan-300 to-blue-300 bg-clip-text text-transparent">
+              <span className="bg-gradient-to-r from-cyan-300 to-blue-300 bg-clip-text text-transparent block sm:inline">
                 Revolutionizing Healthcare
               </span>
-              <br />
-              <span className="text-white">with Advanced Medical Technology</span>
+              <br className="sm:hidden" />
+              <span className="text-white block sm:inline sm:ml-2">with Advanced Medical Technology</span>
             </motion.p>
 
             {/* Enhanced CTA Buttons */}
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={heroInView ? { opacity: 1, y: 0 } : {}}
-            transition={{ duration: 0.8, delay: 0.8 }}
-            className="flex flex-col sm:flex-row gap-6 justify-center items-center"
+            transition={{ duration: 0.8, delay: 0.6 }}
+            className="flex flex-col sm:flex-row gap-3 sm:gap-4 md:gap-6 justify-center items-center px-4 sm:px-0 w-full max-w-md sm:max-w-none mx-auto"
           >
             <Link href="/products">
               <motion.div
@@ -566,7 +566,7 @@ export default function HomePage() {
                 <div className="absolute -inset-2 bg-gradient-to-r from-cyan-400 to-blue-600 rounded-3xl blur-lg opacity-70 group-hover:opacity-100 transition duration-500"></div>
                 <Button
                   size="lg"
-                  className="relative bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white px-12 py-6 text-xl font-bold rounded-2xl shadow-2xl border border-cyan-400/50 overflow-hidden"
+                  className="relative bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white px-8 sm:px-10 md:px-12 py-4 sm:py-5 md:py-6 text-base sm:text-lg md:text-xl font-bold rounded-xl sm:rounded-2xl shadow-2xl border border-cyan-400/50 overflow-hidden w-full sm:w-auto min-h-[48px] touch-manipulation"
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-cyan-300/20 to-blue-400/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   <motion.div
@@ -612,7 +612,7 @@ export default function HomePage() {
                 <Button
                   size="lg"
                   variant="outline"
-                  className="relative bg-white/10 backdrop-blur-lg hover:bg-white/20 text-white px-12 py-6 text-xl font-bold rounded-2xl border-2 border-white/30 hover:border-white/50 transition-all duration-300 overflow-hidden shadow-xl"
+                  className="relative bg-white/10 backdrop-blur-lg hover:bg-white/20 text-white px-8 sm:px-10 md:px-12 py-4 sm:py-5 md:py-6 text-base sm:text-lg md:text-xl font-bold rounded-xl sm:rounded-2xl border-2 border-white/30 hover:border-white/50 transition-all duration-300 overflow-hidden shadow-xl w-full sm:w-auto min-h-[48px] touch-manipulation"
                 >
                   <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-cyan-200/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                   <motion.div
@@ -766,7 +766,7 @@ export default function HomePage() {
             variants={containerVariants}
             initial="hidden"
             animate={servicesInView ? "visible" : "hidden"}
-            className="grid grid-cols-1 md:grid-cols-3 gap-8"
+            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 md:gap-8"
           >
             {services.map((service, index) => (
               <motion.div
@@ -780,40 +780,42 @@ export default function HomePage() {
                 }}
                 className="group perspective-1000"
               >
-                <Card className="h-full p-8 bg-gradient-to-br from-white/90 to-blue-50/90 backdrop-blur-lg border border-cyan-300/30 rounded-3xl hover:shadow-2xl transition-all duration-500 overflow-hidden relative group">
+                <Card className="h-full p-4 sm:p-6 md:p-8 bg-gradient-to-br from-white/90 to-blue-50/90 backdrop-blur-lg border border-cyan-300/30 rounded-xl sm:rounded-2xl md:rounded-3xl hover:shadow-2xl transition-all duration-500 overflow-hidden relative group touch-manipulation">
                   <motion.div
                     className={`absolute inset-0 bg-gradient-to-br ${service.color} opacity-0 group-hover:opacity-20 transition-opacity duration-500`}
                   />
 
                   <div className="relative z-10 text-center">
                     <motion.div
-                      className={`inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br ${service.color} rounded-3xl mb-6 shadow-xl mx-auto border border-cyan-400/30`}
+                      className={`inline-flex items-center justify-center w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 bg-gradient-to-br ${service.color} rounded-xl sm:rounded-2xl md:rounded-3xl mb-3 sm:mb-4 md:mb-6 shadow-xl mx-auto border border-cyan-400/30 touch-manipulation`}
                       whileHover={{
                         rotate: 360,
                         scale: 1.15,
                         y: -5,
                         transition: { duration: 0.6 },
                       }}
+                      whileTap={{ scale: 0.95 }}
                       animate={{
                         boxShadow: [
-                          "0 10px 30px rgba(6, 182, 212, 0.3)",
-                          "0 15px 40px rgba(6, 182, 212, 0.5)",
-                          "0 10px 30px rgba(6, 182, 212, 0.3)",
+                          "0 8px 20px rgba(6, 182, 212, 0.2)",
+                          "0 12px 30px rgba(6, 182, 212, 0.4)",
+                          "0 8px 20px rgba(6, 182, 212, 0.2)",
                         ],
                       }}
                       transition={{ duration: 3, repeat: Infinity }}
                     >
-                      <service.icon className="w-12 h-12 text-white" />
+                      <service.icon className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 text-white" />
                     </motion.div>
 
                     <motion.h3
-                      className="text-2xl font-bold bg-gradient-to-r from-gray-800 to-blue-600 bg-clip-text text-transparent mb-4 group-hover:from-gray-700 group-hover:to-blue-500 transition-all"
+                      className="text-lg sm:text-xl md:text-2xl font-bold bg-gradient-to-r from-gray-800 to-blue-600 bg-clip-text text-transparent mb-2 sm:mb-3 md:mb-4 group-hover:from-gray-700 group-hover:to-blue-500 transition-all leading-tight"
                       whileHover={{ scale: 1.05 }}
+                      whileTap={{ scale: 0.95 }}
                     >
                       {service.title}
                     </motion.h3>
 
-                    <p className="text-gray-600 leading-relaxed text-lg group-hover:text-gray-700 transition-colors">
+                    <p className="text-sm sm:text-base md:text-lg text-gray-600 leading-relaxed group-hover:text-gray-700 transition-colors line-clamp-3 sm:line-clamp-none">
                       {service.description}
                     </p>
                   </div>
@@ -889,7 +891,7 @@ export default function HomePage() {
             variants={containerVariants}
             initial="hidden"
             animate={statsInView ? "visible" : "hidden"}
-            className="grid grid-cols-2 lg:grid-cols-4 gap-8"
+            className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 md:gap-6 lg:gap-8"
           >
             {stats.map((stat, index) => {
               const count = useCounter(parseInt(stat.value), statsInView);
@@ -906,20 +908,21 @@ export default function HomePage() {
                   }}
                   className="text-center group perspective-1000"
                 >
-                  <Card className="p-8 bg-white/70 backdrop-blur-lg border border-sky-200/50 rounded-3xl hover:bg-white/90 hover:shadow-xl transition-all duration-500 shadow-lg">
+                  <Card className="p-4 sm:p-6 md:p-8 bg-white/70 backdrop-blur-lg border border-sky-200/50 rounded-xl sm:rounded-2xl md:rounded-3xl hover:bg-white/90 hover:shadow-xl transition-all duration-500 shadow-lg touch-manipulation">
                     <motion.div
-                      className={`inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br ${stat.color} rounded-2xl mb-6 shadow-lg`}
+                      className={`inline-flex items-center justify-center w-12 h-12 sm:w-16 sm:h-16 md:w-20 md:h-20 bg-gradient-to-br ${stat.color} rounded-xl sm:rounded-2xl mb-3 sm:mb-4 md:mb-6 shadow-lg touch-manipulation`}
                       whileHover={{
                         rotate: 360,
                         scale: 1.2,
                         transition: { duration: 0.6 },
                       }}
+                      whileTap={{ scale: 0.9 }}
                     >
-                      {React.createElement(stat.icon, { className: "w-10 h-10 text-white" })}
+                      {React.createElement(stat.icon, { className: "w-6 h-6 sm:w-8 sm:h-8 md:w-10 md:h-10 text-white" })}
                     </motion.div>
 
                     <motion.h3
-                      className="text-4xl lg:text-5xl font-bold text-slate-800 mb-3"
+                      className="text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl font-bold text-slate-800 mb-1 sm:mb-2 md:mb-3 leading-tight"
                       animate={statsInView ? { scale: [0, 1.1, 1] } : {}}
                       transition={{
                         duration: 0.8,
@@ -930,7 +933,7 @@ export default function HomePage() {
                       {stat.suffix}
                     </motion.h3>
 
-                    <p className="text-lg text-slate-600 font-medium">
+                    <p className="text-xs sm:text-sm md:text-base lg:text-lg text-slate-600 font-medium leading-tight">
                       {stat.label}
                     </p>
                   </Card>
@@ -1020,7 +1023,7 @@ export default function HomePage() {
             variants={containerVariants}
             initial="hidden"
             animate={testimonialsInView ? "visible" : "hidden"}
-            className="grid grid-cols-1 md:grid-cols-3 gap-8"
+            className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 md:gap-8"
           >
             {testimonials.map((testimonial, index) => (
               <motion.div
@@ -1034,7 +1037,7 @@ export default function HomePage() {
                 }}
                 className="group perspective-1000"
               >
-                <Card className="h-full p-8 bg-gradient-to-br from-white/90 to-cyan-50/90 backdrop-blur-lg border border-cyan-200/50 rounded-3xl hover:shadow-2xl transition-all duration-500 relative overflow-hidden group">
+                <Card className="h-full p-4 sm:p-6 md:p-8 bg-gradient-to-br from-white/90 to-cyan-50/90 backdrop-blur-lg border border-cyan-200/50 rounded-xl sm:rounded-2xl md:rounded-3xl hover:shadow-2xl transition-all duration-500 relative overflow-hidden group touch-manipulation">
                   <motion.div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-blue-600/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
 
                   <motion.div
@@ -1061,10 +1064,10 @@ export default function HomePage() {
                         <Image
                           src={testimonial.avatar}
                           alt={testimonial.name}
-                          width={70}
-                          height={70}
-                          className="rounded-full mr-4 border-3 border-cyan-400/30 shadow-lg"
-                          style={{ width: "70px", height: "70px" }}
+                          width={50}
+                          height={50}
+                          className="rounded-full mr-3 sm:mr-4 border-2 sm:border-3 border-cyan-400/30 shadow-lg"
+                          style={{ width: "40px", height: "40px" }}
                         />
                         <motion.div
                           className="absolute inset-0 rounded-full border-2 border-cyan-400 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
@@ -1077,25 +1080,26 @@ export default function HomePage() {
                       </motion.div>
                       <div>
                         <motion.h3
-                          className="text-xl font-bold bg-gradient-to-r from-gray-800 to-blue-600 bg-clip-text text-transparent"
+                          className="text-base sm:text-lg md:text-xl font-bold bg-gradient-to-r from-gray-800 to-blue-600 bg-clip-text text-transparent"
                           whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
                         >
                           {testimonial.name}
                         </motion.h3>
-                        <p className="text-cyan-600 font-semibold">
+                        <p className="text-xs sm:text-sm md:text-base text-cyan-600 font-semibold">
                           {testimonial.role}
                         </p>
                       </div>
                     </motion.div>
 
                     <motion.p
-                      className="text-gray-700 italic leading-relaxed mb-6 text-lg"
+                      className="text-gray-700 italic leading-relaxed mb-3 sm:mb-4 md:mb-6 text-sm sm:text-base md:text-lg line-clamp-4 sm:line-clamp-none"
                       whileHover={{ color: "#374151" }}
                     >
                       "{testimonial.content}"
                     </motion.p>
 
-                    <div className="flex text-yellow-500 space-x-1">
+                    <div className="flex text-yellow-500 space-x-0.5 sm:space-x-1">
                       {[...Array(testimonial.rating)].map((_, i) => (
                         <motion.div
                           key={i}
@@ -1111,8 +1115,9 @@ export default function HomePage() {
                             rotate: 360,
                             transition: { duration: 0.3 },
                           }}
+                          whileTap={{ scale: 0.9 }}
                         >
-                          <Star className="w-6 h-6 fill-current" />
+                          <Star className="w-4 h-4 sm:w-5 sm:h-5 md:w-6 md:h-6 fill-current touch-manipulation" />
                         </motion.div>
                       ))}
                     </div>
@@ -1156,10 +1161,10 @@ export default function HomePage() {
             initial={{ opacity: 0, y: 50 }}
             animate={mapInView ? { opacity: 1, y: 0 } : {}}
             transition={{ duration: 0.8 }}
-            className="text-center mb-8 sm:mb-12"
+            className="text-center mb-6 sm:mb-8 md:mb-12"
           >
             <motion.h2
-              className="text-2xl sm:text-3xl md:text-4xl font-bold bg-gradient-to-r from-gray-800 via-blue-600 to-cyan-600 bg-clip-text text-transparent mb-3 sm:mb-4"
+              className="text-lg sm:text-xl md:text-2xl lg:text-3xl xl:text-4xl font-bold bg-gradient-to-r from-gray-800 via-blue-600 to-cyan-600 bg-clip-text text-transparent mb-2 sm:mb-3 md:mb-4 leading-tight"
               animate={{
                 backgroundPosition: ["0%", "100%", "0%"],
               }}
@@ -1171,7 +1176,7 @@ export default function HomePage() {
               initial={{ opacity: 0, y: 20 }}
               animate={mapInView ? { opacity: 1, y: 0 } : {}}
               transition={{ duration: 0.8, delay: 0.2 }}
-              className="text-base sm:text-lg text-gray-600 max-w-2xl mx-auto"
+              className="text-sm sm:text-base md:text-lg text-gray-600 max-w-2xl mx-auto px-4 sm:px-0"
             >
               Visit our advanced medical facility at Annapurna Neurological
               Institute & Allied Sciences
@@ -1182,13 +1187,13 @@ export default function HomePage() {
             initial={{ opacity: 0, scale: 0.9 }}
             animate={mapInView ? { opacity: 1, scale: 1 } : {}}
             transition={{ duration: 0.8, delay: 0.2 }}
-            className="bg-white rounded-3xl shadow-2xl overflow-hidden"
+            className="bg-white rounded-xl sm:rounded-2xl md:rounded-3xl shadow-2xl overflow-hidden mx-4 sm:mx-0"
           >
-            <div className="relative w-full h-[300px]">
+            <div className="relative w-full h-[250px] sm:h-[300px] md:h-[350px]">
               <iframe
                 src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3532.5440193842667!2d85.31673821504788!3d27.703030282849743!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x39eb199a07a31fc5%3A0x984031b6bb9f6b5a!2sAnnapurna%20Neurological%20Institute%20%26%20Allied%20Sciences!5e0!3m2!1sen!2snp!4v1734518769875!5m2!1sen!2snp"
                 width="100%"
-                height="300"
+                height="100%"
                 style={{ border: 0 }}
                 allowFullScreen
                 loading="lazy"
@@ -1220,13 +1225,13 @@ export default function HomePage() {
             transition={{ duration: 0.8, delay: 0.4 }}
             className="mt-4 sm:mt-6"
           >
-            <Card className="p-4 sm:p-6 lg:p-8 bg-white/80 backdrop-blur-lg border border-blue-200 rounded-2xl sm:rounded-3xl shadow-xl">
+            <Card className="p-4 sm:p-6 lg:p-8 bg-white/80 backdrop-blur-lg border border-blue-200 rounded-xl sm:rounded-2xl md:rounded-3xl shadow-xl mx-4 sm:mx-0 touch-manipulation">
               <div className="text-center">
-                <h3 className="text-lg sm:text-xl lg:text-2xl font-bold text-blue-600 mb-3 sm:mb-4">
-                  <MapPin className="w-6 h-6 sm:w-8 sm:h-8 inline mr-2" />
+                <h3 className="text-base sm:text-lg md:text-xl lg:text-2xl font-bold text-blue-600 mb-2 sm:mb-3 md:mb-4 leading-tight">
+                  <MapPin className="w-5 h-5 sm:w-6 sm:h-6 md:w-8 md:h-8 inline mr-1 sm:mr-2" />
                   Annapurna Neurological Institute & Allied Sciences
                 </h3>
-                <div className="space-y-1 sm:space-y-2 text-sm sm:text-base">
+                <div className="space-y-1 sm:space-y-2 text-xs sm:text-sm md:text-base">
                   <p className="text-gray-700">
                     <strong>Address:</strong> {mounted ? settings.contact.address : "Annapurna Neurological Institute & Allied Sciences, Maitighar Mandala-10, Kathmandu 44600, Nepal"}
                   </p>
@@ -1246,9 +1251,10 @@ export default function HomePage() {
                   rel="noopener noreferrer"
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
+                  className="touch-manipulation"
                 >
-                  <Button className="bg-gradient-to-r from-sky-500 to-teal-500 hover:from-sky-600 hover:to-teal-600 text-white px-6 sm:px-8 py-2 sm:py-3 rounded-xl font-semibold text-sm sm:text-base">
-                    <ExternalLink className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+                  <Button className="bg-gradient-to-r from-sky-500 to-teal-500 hover:from-sky-600 hover:to-teal-600 text-white px-4 sm:px-6 md:px-8 py-2 sm:py-3 rounded-xl font-semibold text-xs sm:text-sm md:text-base min-h-[44px] w-full sm:w-auto">
+                    <ExternalLink className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5 mr-1 sm:mr-2" />
                     Open in Google Maps
                   </Button>
                 </motion.a>

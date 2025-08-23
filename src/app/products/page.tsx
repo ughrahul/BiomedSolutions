@@ -10,6 +10,7 @@ export default function ProductsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
+  const [isMobile, setIsMobile] = useState(false);
   
   const ref = useRef(null);
   const { scrollYProgress } = useScroll({
@@ -24,8 +25,22 @@ export default function ProductsPage() {
       setMousePosition({ x: e.clientX, y: e.clientY });
     };
 
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
+    const handleResize = () => {
+      setIsMobile(window.innerWidth < 768);
+    };
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('resize', handleResize);
+      handleResize(); // Initial check
+    }
+
+    return () => {
+      if (typeof window !== 'undefined') {
+        window.removeEventListener('mousemove', handleMouseMove);
+        window.removeEventListener('resize', handleResize);
+      }
+    };
   }, []);
 
   const floatingIcons = [
@@ -39,24 +54,26 @@ export default function ProductsPage() {
   return (
     <div className="min-h-screen">
       {/* Hero Section - Similar to About Page */}
-      <section ref={ref} className="relative h-[60vh] md:h-[70vh] flex items-center justify-center overflow-hidden">
+      <section ref={ref} className="relative h-[50vh] sm:h-[60vh] md:h-[70vh] flex items-center justify-center overflow-hidden pt-16 sm:pt-20">
         {/* Dynamic Background */}
-        <motion.div 
+        <motion.div
           className="absolute inset-0 bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900"
           style={{ y }}
         >
           <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-20"></div>
           <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
-          
-          {/* Mouse-following gradient */}
-          <motion.div
-            className="absolute w-96 h-96 bg-gradient-to-r from-cyan-500/30 to-purple-600/30 rounded-full blur-3xl pointer-events-none"
-            animate={{
-              x: mousePosition.x - 192,
-              y: mousePosition.y - 192,
-            }}
-            transition={{ type: "spring", damping: 30, stiffness: 200 }}
-          />
+
+          {/* Mouse-following gradient - disabled on mobile for performance */}
+          {!isMobile && (
+            <motion.div
+              className="absolute w-96 h-96 bg-gradient-to-r from-cyan-500/30 to-purple-600/30 rounded-full blur-3xl pointer-events-none"
+              animate={{
+                x: mousePosition.x - 192,
+                y: mousePosition.y - 192,
+              }}
+              transition={{ type: "spring", damping: 30, stiffness: 200 }}
+            />
+          )}
         </motion.div>
 
         {/* Floating Background Elements */}
@@ -106,11 +123,11 @@ export default function ProductsPage() {
         </div>
 
         {/* Main Content */}
-        <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center -mt-4 sm:-mt-8 md:-mt-10">
           <motion.div
-            initial={{ opacity: 0, y: 30 }}
+            initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease: "easeOut" }}
+            transition={{ duration: 0.6, ease: "easeOut" }}
           >
             <motion.div
               initial={{ opacity: 0, scale: 0.5 }}
@@ -125,14 +142,14 @@ export default function ProductsPage() {
             </motion.div>
 
             <motion.h1
-              className="text-4xl md:text-7xl font-bold mb-6 text-white"
-              initial={{ opacity: 0, y: 20 }}
+              className="text-3xl xs:text-4xl sm:text-5xl md:text-6xl lg:text-7xl xl:text-8xl font-bold mb-4 sm:mb-6 text-white leading-[1.1] sm:leading-tight tracking-tight"
+              initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.2 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
             >
               Medical{" "}
-              <motion.span 
-                className="bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent"
+              <motion.span
+                className="bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent block sm:inline"
                 animate={{
                   backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
                 }}
@@ -150,36 +167,36 @@ export default function ProductsPage() {
             </motion.h1>
 
             <motion.p
-              className="text-lg md:text-xl text-gray-300 max-w-4xl mx-auto leading-relaxed mb-8"
-              initial={{ opacity: 0, y: 20 }}
+              className="text-sm xs:text-base sm:text-lg md:text-xl text-gray-300 max-w-4xl mx-auto leading-relaxed mb-6 sm:mb-8 px-2 sm:px-0"
+              initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.4 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
             >
               Discover our comprehensive range of cutting-edge medical equipment designed to enhance patient care and clinical outcomes.
             </motion.p>
 
             {/* Enhanced Search and View Controls */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.6 }}
-              className="flex flex-col sm:flex-row items-center justify-center gap-6 max-w-3xl mx-auto mb-8"
+              transition={{ duration: 0.6, delay: 0.4 }}
+              className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 md:gap-6 max-w-4xl mx-auto mb-6 sm:mb-8 px-4 sm:px-0 w-full"
             >
               <div className="relative flex-1 w-full">
-                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-cyan-400 w-5 h-5" />
+                <Search className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-cyan-400 w-4 h-4 sm:w-5 sm:h-5" />
                 <EnhancedInput
                   type="text"
                   placeholder="Search medical equipment..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-12 pr-4 py-4 bg-white/10 backdrop-blur-sm border-2 border-cyan-300/30 rounded-xl focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 text-white placeholder-gray-300"
+                  className="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-3 sm:py-4 bg-white/10 backdrop-blur-sm border-2 border-cyan-300/30 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 text-white placeholder-gray-300 text-sm sm:text-base min-h-[48px] touch-manipulation"
                 />
               </div>
               
-              <div className="flex bg-white/10 backdrop-blur-sm border-2 border-cyan-300/30 rounded-xl p-1">
+              <div className="flex bg-white/10 backdrop-blur-sm border-2 border-cyan-300/30 rounded-lg sm:rounded-xl p-1">
                 <motion.button
                   onClick={() => setViewMode("grid")}
-                  className={`p-3 rounded-lg transition-all duration-200 ${
+                  className={`p-2 sm:p-3 rounded-md sm:rounded-lg transition-all duration-200 min-h-[44px] min-w-[44px] sm:min-h-auto sm:min-w-auto touch-manipulation ${
                     viewMode === "grid"
                       ? "bg-cyan-500 text-white shadow-lg"
                       : "text-cyan-300 hover:text-white hover:bg-cyan-500/20"
@@ -187,11 +204,11 @@ export default function ProductsPage() {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  <Grid className="w-5 h-5" />
+                  <Grid className="w-4 h-4 sm:w-5 sm:h-5" />
                 </motion.button>
                 <motion.button
                   onClick={() => setViewMode("list")}
-                  className={`p-3 rounded-lg transition-all duration-200 ${
+                  className={`p-2 sm:p-3 rounded-md sm:rounded-lg transition-all duration-200 min-h-[44px] min-w-[44px] sm:min-h-auto sm:min-w-auto touch-manipulation ${
                     viewMode === "list"
                       ? "bg-cyan-500 text-white shadow-lg"
                       : "text-cyan-300 hover:text-white hover:bg-cyan-500/20"
@@ -199,17 +216,17 @@ export default function ProductsPage() {
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
                 >
-                  <List className="w-5 h-5" />
+                  <List className="w-4 h-4 sm:w-5 sm:h-5" />
                 </motion.button>
               </div>
             </motion.div>
 
             {/* Explore Buttons - Similar to About page "Discover Our Story" */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
+              initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.7 }}
-              className="flex flex-col sm:flex-row items-center justify-center gap-4 max-w-4xl mx-auto mb-8"
+              transition={{ duration: 0.6, delay: 0.5 }}
+              className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 max-w-4xl mx-auto mb-6 sm:mb-8 px-4 sm:px-0 w-full"
             >
               <motion.button
                 onClick={() => {
@@ -219,7 +236,7 @@ export default function ProductsPage() {
                     nextSection?.scrollIntoView({ behavior: 'smooth' });
                   }
                 }}
-                className="px-6 py-3 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-medium rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+                className="px-4 sm:px-6 py-3 sm:py-4 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-600 hover:to-blue-700 text-white font-medium rounded-lg sm:rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 text-sm sm:text-base min-h-[48px] w-full sm:w-auto touch-manipulation"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
@@ -234,7 +251,7 @@ export default function ProductsPage() {
                     nextSection?.scrollIntoView({ behavior: 'smooth' });
                   }
                 }}
-                className="px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white font-medium rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+                className="px-4 sm:px-6 py-3 sm:py-4 bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white font-medium rounded-lg sm:rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 text-sm sm:text-base min-h-[48px] w-full sm:w-auto touch-manipulation"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
@@ -249,7 +266,7 @@ export default function ProductsPage() {
                     nextSection?.scrollIntoView({ behavior: 'smooth' });
                   }
                 }}
-                className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-medium rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+                className="px-4 sm:px-6 py-3 sm:py-4 bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-medium rounded-lg sm:rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 text-sm sm:text-base min-h-[48px] w-full sm:w-auto touch-manipulation"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
@@ -264,7 +281,7 @@ export default function ProductsPage() {
                     nextSection?.scrollIntoView({ behavior: 'smooth' });
                   }
                 }}
-                className="px-6 py-3 bg-white/10 backdrop-blur-sm border-2 border-cyan-300/30 hover:bg-white/20 text-white font-medium rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105"
+                className="px-4 sm:px-6 py-3 sm:py-4 bg-white/10 backdrop-blur-sm border-2 border-cyan-300/30 hover:bg-white/20 text-white font-medium rounded-lg sm:rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl transform hover:scale-105 text-sm sm:text-base min-h-[48px] w-full sm:w-auto touch-manipulation"
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
               >
@@ -274,10 +291,10 @@ export default function ProductsPage() {
 
             {/* Explore Categories - Similar to About page "Discover Our Story" */}
             <motion.div
-              className="flex flex-col items-center justify-center"
-              initial={{ opacity: 0, y: 20 }}
+              className="flex flex-col items-center justify-center px-4 sm:px-0"
+              initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.8, delay: 0.8 }}
+              transition={{ duration: 0.6, delay: 0.6 }}
             >
               <motion.div
                 animate={{ y: [0, 10, 0] }}
@@ -290,29 +307,31 @@ export default function ProductsPage() {
                   }
                 }}
               >
-                <motion.span 
-                  className="text-lg font-medium mb-4 group-hover:text-white transition-colors duration-300"
+                <motion.span
+                  className="text-base sm:text-lg font-medium mb-3 sm:mb-4 group-hover:text-white transition-colors duration-300 text-center leading-tight"
                   whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
                 >
                   Explore Our Products
                 </motion.span>
                 <motion.div
-                  className="w-12 h-12 rounded-full border-2 border-gray-400 flex items-center justify-center group-hover:border-white group-hover:bg-white/10 transition-all duration-300 backdrop-blur-sm"
+                  className="w-10 h-10 sm:w-12 sm:h-12 rounded-full border-2 border-gray-400 flex items-center justify-center group-hover:border-white group-hover:bg-white/10 transition-all duration-300 backdrop-blur-sm touch-manipulation"
                   whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
                   animate={{
                     boxShadow: [
-                      "0 0 20px rgba(255,255,255,0.1)",
-                      "0 0 40px rgba(255,255,255,0.2)",
-                      "0 0 20px rgba(255,255,255,0.1)",
+                      "0 0 15px rgba(255,255,255,0.1)",
+                      "0 0 25px rgba(255,255,255,0.2)",
+                      "0 0 15px rgba(255,255,255,0.1)",
                     ]
                   }}
                   transition={{ duration: 2, repeat: Infinity }}
                 >
                   <motion.div
-                    animate={{ y: [0, 3, 0] }}
-                    transition={{ duration: 1.5, repeat: Infinity }}
+                    animate={{ y: [0, 2, 0] }}
+                    transition={{ duration: 1.2, repeat: Infinity }}
                   >
-                    <ChevronDown className="w-6 h-6" />
+                    <ChevronDown className="w-5 h-5 sm:w-6 sm:h-6" />
                   </motion.div>
                 </motion.div>
               </motion.div>

@@ -11,8 +11,7 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://biomedsolutions.com.np"),
-  title:
-    "Biomed Solutions - Leading Medical Equipment Provider in Nepal | Healthcare Technology",
+  title: "Biomed Solutions",
   description:
     "Biomed Solutions is Nepal's premier provider of advanced medical equipment and healthcare technology solutions. We supply, maintain, and support medical devices from globally recognized brands for hospitals and clinics in Maitighar, Kathmandu.",
   keywords:
@@ -36,7 +35,7 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_US",
     url: "https://biomedsolutions.com.np",
-    title: "Biomed Solutions - Leading Medical Equipment Provider in Nepal",
+    title: "Biomed Solutions",
     description:
       "Nepal's premier provider of advanced medical equipment and healthcare technology solutions. Professional medical devices for hospitals and clinics.",
     siteName: "Biomed Solutions",
@@ -45,13 +44,13 @@ export const metadata: Metadata = {
         url: "/assets/images/logo.png",
         width: 1200,
         height: 630,
-        alt: "Biomed Solutions - Leading Medical Equipment Provider in Nepal",
+        alt: "Biomed Solutions",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Biomed Solutions - Leading Medical Equipment Provider in Nepal",
+    title: "Biomed Solutions",
     description:
       "Nepal's premier provider of advanced medical equipment and healthcare technology solutions.",
     creator: "@biomedsolutions",

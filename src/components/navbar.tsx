@@ -14,11 +14,10 @@ import {
   Shield,
   Clock,
   MapPin,
-  ArrowRight,
 } from "lucide-react";
 import Image from "next/image";
 import { getCurrentUser, getUserProfile, signOut } from "@/lib/auth";
-import { Button } from "@/components/ui/button";
+// Button import removed - no longer needed for login functionality
 import { useWebsiteSettings } from "@/hooks/useWebsiteSettings";
 import toast from "react-hot-toast";
 
@@ -32,10 +31,9 @@ const navigation = [
 export default function Navbar() {
   const { settings } = useWebsiteSettings();
   const [isOpen, setIsOpen] = useState(false);
-  const [user, setUser] = useState<any>(null);
-  const [profile, setProfile] = useState<any>(null);
+  const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
+  const [profile, setProfile] = useState<{ full_name?: string; role?: string } | null>(null);
   const [showUserMenu, setShowUserMenu] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [windowWidth, setWindowWidth] = useState(0);
   const pathname = usePathname();
 
@@ -50,7 +48,6 @@ export default function Navbar() {
   // Fetch user data on mount and when auth state changes
   const fetchUserData = async () => {
     try {
-      setLoading(true);
       const currentUser = await getCurrentUser();
       if (currentUser) {
         setUser(currentUser);
@@ -65,8 +62,6 @@ export default function Navbar() {
       console.error("Error fetching user data:", error);
       setUser(null);
       setProfile(null);
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -435,43 +430,50 @@ export default function Navbar() {
                   <Link href="/auth/login">
                     <motion.div
                       className="relative group"
-                      whileHover={{ scale: 1.02, y: -1 }}
-                      whileTap={{ scale: 0.98 }}
+                      whileHover={{ scale: 1.1, y: -2 }}
+                      whileTap={{ scale: 0.95 }}
                       transition={{ duration: 0.2, ease: "easeOut" }}
                     >
-                      {/* Subtle glow effect */}
-                      <motion.div 
-                        className="absolute -inset-1 rounded-xl bg-gradient-to-r from-blue-600/20 to-cyan-600/20 blur-sm opacity-0 group-hover:opacity-100"
+                      {/* Enhanced glow effect */}
+                      <motion.div
+                        className="absolute -inset-2 rounded-2xl bg-gradient-to-r from-blue-600/30 to-cyan-600/30 blur-md opacity-0 group-hover:opacity-100"
                         transition={{ duration: 0.3 }}
                       />
-                      
-                      {/* Main button */}
-                      <motion.div className="relative bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-6 py-3 rounded-xl font-semibold shadow-lg border border-blue-500/30 transition-all duration-300">
+
+                      {/* Compact icon button */}
+                      <motion.div
+                        className="relative w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded-2xl flex items-center justify-center shadow-lg border border-blue-500/40 transition-all duration-300"
+                        whileHover={{
+                          boxShadow: "0 8px 25px rgba(59, 130, 246, 0.4)",
+                          rotate: 5
+                        }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        {/* Animated icon */}
                         <motion.div
-                          className="flex items-center"
-                          whileHover={{ x: 2 }}
+                          whileHover={{ rotate: 15, scale: 1.1 }}
                           transition={{ duration: 0.2 }}
                         >
-                          <motion.div
-                            className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center mr-2"
-                            whileHover={{ rotate: 15, scale: 1.1 }}
-                            transition={{ duration: 0.2 }}
-                          >
-                            <User className="w-3 h-3 text-white" />
-                          </motion.div>
-                          <span className="text-white font-medium">Login</span>
-                          <motion.div
-                            className="ml-2 opacity-60 group-hover:opacity-100"
-                            animate={{ x: [0, 2, 0] }}
-                            transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 2 }}
-                          >
-                            <ArrowRight className="w-4 h-4" />
-                          </motion.div>
+                          <User className="w-5 h-5 text-white" />
                         </motion.div>
-                        
-                        {/* Subtle shimmer on hover */}
+
+                        {/* Subtle pulse animation */}
                         <motion.div
-                          className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12 opacity-0 group-hover:opacity-100"
+                          className="absolute inset-0 rounded-2xl bg-white/10"
+                          animate={{
+                            scale: [1, 1.05, 1],
+                            opacity: [0.3, 0.6, 0.3]
+                          }}
+                          transition={{
+                            duration: 2,
+                            repeat: Infinity,
+                            ease: "easeInOut"
+                          }}
+                        />
+
+                        {/* Shimmer effect */}
+                        <motion.div
+                          className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent rounded-2xl opacity-0 group-hover:opacity-100"
                           animate={{ x: ["-100%", "200%"] }}
                           transition={{ duration: 1.5, ease: "easeInOut" }}
                         />
@@ -610,46 +612,54 @@ export default function Navbar() {
                     <Link href="/auth/login" onClick={() => setIsOpen(false)}>
                       <motion.div
                         className="relative group"
-                        whileHover={{ scale: 1.02, y: -2 }}
-                        whileTap={{ scale: 0.98 }}
-                        transition={{ duration: 0.2 }}
+                        whileHover={{ scale: 1.1, y: -2 }}
+                        whileTap={{ scale: 0.95 }}
+                        transition={{ duration: 0.2, ease: "easeOut" }}
                       >
-                        {/* Subtle glow effect */}
-                        <motion.div 
-                          className="absolute -inset-1 rounded-xl bg-gradient-to-r from-blue-600/20 to-cyan-600/20 blur-sm opacity-0 group-hover:opacity-100"
+                        {/* Enhanced glow effect */}
+                        <motion.div
+                          className="absolute -inset-2 rounded-2xl bg-gradient-to-r from-blue-600/30 to-cyan-600/30 blur-md opacity-0 group-hover:opacity-100"
                           transition={{ duration: 0.3 }}
                         />
-                        
-                        <Button className="relative w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white py-4 rounded-xl font-semibold shadow-lg border border-blue-500/30 transition-all duration-300">
+
+                        {/* Compact mobile icon button */}
+                        <motion.div
+                          className="relative w-14 h-14 mx-auto bg-gradient-to-br from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded-2xl flex items-center justify-center shadow-lg border border-blue-500/40 transition-all duration-300"
+                          whileHover={{
+                            boxShadow: "0 8px 25px rgba(59, 130, 246, 0.4)",
+                            rotate: 5
+                          }}
+                          transition={{ duration: 0.3 }}
+                        >
+                          {/* Animated icon */}
                           <motion.div
-                            className="flex items-center justify-center"
-                            whileHover={{ x: 2 }}
+                            whileHover={{ rotate: 15, scale: 1.1 }}
                             transition={{ duration: 0.2 }}
                           >
-                            <motion.div
-                              className="w-5 h-5 rounded-full bg-white/20 flex items-center justify-center mr-3"
-                              whileHover={{ rotate: 15, scale: 1.1 }}
-                              transition={{ duration: 0.2 }}
-                            >
-                              <User className="w-3 h-3 text-white" />
-                            </motion.div>
-                            <span className="font-medium">Login</span>
-                            <motion.div
-                              className="ml-2 opacity-60 group-hover:opacity-100"
-                              animate={{ x: [0, 2, 0] }}
-                              transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 2 }}
-                            >
-                              <ArrowRight className="w-4 h-4" />
-                            </motion.div>
+                            <User className="w-6 h-6 text-white" />
                           </motion.div>
-                          
-                          {/* Subtle shimmer on hover */}
+
+                          {/* Subtle pulse animation */}
                           <motion.div
-                            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent -skew-x-12 opacity-0 group-hover:opacity-100"
+                            className="absolute inset-0 rounded-2xl bg-white/10"
+                            animate={{
+                              scale: [1, 1.05, 1],
+                              opacity: [0.3, 0.6, 0.3]
+                            }}
+                            transition={{
+                              duration: 2,
+                              repeat: Infinity,
+                              ease: "easeInOut"
+                            }}
+                          />
+
+                          {/* Shimmer effect */}
+                          <motion.div
+                            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent rounded-2xl opacity-0 group-hover:opacity-100"
                             animate={{ x: ["-100%", "200%"] }}
                             transition={{ duration: 1.5, ease: "easeInOut" }}
                           />
-                        </Button>
+                        </motion.div>
                       </motion.div>
                     </Link>
                   )}
