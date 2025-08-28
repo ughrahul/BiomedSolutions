@@ -3,20 +3,7 @@
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
 import Image from "next/image";
-import {
-  Package,
-  Users,
-  ShoppingCart,
-  DollarSign,
-  Eye,
-  Heart,
-  Star,
-  ArrowUpRight,
-  Activity,
-  Mail,
-  User,
-  Settings,
-} from "lucide-react";
+import { Package, Mail, Settings } from "lucide-react";
 import type { Product } from "@/types/product";
 import { EnhancedCard } from "@/components/ui/enhanced-card";
 import { EnhancedButton } from "@/components/ui/enhanced-button";
@@ -24,6 +11,9 @@ import ContactMessages from "@/components/admin/ContactMessages";
 import AdminPageWrapper from "@/components/admin/AdminPageWrapper";
 import { useRealtime } from "@/contexts/RealtimeContext";
 import { useMessages } from "@/contexts/MessageContext";
+import { useRouter } from "next/navigation";
+
+export const dynamic = "force-dynamic";
 
 interface DashboardStats {
   totalProducts: number;
@@ -31,6 +21,7 @@ interface DashboardStats {
 }
 
 export default function AdminDashboard() {
+  const router = useRouter();
   const { messages, unreadCount, readCount, markAllAsRead } = useMessages();
   const [stats, setStats] = useState<DashboardStats>({
     totalProducts: 0,
@@ -41,91 +32,68 @@ export default function AdminDashboard() {
   const [productsLoading, setProductsLoading] = useState(true);
   const { subscribeToTable, unsubscribeFromTable } = useRealtime();
 
-  // Fetch initial stats
   const fetchStats = async () => {
     try {
       setLoading(true);
-
-      // Fetch dashboard stats
-      const response = await fetch("/api/dashboard-stats");
+      const response = await fetch("/api/dashboard-stats", {
+        cache: "no-store",
+      });
       const data = await response.json();
-
-      if (data.error) {
-        throw new Error(data.error);
-      }
-
+      if (data.error) throw new Error(data.error);
       setStats({
         totalProducts: data.totalProducts || 0,
         totalMessages: data.totalMessages || 0,
       });
     } catch (error) {
-      if (process.env.NODE_ENV === "development") {
+      if (process.env.NODE_ENV === "development")
         console.error("Error fetching stats:", error);
-      }
     } finally {
       setLoading(false);
     }
   };
 
-  // Fetch recent products
   const fetchRecentProducts = async () => {
     try {
       setProductsLoading(true);
-      const response = await fetch("/api/products");
-
+      const response = await fetch("/api/products", { cache: "no-store" });
       if (response.ok) {
         const data = await response.json();
-        // Sort by created_at in descending order and get the 3 most recent products
         const sortedProducts = (data.products || []).sort(
           (a: Product, b: Product) =>
             new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
         );
-        const recent = sortedProducts.slice(0, 3);
-        setRecentProducts(recent);
-      } else {
-        if (process.env.NODE_ENV === "development") {
-          console.error("Failed to fetch recent products");
-        }
+        setRecentProducts(sortedProducts.slice(0, 3));
+      } else if (process.env.NODE_ENV === "development") {
+        console.error("Failed to fetch recent products");
       }
     } catch (error) {
-      if (process.env.NODE_ENV === "development") {
+      if (process.env.NODE_ENV === "development")
         console.error("Error fetching recent products:", error);
-      }
     } finally {
       setProductsLoading(false);
     }
   };
 
-  // No need for separate message stats - using MessageContext
-
-  // Setup real-time subscriptions
   useEffect(() => {
     fetchStats();
     fetchRecentProducts();
 
-    // Subscribe to products table changes
     const productsChannel = subscribeToTable("products", (payload) => {
-      // Products update received
       if (payload.eventType === "INSERT") {
         setStats((prev) => ({
           ...prev,
           totalProducts: prev.totalProducts + 1,
         }));
-        // Refresh recent products when new product is added
         fetchRecentProducts();
       } else if (payload.eventType === "DELETE") {
         setStats((prev) => ({
           ...prev,
           totalProducts: Math.max(0, prev.totalProducts - 1),
         }));
-        // Refresh recent products when product is deleted
         fetchRecentProducts();
       }
     });
 
-    // No need for separate messages subscription - MessageContext handles it
-
-    // Cleanup subscriptions
     return () => {
       if (productsChannel) unsubscribeFromTable(productsChannel);
     };
@@ -151,13 +119,9 @@ export default function AdminDashboard() {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-        delayChildren: 0.2,
-      },
+      transition: { staggerChildren: 0.1, delayChildren: 0.2 },
     },
   };
-
   const itemVariants = {
     hidden: { opacity: 0, y: 20 },
     visible: {
@@ -192,7 +156,7 @@ export default function AdminDashboard() {
         initial="hidden"
         animate="visible"
       >
-        {statsData.map((stat, index) => (
+        {statsData.map((stat) => (
           <motion.div key={stat.title} variants={itemVariants}>
             <EnhancedCard
               variant="medical"
@@ -224,9 +188,7 @@ export default function AdminDashboard() {
                           </div>
                         </div>
                         <button
-                          onClick={async () => {
-                            await markAllAsRead();
-                          }}
+                          onClick={markAllAsRead}
                           disabled={unreadCount === 0}
                           className="px-3 py-1 text-xs bg-blue-100 text-blue-700 rounded-md hover:bg-blue-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                         >
@@ -255,19 +217,17 @@ export default function AdminDashboard() {
           transition={{ duration: 0.8, delay: 0.3 }}
         >
           <EnhancedCard variant="medical" padding="none">
-            <div className="p-6 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold text-gray-900">
-                  Recent Products
-                </h2>
-                <EnhancedButton
-                  variant="outline"
-                  size="sm"
-                  onClick={() => (window.location.href = "/admin/products")}
-                >
-                  View All
-                </EnhancedButton>
-              </div>
+            <div className="p-6 border-b border-gray-200 flex items-center justify-between">
+              <h2 className="text-2xl font-bold text-gray-900">
+                Recent Products
+              </h2>
+              <EnhancedButton
+                variant="outline"
+                size="sm"
+                onClick={() => router.push("/admin/products")}
+              >
+                View All
+              </EnhancedButton>
             </div>
             <div className="divide-y divide-gray-200">
               {productsLoading ? (
@@ -287,34 +247,27 @@ export default function AdminDashboard() {
                   <div
                     key={product.id}
                     className="p-6 hover:bg-gray-50 transition-colors cursor-pointer"
-                    onClick={() =>
-                      (window.location.href = `/admin/products/${product.id}`)
-                    }
+                    onClick={() => router.push(`/admin/products/${product.id}`)}
                   >
                     <div className="flex items-start gap-4">
-                      {/* Product Image */}
-                      <div className="flex-shrink-0">
-                        <div className="w-16 h-16 rounded-lg overflow-hidden bg-gray-100">
-                          <Image
-                            src={
-                              product.images &&
-                              Array.isArray(product.images) &&
-                              product.images.length > 0
-                                ? typeof product.images[0] === "string"
-                                  ? product.images[0]
-                                  : (product.images[0] as any)?.url ||
-                                    (product.images[0] as any)?.src
-                                : "/assets/images/placeholder-product.svg"
-                            }
-                            alt={product.name}
-                            width={64}
-                            height={64}
-                            className="w-full h-full object-cover"
-                          />
-                        </div>
+                      <div className="flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden bg-gray-100">
+                        <Image
+                          src={
+                            product.images &&
+                            Array.isArray(product.images) &&
+                            product.images.length > 0
+                              ? typeof product.images[0] === "string"
+                                ? product.images[0]
+                                : (product.images[0] as any)?.url ||
+                                  (product.images[0] as any)?.src
+                              : "/assets/images/placeholder-product.svg"
+                          }
+                          alt={product.name}
+                          width={64}
+                          height={64}
+                          className="w-full h-full object-cover"
+                        />
                       </div>
-
-                      {/* Product Info */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-3 mb-2">
                           <h3 className="text-lg font-semibold text-gray-900 truncate hover:text-primary-600 transition-colors">
@@ -343,21 +296,17 @@ export default function AdminDashboard() {
           transition={{ duration: 0.8, delay: 0.4 }}
         >
           <EnhancedCard variant="medical" padding="none">
-            <div className="p-6 border-b border-gray-200">
-              <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-bold text-gray-900">
-                  Recent Contact Messages
-                </h2>
-                <EnhancedButton
-                  variant="outline"
-                  size="sm"
-                  onClick={() =>
-                    (window.location.href = "/admin/contact-messages")
-                  }
-                >
-                  View All Messages
-                </EnhancedButton>
-              </div>
+            <div className="p-6 border-b border-gray-200 flex items-center justify-between">
+              <h2 className="text-2xl font-bold text-gray-900">
+                Recent Contact Messages
+              </h2>
+              <EnhancedButton
+                variant="outline"
+                size="sm"
+                onClick={() => router.push("/admin/contact-messages")}
+              >
+                View All Messages
+              </EnhancedButton>
             </div>
             <div className="max-h-96 overflow-y-auto p-6">
               <ContactMessages limit={3} />
@@ -381,25 +330,21 @@ export default function AdminDashboard() {
               <EnhancedButton
                 variant="primary"
                 icon={<Package className="w-5 h-5" />}
-                onClick={() => (window.location.href = "/admin/products/new")}
+                onClick={() => router.push("/admin/products/new")}
               >
                 Add New Product
               </EnhancedButton>
               <EnhancedButton
                 variant="medical"
                 icon={<Mail className="w-5 h-5" />}
-                onClick={() =>
-                  (window.location.href = "/admin/contact-messages")
-                }
+                onClick={() => router.push("/admin/contact-messages")}
               >
                 Contact Messages
               </EnhancedButton>
               <EnhancedButton
                 variant="medical"
                 icon={<Settings className="w-5 h-5" />}
-                onClick={() =>
-                  (window.location.href = "/admin/website-settings")
-                }
+                onClick={() => router.push("/admin/website-settings")}
               >
                 Website Settings
               </EnhancedButton>
