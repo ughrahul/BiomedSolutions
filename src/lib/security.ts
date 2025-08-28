@@ -169,7 +169,9 @@ export async function checkRateLimit(
       reset: result.reset,
     };
   } catch (error) {
-    console.error("Rate limiting error:", error);
+    if (process.env.NODE_ENV === "development") {
+      console.error("Rate limiting error:", error);
+    }
     return { success: true }; // Allow request if rate limiting fails
   }
 }

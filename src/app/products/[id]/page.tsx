@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
 import { ArrowLeft, Star, Loader2, AlertCircle } from "lucide-react";
 import Link from "next/link";
@@ -12,6 +12,7 @@ import ProductSpecifications from "@/components/ProductDetail/ProductSpecificati
 import { Product } from "@/types/product";
 import { createClientSupabase } from "@/lib/supabase";
 import toast from "react-hot-toast";
+import { logger } from "@/lib/logger";
 
 export default function ProductDetailPage() {
   const params = useParams();
@@ -22,13 +23,7 @@ export default function ProductDetailPage() {
   const productId = params.id as string;
   const supabase = createClientSupabase();
 
-  useEffect(() => {
-    if (productId) {
-      fetchProduct();
-    }
-  }, [productId]);
-
-  const fetchProduct = async () => {
+  const fetchProduct = useCallback(async () => {
     try {
       setLoading(true);
       setError(null);
@@ -39,10 +34,12 @@ export default function ProductDetailPage() {
 
       const { data, error: supabaseError } = await supabase
         .from("products")
-        .select(`
+        .select(
+          `
           *,
           categories(name, slug)
-        `)
+        `
+        )
         .eq("id", productId)
         .eq("is_active", true)
         .single();
@@ -59,7 +56,7 @@ export default function ProductDetailPage() {
       const transformedProduct: Product = {
         id: data.id,
         name: data.name,
-        slug: data.name.toLowerCase().replace(/\s+/g, '-'),
+        slug: data.name.toLowerCase().replace(/\s+/g, "-"),
         category: data.categories?.name || "Medical Equipment",
         category_id: data.category_id,
         description: data.description,
@@ -79,14 +76,17 @@ export default function ProductDetailPage() {
             alt: data.name,
             isPrimary: true,
             order: 1,
-          }
+          },
         ],
         features: data.features || [],
-        specifications: Array.isArray(data.specifications) 
-          ? data.specifications 
-          : data.specifications 
-            ? Object.entries(data.specifications).map(([name, value]) => ({ name, value: String(value) }))
-            : [],
+        specifications: Array.isArray(data.specifications)
+          ? data.specifications
+          : data.specifications
+          ? Object.entries(data.specifications).map(([name, value]) => ({
+              name,
+              value: String(value),
+            }))
+          : [],
         benefits: [],
         warranty: "1 year",
         certifications: ["CE Marked", "FDA Approved"],
@@ -101,13 +101,18 @@ export default function ProductDetailPage() {
 
       setProduct(transformedProduct);
     } catch (error) {
-      console.error("Error fetching product:", error);
+      logger.error("Error fetching product:", error);
       setError("Failed to load product details");
       toast.error("Failed to load product details");
     } finally {
       setLoading(false);
     }
-  };
+  }, [productId, supabase]);
+
+  // Add this useEffect
+  useEffect(() => {
+    fetchProduct();
+  }, [fetchProduct]);
 
   if (loading) {
     return (
@@ -133,8 +138,12 @@ export default function ProductDetailPage() {
           className="text-center max-w-md mx-auto px-4"
         >
           <AlertCircle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-gray-900 mb-2">Product Not Found</h1>
-          <p className="text-gray-600 mb-6">{error || "The requested product could not be found."}</p>
+          <h1 className="text-2xl font-bold text-gray-900 mb-2">
+            Product Not Found
+          </h1>
+          <p className="text-gray-600 mb-6">
+            {error || "The requested product could not be found."}
+          </p>
           <Link href="/products">
             <EnhancedButton>
               <ArrowLeft className="w-4 h-4 mr-2" />
@@ -147,7 +156,7 @@ export default function ProductDetailPage() {
   }
 
   return (
-    <motion.div 
+    <motion.div
       className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -179,9 +188,7 @@ export default function ProductDetailPage() {
       <div className="relative z-10 pt-4">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <Link href="/products">
-            <button 
-              className="inline-flex items-center text-sm text-gray-500 hover:text-gray-700 hover:bg-gray-100 px-3 py-2 rounded-lg transition-all duration-200"
-            >
+            <button className="inline-flex items-center text-sm text-gray-500 hover:text-gray-700 hover:bg-gray-100 px-3 py-2 rounded-lg transition-all duration-200">
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Products
             </button>

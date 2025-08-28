@@ -192,7 +192,7 @@ export default function HeroSection() {
             transition={{ duration: 0.8, delay: 0.4 }}
           >
             Established in 2015 as a healthcare provider specializing in advanced medical technology. 
-            From Deep Brain Stimulation to 3D printed implants, we're revolutionizing 
+            From Deep Brain Stimulation to 3D printed implants, we&apos;re revolutionizing 
             healthcare delivery across Nepal with cutting-edge solutions.
           </motion.p>
 

@@ -7,7 +7,9 @@ export async function getCurrentUserServer() {
     const user = await getServerUser();
     return user;
   } catch (error) {
-    console.error("Server auth error:", error);
+    if (process.env.NODE_ENV === "development") {
+      console.error("Server auth error:", error);
+    }
     return null;
   }
 }
@@ -15,16 +17,20 @@ export async function getCurrentUserServer() {
 export async function getUserProfileServer(userId: string) {
   try {
     if (!userId) {
-      console.error("No userId provided for server profile lookup");
+      if (process.env.NODE_ENV === "development") {
+        console.error("No userId provided for server profile lookup");
+      }
       return null;
     }
-    
+
     const profile = await getServerUserProfile(userId);
     return profile;
   } catch (error) {
     // Don't log empty error objects
     if (error && Object.keys(error).length > 0) {
-      console.error("Server profile error:", error);
+      if (process.env.NODE_ENV === "development") {
+        console.error("Server profile error:", error);
+      }
     }
     return null;
   }

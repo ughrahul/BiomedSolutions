@@ -1,5 +1,10 @@
 import { createClientSupabase } from "@/lib/supabase";
-import { createProfileWithAdmin, getProfileWithAdmin, upsertProfileWithAdmin } from "@/lib/auth-admin";
+import {
+  createProfileWithAdmin,
+  getProfileWithAdmin,
+  upsertProfileWithAdmin,
+} from "@/lib/auth-admin";
+import { logger } from "@/lib/logger";
 
 // Client-side auth functions with session validation
 export async function getCurrentUser() {
@@ -10,15 +15,18 @@ export async function getCurrentUser() {
   }
 
   try {
-    const { data: { user }, error } = await supabase.auth.getUser();
-    
+    const {
+      data: { user },
+      error,
+    } = await supabase.auth.getUser();
+
     if (error || !user) {
       return null;
     }
 
     return user;
   } catch (error) {
-    console.error("Error getting current user:", error);
+    logger.error("Error getting current user:", error);
     return null;
   }
 }
@@ -43,7 +51,7 @@ export async function getUserProfile(userId: string) {
 
     return profile;
   } catch (error) {
-    console.error("Error getting user profile:", error);
+    logger.error("Error getting user profile:", error);
     return null;
   }
 }
@@ -66,7 +74,7 @@ export async function requireAuth() {
 
     return { user, profile };
   } catch (error) {
-    console.error("Auth error:", error);
+    logger.error("Auth error:", error);
     window.location.href = "/auth/login";
     return null;
   }
@@ -74,14 +82,9 @@ export async function requireAuth() {
 
 export async function signOut() {
   const supabase = createClientSupabase();
-  
-  if (!supabase) {
-    console.error("Supabase client not available");
-    return;
-  }
 
   if (!supabase) {
-    console.log("Supabase not configured - cannot sign out");
+    logger.error("Supabase client not available");
     return { error: "Authentication not configured" };
   }
 
@@ -118,7 +121,7 @@ export async function signOut() {
 
     return { error };
   } catch (error) {
-    console.error("Signout error:", error);
+    logger.error("Signout error:", error);
     return { error };
   }
 }
@@ -127,12 +130,16 @@ export async function signInWithEmail(email: string, password: string) {
   const supabase = createClientSupabase();
 
   if (!supabase) {
-    console.error("Supabase client not available");
-    return { user: null, error: "Database connection not available", success: false };
+    logger.error("Supabase client not available");
+    return {
+      user: null,
+      error: "Database connection not available",
+      success: false,
+    };
   }
 
   try {
-    console.log(`🔐 Attempting to sign in user: ${email}`);
+    logger.log(`🔐 Attempting to sign in user: ${email}`);
 
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
@@ -140,12 +147,12 @@ export async function signInWithEmail(email: string, password: string) {
     });
 
     if (error) {
-      console.error(`❌ Auth error for ${email}:`, error.message);
+      logger.error(`❌ Auth error for ${email}:`, error.message);
       return { user: null, error: error.message, success: false };
     }
 
     if (data.user) {
-      console.log(
+      logger.log(
         `✅ User authenticated: ${data.user.email} (ID: ${data.user.id})`
       );
 
@@ -158,10 +165,10 @@ export async function signInWithEmail(email: string, password: string) {
           .select("*")
           .eq("user_id", data.user.id)
           .single();
-        
+
         if (fetchError) {
-          console.log(`🔧 No profile found for ${email}, creating one...`);
-          
+          logger.log(`🔧 No profile found for ${email}, creating one...`);
+
           // Create profile with admin client to bypass RLS
           try {
             const adminProfile = await createProfileWithAdmin(
@@ -169,28 +176,32 @@ export async function signInWithEmail(email: string, password: string) {
               data.user.email || email,
               data.user.user_metadata
             );
-            
+
             if (adminProfile) {
               profile = adminProfile;
-              console.log(`✅ Created profile for ${email}`);
+              logger.log(`✅ Created profile for ${email}`);
             } else {
               throw new Error("Failed to create profile");
             }
           } catch (adminError) {
-            console.error(`❌ Failed to create profile for ${email}:`, adminError);
+            logger.error(
+              `❌ Failed to create profile for ${email}:`,
+              adminError
+            );
             await supabase.auth.signOut();
             return {
               user: null,
-              error: "Failed to create user profile. Please contact administrator.",
+              error:
+                "Failed to create user profile. Please contact administrator.",
               success: false,
             };
           }
         } else {
           profile = fetchedProfile;
-          console.log(`✅ Found profile for ${email}`);
+          logger.log(`✅ Found profile for ${email}`);
         }
       } catch (e) {
-        console.error(`❌ Profile error for ${email}:`, e);
+        logger.error(`❌ Profile error for ${email}:`, e);
         await supabase.auth.signOut();
         return {
           user: null,
@@ -200,7 +211,7 @@ export async function signInWithEmail(email: string, password: string) {
       }
 
       if (!profile) {
-        console.error(`❌ No profile found for ${email}`);
+        logger.error(`❌ No profile found for ${email}`);
         await supabase.auth.signOut();
         return {
           user: null,
@@ -210,7 +221,7 @@ export async function signInWithEmail(email: string, password: string) {
       }
 
       if (!profile.is_active) {
-        console.error(`❌ Inactive profile for ${email}`);
+        logger.error(`❌ Inactive profile for ${email}`);
         await supabase.auth.signOut();
         return {
           user: null,
@@ -219,7 +230,7 @@ export async function signInWithEmail(email: string, password: string) {
         };
       }
 
-      console.log(`✅ Profile validated for ${email}:`, {
+      logger.log(`✅ Profile validated for ${email}:`, {
         full_name: profile.full_name,
         role: profile.role,
         is_active: profile.is_active,
@@ -234,9 +245,9 @@ export async function signInWithEmail(email: string, password: string) {
             login_count: (profile.login_count || 0) + 1,
           })
           .eq("user_id", data.user.id);
-        console.log(`✅ Updated login stats for ${email}`);
+        logger.log(`✅ Updated login stats for ${email}`);
       } catch (updateError) {
-        console.warn(
+        logger.warn(
           `⚠️  Failed to update login stats for ${email}:`,
           updateError
         );
@@ -256,10 +267,14 @@ export async function signInWithEmail(email: string, password: string) {
       };
     }
 
-    console.error(`❌ No user data returned for ${email}`);
+    if (process.env.NODE_ENV === "development") {
+      console.error(`❌ No user data returned for ${email}`);
+    }
     return { user: null, error: "Authentication failed", success: false };
   } catch (error) {
-    console.error(`❌ Sign in error for ${email}:`, error);
+    if (process.env.NODE_ENV === "development") {
+      console.error(`❌ Sign in error for ${email}:`, error);
+    }
     return { user: null, error: "Authentication failed", success: false };
   }
 }
@@ -292,7 +307,9 @@ export async function signUpWithEmail(
 
     return { user: data.user, error: null };
   } catch (error) {
-    console.error("Sign up error:", error);
+    if (process.env.NODE_ENV === "development") {
+      console.error("Sign up error:", error);
+    }
     return { user: null, error: "Registration failed" };
   }
 }
@@ -315,7 +332,9 @@ export async function resetPassword(email: string) {
 
     return { error: null };
   } catch (error) {
-    console.error("Reset password error:", error);
+    if (process.env.NODE_ENV === "development") {
+      console.error("Reset password error:", error);
+    }
     return { error: "Password reset failed" };
   }
 }
@@ -338,7 +357,9 @@ export async function updatePassword(password: string) {
 
     return { error: null };
   } catch (error) {
-    console.error("Update password error:", error);
+    if (process.env.NODE_ENV === "development") {
+      console.error("Update password error:", error);
+    }
     return { error: "Password update failed" };
   }
 }

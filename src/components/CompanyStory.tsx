@@ -110,7 +110,7 @@ export default function CompanyStory() {
             Transforming Healthcare Since 2015
           </h2>
           <p className="text-base text-gray-600 max-w-2xl mx-auto">
-            From Deep Brain Stimulation to 3D printed implants, discover how we've pioneered 
+            From Deep Brain Stimulation to 3D printed implants, discover how we&apos;ve pioneered 
             advanced healthcare solutions across Nepal.
           </p>
         </motion.div>

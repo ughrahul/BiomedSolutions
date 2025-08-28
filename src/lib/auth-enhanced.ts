@@ -1,6 +1,7 @@
 import { createClientSupabase } from "@/lib/supabase";
 import { createProfileWithAdmin } from "@/lib/auth-admin";
 import { sanitizeInput, createSecurityAuditLog } from "@/lib/security-enhanced";
+import { logger } from "@/lib/logger";
 
 // Enhanced authentication with comprehensive security
 export interface AuthUser {
@@ -18,7 +19,7 @@ export interface UserProfile {
   full_name: string | null;
   email: string;
   avatar_url: string | null;
-  role: 'admin' | 'user';
+  role: "admin" | "user";
   access_level: string;
   is_active: boolean;
   employee_id?: string;
@@ -45,14 +46,17 @@ const MAX_FAILED_ATTEMPTS = 5;
 const LOCKOUT_DURATION = 15 * 60 * 1000; // 15 minutes
 
 // Failed login tracking
-const failedAttempts = new Map<string, { count: number; lastAttempt: Date; lockedUntil?: Date }>();
+const failedAttempts = new Map<
+  string,
+  { count: number; lastAttempt: Date; lockedUntil?: Date }
+>();
 
 export async function getCurrentUser(): Promise<AuthUser | null> {
   try {
     const supabase = createClientSupabase();
 
     if (!supabase) {
-      console.log("Supabase not configured - no authentication available");
+      logger.log("Supabase not configured - no authentication available");
       return null;
     }
 
@@ -63,16 +67,16 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
 
     if (error) {
       if (error.message.includes("Auth session missing")) {
-        console.log("No active session - user not authenticated");
+        logger.log("No active session - user not authenticated");
         return null;
       }
-      console.error("Auth error:", error);
+      logger.error("Auth error:", error);
       return null;
     }
 
     // Validate session is still active
-    if (user && typeof window !== 'undefined') {
-      const sessionId = localStorage.getItem('auth_session_id');
+    if (user && typeof window !== "undefined") {
+      const sessionId = localStorage.getItem("auth_session_id");
       if (sessionId) {
         const session = sessions.get(sessionId);
         if (session && session.expiresAt > new Date()) {
@@ -94,20 +98,22 @@ export async function getCurrentUser(): Promise<AuthUser | null> {
       error instanceof Error &&
       error.message.includes("Auth session missing")
     ) {
-      console.log("No active session - user not authenticated");
+      logger.log("No active session - user not authenticated");
       return null;
     }
-    console.error("Auth error:", error);
+    logger.error("Auth error:", error);
     return null;
   }
 }
 
-export async function getUserProfile(userId: string): Promise<UserProfile | null> {
+export async function getUserProfile(
+  userId: string
+): Promise<UserProfile | null> {
   try {
     const supabase = createClientSupabase();
 
     if (!supabase) {
-      console.log("Supabase not configured - skipping profile fetch");
+      logger.log("Supabase not configured - skipping profile fetch");
       return null;
     }
 
@@ -118,29 +124,32 @@ export async function getUserProfile(userId: string): Promise<UserProfile | null
       .single();
 
     if (error) {
-      console.error("Error fetching profile:", error);
+      logger.error("Error fetching profile:", error);
       return null;
     }
 
     // Validate required profile fields
     if (!profile || !profile.is_active) {
-      console.warn("Profile is inactive or missing");
+      logger.warn("Profile is inactive or missing");
       return null;
     }
 
     return profile;
   } catch (error) {
-    console.error("Profile error:", error);
+    logger.error("Profile error:", error);
     return null;
   }
 }
 
-export async function requireAuth(): Promise<{ user: AuthUser; profile: UserProfile } | null> {
+export async function requireAuth(): Promise<{
+  user: AuthUser;
+  profile: UserProfile;
+} | null> {
   try {
     const user = await getCurrentUser();
 
     if (!user) {
-      if (typeof window !== 'undefined') {
+      if (typeof window !== "undefined") {
         window.location.href = "/auth/login";
       }
       return null;
@@ -149,7 +158,7 @@ export async function requireAuth(): Promise<{ user: AuthUser; profile: UserProf
     const profile = await getUserProfile(user.id);
 
     if (!profile || !profile.is_active) {
-      if (typeof window !== 'undefined') {
+      if (typeof window !== "undefined") {
         window.location.href = "/auth/login";
       }
       return null;
@@ -157,25 +166,28 @@ export async function requireAuth(): Promise<{ user: AuthUser; profile: UserProf
 
     return { user, profile };
   } catch (error) {
-    console.error("Auth error:", error);
-    if (typeof window !== 'undefined') {
+    logger.error("Auth error:", error);
+    if (typeof window !== "undefined") {
       window.location.href = "/auth/login";
     }
     return null;
   }
 }
 
-export async function requireAdminAuth(): Promise<{ user: AuthUser; profile: UserProfile } | null> {
+export async function requireAdminAuth(): Promise<{
+  user: AuthUser;
+  profile: UserProfile;
+} | null> {
   const auth = await requireAuth();
-  
+
   if (!auth) {
     return null;
   }
 
   // Check if user has admin role
-  if (auth.profile.role !== 'admin') {
-    console.warn("Access denied: User does not have admin privileges");
-    if (typeof window !== 'undefined') {
+  if (auth.profile.role !== "admin") {
+    logger.warn("Access denied: User does not have admin privileges");
+    if (typeof window !== "undefined") {
       window.location.href = "/auth/login?error=insufficient_privileges";
     }
     return null;
@@ -188,14 +200,17 @@ export async function signOut(): Promise<{ error?: any }> {
   const supabase = createClientSupabase();
 
   if (!supabase) {
-    console.log("Supabase not configured - cannot sign out");
+    logger.log("Supabase not configured - cannot sign out");
     return { error: "Authentication not configured" };
   }
 
   try {
     // Get current session info for audit log
     const user = await getCurrentUser();
-    const sessionId = typeof window !== 'undefined' ? localStorage.getItem('auth_session_id') : null;
+    const sessionId =
+      typeof window !== "undefined"
+        ? localStorage.getItem("auth_session_id")
+        : null;
 
     // Update last login time before signing out
     if (user) {
@@ -208,13 +223,14 @@ export async function signOut(): Promise<{ error?: any }> {
 
       // Create audit log
       const auditLog = createSecurityAuditLog({
-        event: 'logout',
+        event: "logout",
         userId: user.id,
-        ip: 'unknown',
-        userAgent: typeof window !== 'undefined' ? navigator.userAgent : 'server',
-        severity: 'low'
+        ip: "unknown",
+        userAgent:
+          typeof window !== "undefined" ? navigator.userAgent : "server",
+        severity: "low",
       });
-      console.log('Logout audit log:', auditLog);
+      logger.log("Logout audit log:", auditLog);
     }
 
     // Clean up session
@@ -225,28 +241,31 @@ export async function signOut(): Promise<{ error?: any }> {
     const { error } = await supabase.auth.signOut();
 
     // Clear all local storage and session storage
-    if (typeof window !== 'undefined') {
+    if (typeof window !== "undefined") {
       localStorage.clear();
       sessionStorage.clear();
-      
+
       // Dispatch custom event for auth state change
       window.dispatchEvent(new CustomEvent("auth-state-changed"));
-      
+
       // Redirect to login
       window.location.href = "/auth/login";
     }
 
     return { error };
   } catch (error) {
-    console.error("Signout error:", error);
+    logger.error("Signout error:", error);
     return { error };
   }
 }
 
 export async function signInWithEmail(
-  email: string, 
+  email: string,
   password: string,
-  clientInfo: { ip: string; userAgent: string } = { ip: 'unknown', userAgent: 'unknown' }
+  clientInfo: { ip: string; userAgent: string } = {
+    ip: "unknown",
+    userAgent: "unknown",
+  }
 ): Promise<{
   user: AuthUser | null;
   profile?: UserProfile;
@@ -267,24 +286,30 @@ export async function signInWithEmail(
   try {
     // Sanitize inputs
     const sanitizedEmail = sanitizeInput(email.toLowerCase().trim());
-    
+
     // Check for account lockout
     const attemptKey = `${clientInfo.ip}:${sanitizedEmail}`;
     const attempts = failedAttempts.get(attemptKey);
-    
+
     if (attempts && attempts.lockedUntil && attempts.lockedUntil > new Date()) {
-      const lockoutRemaining = Math.ceil((attempts.lockedUntil.getTime() - Date.now()) / 60000);
-      
+      const lockoutRemaining = Math.ceil(
+        (attempts.lockedUntil.getTime() - Date.now()) / 60000
+      );
+
       // Create audit log for locked account attempt
       const auditLog = createSecurityAuditLog({
-        event: 'failed_login',
+        event: "failed_login",
         ip: clientInfo.ip,
         userAgent: clientInfo.userAgent,
-        details: { email: sanitizedEmail, reason: 'account_locked', remaining_minutes: lockoutRemaining },
-        severity: 'high'
+        details: {
+          email: sanitizedEmail,
+          reason: "account_locked",
+          remaining_minutes: lockoutRemaining,
+        },
+        severity: "high",
       });
-      console.log('Account locked audit log:', auditLog);
-      
+      logger.log("Account locked audit log:", auditLog);
+
       return {
         user: null,
         error: `Account locked due to multiple failed attempts. Try again in ${lockoutRemaining} minutes.`,
@@ -292,7 +317,7 @@ export async function signInWithEmail(
       };
     }
 
-    console.log(`🔐 Attempting to sign in user: ${sanitizedEmail}`);
+    logger.log(`🔐 Attempting to sign in user: ${sanitizedEmail}`);
 
     const { data, error } = await supabase.auth.signInWithPassword({
       email: sanitizedEmail,
@@ -300,44 +325,48 @@ export async function signInWithEmail(
     });
 
     if (error) {
-      console.error(`❌ Auth error for ${sanitizedEmail}:`, error.message);
-      
+      logger.error(`❌ Auth error for ${sanitizedEmail}:`, error.message);
+
       // Track failed attempt
       const currentAttempts = attempts || { count: 0, lastAttempt: new Date() };
       currentAttempts.count += 1;
       currentAttempts.lastAttempt = new Date();
-      
+
       // Lock account if too many failed attempts
       if (currentAttempts.count >= MAX_FAILED_ATTEMPTS) {
         currentAttempts.lockedUntil = new Date(Date.now() + LOCKOUT_DURATION);
       }
-      
+
       failedAttempts.set(attemptKey, currentAttempts);
-      
+
       // Create audit log for failed login
       const auditLog = createSecurityAuditLog({
-        event: 'failed_login',
+        event: "failed_login",
         ip: clientInfo.ip,
         userAgent: clientInfo.userAgent,
-        details: { email: sanitizedEmail, attempt_count: currentAttempts.count },
-        severity: currentAttempts.count >= MAX_FAILED_ATTEMPTS ? 'critical' : 'medium'
+        details: {
+          email: sanitizedEmail,
+          attempt_count: currentAttempts.count,
+        },
+        severity:
+          currentAttempts.count >= MAX_FAILED_ATTEMPTS ? "critical" : "medium",
       });
-      console.log('Failed login audit log:', auditLog);
-      
+      logger.log("Failed login audit log:", auditLog);
+
       return { user: null, error: error.message, success: false };
     }
 
     if (data.user) {
       // Clear failed attempts on successful login
       failedAttempts.delete(attemptKey);
-      
-      console.log(
+
+      logger.log(
         `✅ User authenticated: ${data.user.email} (ID: ${data.user.id})`
       );
 
       // Check if user profile exists
       let profile = null;
-      
+
       try {
         // Get single profile for user
         const { data: fetchedProfile, error: fetchError } = await supabase
@@ -345,10 +374,12 @@ export async function signInWithEmail(
           .select("*")
           .eq("user_id", data.user.id)
           .single();
-        
+
         if (fetchError) {
-          console.log(`🔧 No profile found for ${sanitizedEmail}, creating one...`);
-          
+          logger.log(
+            `🔧 No profile found for ${sanitizedEmail}, creating one...`
+          );
+
           // Create profile with admin client to bypass RLS
           try {
             const adminProfile = await createProfileWithAdmin(
@@ -356,28 +387,32 @@ export async function signInWithEmail(
               data.user.email || sanitizedEmail,
               data.user.user_metadata
             );
-            
+
             if (adminProfile) {
               profile = adminProfile;
-              console.log(`✅ Created profile for ${sanitizedEmail}`);
+              logger.log(`✅ Created profile for ${sanitizedEmail}`);
             } else {
               throw new Error("Failed to create profile");
             }
           } catch (adminError) {
-            console.error(`❌ Failed to create profile for ${sanitizedEmail}:`, adminError);
+            logger.error(
+              `❌ Failed to create profile for ${sanitizedEmail}:`,
+              adminError
+            );
             await supabase.auth.signOut();
             return {
               user: null,
-              error: "Failed to create user profile. Please contact administrator.",
+              error:
+                "Failed to create user profile. Please contact administrator.",
               success: false,
             };
           }
         } else {
           profile = fetchedProfile;
-          console.log(`✅ Found profile for ${sanitizedEmail}`);
+          logger.log(`✅ Found profile for ${sanitizedEmail}`);
         }
       } catch (e) {
-        console.error(`❌ Profile error for ${sanitizedEmail}:`, e);
+        logger.error(`❌ Profile error for ${sanitizedEmail}:`, e);
         await supabase.auth.signOut();
         return {
           user: null,
@@ -387,7 +422,7 @@ export async function signInWithEmail(
       }
 
       if (!profile) {
-        console.error(`❌ No profile found for ${sanitizedEmail}`);
+        logger.error(`❌ No profile found for ${sanitizedEmail}`);
         await supabase.auth.signOut();
         return {
           user: null,
@@ -397,7 +432,7 @@ export async function signInWithEmail(
       }
 
       if (!profile.is_active) {
-        console.error(`❌ Inactive profile for ${sanitizedEmail}`);
+        logger.error(`❌ Inactive profile for ${sanitizedEmail}`);
         await supabase.auth.signOut();
         return {
           user: null,
@@ -406,7 +441,7 @@ export async function signInWithEmail(
         };
       }
 
-      console.log(`✅ Profile validated for ${sanitizedEmail}:`, {
+      logger.log(`✅ Profile validated for ${sanitizedEmail}:`, {
         full_name: profile.full_name,
         role: profile.role,
         is_active: profile.is_active,
@@ -421,9 +456,9 @@ export async function signInWithEmail(
             login_count: (profile.login_count || 0) + 1,
           })
           .eq("user_id", data.user.id);
-        console.log(`✅ Updated login stats for ${sanitizedEmail}`);
+        logger.log(`✅ Updated login stats for ${sanitizedEmail}`);
       } catch (updateError) {
-        console.warn(
+        logger.warn(
           `⚠️  Failed to update login stats for ${sanitizedEmail}:`,
           updateError
         );
@@ -436,29 +471,29 @@ export async function signInWithEmail(
         profile,
         sessionId,
         expiresAt: new Date(Date.now() + SESSION_TIMEOUT),
-        lastActivity: new Date()
+        lastActivity: new Date(),
       };
-      
+
       sessions.set(sessionId, session);
-      
+
       // Store session ID in localStorage
-      if (typeof window !== 'undefined') {
-        localStorage.setItem('auth_session_id', sessionId);
+      if (typeof window !== "undefined") {
+        localStorage.setItem("auth_session_id", sessionId);
       }
 
       // Create audit log for successful login
       const auditLog = createSecurityAuditLog({
-        event: 'login',
+        event: "login",
         userId: data.user.id,
         ip: clientInfo.ip,
         userAgent: clientInfo.userAgent,
         details: { email: sanitizedEmail, role: profile.role },
-        severity: 'low'
+        severity: "low",
       });
-      console.log('Successful login audit log:', auditLog);
+      logger.log("Successful login audit log:", auditLog);
 
       // Dispatch custom event for auth state change
-      if (typeof window !== 'undefined') {
+      if (typeof window !== "undefined") {
         window.dispatchEvent(new CustomEvent("auth-state-changed"));
       }
 
@@ -467,25 +502,25 @@ export async function signInWithEmail(
         profile: profile,
         error: undefined,
         success: true,
-        sessionId
+        sessionId,
       };
     }
 
-    console.error(`❌ No user data returned for ${sanitizedEmail}`);
+    logger.error(`❌ No user data returned for ${sanitizedEmail}`);
     return { user: null, error: "Authentication failed", success: false };
   } catch (error) {
-    console.error(`❌ Sign in error for ${email}:`, error);
-    
+    logger.error(`❌ Sign in error for ${email}:`, error);
+
     // Create audit log for system error
     const auditLog = createSecurityAuditLog({
-      event: 'failed_login',
+      event: "failed_login",
       ip: clientInfo.ip,
       userAgent: clientInfo.userAgent,
       details: { email, error: (error as Error).message },
-      severity: 'high'
+      severity: "high",
     });
-    console.log('System error audit log:', auditLog);
-    
+    logger.log("System error audit log:", auditLog);
+
     return { user: null, error: "Authentication failed", success: false };
   }
 }
@@ -501,26 +536,28 @@ export function cleanupExpiredSessions(): void {
 }
 
 // Initialize cleanup interval
-if (typeof window !== 'undefined') {
+if (typeof window !== "undefined") {
   setInterval(cleanupExpiredSessions, 60000); // Clean up every minute
 }
 
-export async function validateSession(sessionId: string): Promise<AuthSession | null> {
+export async function validateSession(
+  sessionId: string
+): Promise<AuthSession | null> {
   const session = sessions.get(sessionId);
-  
+
   if (!session) {
     return null;
   }
-  
+
   if (session.expiresAt < new Date()) {
     sessions.delete(sessionId);
     return null;
   }
-  
+
   // Update last activity
   session.lastActivity = new Date();
   sessions.set(sessionId, session);
-  
+
   return session;
 }
 
@@ -531,7 +568,7 @@ export function getActiveSessionsCount(): number {
 
 export function revokeAllSessions(): void {
   sessions.clear();
-  if (typeof window !== 'undefined') {
-    localStorage.removeItem('auth_session_id');
+  if (typeof window !== "undefined") {
+    localStorage.removeItem("auth_session_id");
   }
-} 
+}

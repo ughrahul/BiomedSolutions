@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminSupabaseClient } from "@/lib/supabase-admin";
+import { serverLogger } from "@/lib/logger";
 
 export async function GET(
   request: NextRequest,
@@ -44,7 +45,7 @@ export async function GET(
           { status: 404 }
         );
       }
-      console.error("Database error:", error);
+      serverLogger.error("Database error:", error);
       return NextResponse.json(
         { error: "Failed to fetch product" },
         { status: 500 }
@@ -53,7 +54,7 @@ export async function GET(
 
     return NextResponse.json({ data });
   } catch (error) {
-    console.error("API error:", error);
+    serverLogger.error("API error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
@@ -66,15 +67,15 @@ export async function PATCH(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    console.log("🚀 Starting product update...");
-    
+    serverLogger.log("🚀 Starting product update...");
+
     const { id } = await params;
     const body = await request.json();
-    console.log("📦 Received update data:", JSON.stringify(body, null, 2));
+    serverLogger.log("📦 Received update data:", JSON.stringify(body, null, 2));
 
     // Validate request body
-    if (!body || typeof body !== 'object') {
-      console.error("❌ Invalid request body");
+    if (!body || typeof body !== "object") {
+      serverLogger.error("❌ Invalid request body");
       return NextResponse.json(
         { error: "Invalid request body" },
         { status: 400 }
@@ -106,38 +107,44 @@ export async function PATCH(
     // Validate required fields
     const requiredFields = { name, description, category_id };
     const missingFields = Object.entries(requiredFields)
-      .filter(([key, value]) => !value || (typeof value === 'string' && !value.trim()))
+      .filter(
+        ([key, value]) => !value || (typeof value === "string" && !value.trim())
+      )
       .map(([key]) => key);
 
     if (missingFields.length > 0) {
-      console.error("❌ Missing required fields:", missingFields);
+      if (process.env.NODE_ENV === "development") {
+        console.error("❌ Missing required fields:", missingFields);
+      }
       return NextResponse.json(
         {
           error: "Missing required fields",
-          details: `Required fields missing: ${missingFields.join(', ')}`,
-          missingFields
+          details: `Required fields missing: ${missingFields.join(", ")}`,
+          missingFields,
         },
         { status: 400 }
       );
     }
 
-    console.log("✅ Required fields validation passed");
+    if (process.env.NODE_ENV === "development") {
+      serverLogger.log("✅ Required fields validation passed");
+    }
 
     // Initialize Supabase client
     const supabase = createAdminSupabaseClient();
     if (!supabase) {
-      console.error("❌ Database client not available");
+      serverLogger.error("❌ Database client not available");
       return NextResponse.json(
         { error: "Database not configured" },
         { status: 500 }
       );
     }
 
-    console.log("✅ Database client initialized");
+    serverLogger.log("✅ Database client initialized");
 
     // Verify category exists if category_id is provided
     if (category_id) {
-      console.log("🔍 Verifying category_id:", category_id);
+      serverLogger.log("🔍 Verifying category_id:", category_id);
       const { data: categoryData, error: categoryError } = await supabase
         .from("categories")
         .select("id, name, slug")
@@ -145,18 +152,18 @@ export async function PATCH(
         .single();
 
       if (categoryError || !categoryData) {
-        console.error("❌ Category verification failed:", categoryError);
+        serverLogger.error("❌ Category verification failed:", categoryError);
         return NextResponse.json(
-          { 
+          {
             error: "Invalid category selected",
             details: categoryError?.message || "Category not found",
-            category_id 
+            category_id,
           },
           { status: 400 }
         );
       }
 
-      console.log("✅ Category verified:", categoryData.name);
+      serverLogger.log("✅ Category verified:", categoryData.name);
     }
 
     // Check for SKU uniqueness if SKU is being updated
@@ -169,18 +176,18 @@ export async function PATCH(
         .single();
 
       if (existingSku && !skuCheckError) {
-        console.error("❌ SKU already exists:", existingSku);
+        serverLogger.error("❌ SKU already exists:", existingSku);
         return NextResponse.json(
-          { 
+          {
             error: "SKU already exists",
             details: `SKU '${sku}' is already used by product '${existingSku.name}'`,
-            existingProduct: existingSku
+            existingProduct: existingSku,
           },
           { status: 409 }
         );
       }
 
-      console.log("✅ SKU uniqueness verified");
+      serverLogger.log("✅ SKU uniqueness verified");
     }
 
     // Prepare comprehensive update data
@@ -196,72 +203,81 @@ export async function PATCH(
       features: Array.isArray(features) ? features : undefined,
       benefits: Array.isArray(benefits) ? benefits : undefined,
       warranty: warranty || undefined,
-      certifications: Array.isArray(certifications) ? certifications : undefined,
-      rating: typeof rating === 'number' ? Math.max(0, Math.min(5, rating)) : undefined,
-      review_count: typeof review_count === 'number' ? Math.max(0, review_count) : undefined,
+      certifications: Array.isArray(certifications)
+        ? certifications
+        : undefined,
+      rating:
+        typeof rating === "number"
+          ? Math.max(0, Math.min(5, rating))
+          : undefined,
+      review_count:
+        typeof review_count === "number"
+          ? Math.max(0, review_count)
+          : undefined,
       tags: Array.isArray(tags) ? tags : undefined,
-      is_active: typeof is_active === 'boolean' ? is_active : undefined,
-      is_featured: typeof is_featured === 'boolean' ? is_featured : undefined,
+      is_active: typeof is_active === "boolean" ? is_active : undefined,
+      is_featured: typeof is_featured === "boolean" ? is_featured : undefined,
       updated_at: updated_at || new Date().toISOString(),
     };
 
     // Remove undefined values
-    Object.keys(updateData).forEach(key => 
-      updateData[key] === undefined && delete updateData[key]
+    Object.keys(updateData).forEach(
+      (key) => updateData[key] === undefined && delete updateData[key]
     );
 
-    console.log("📝 Prepared update data:", JSON.stringify(updateData, null, 2));
+    serverLogger.log(
+      "📝 Prepared update data:",
+      JSON.stringify(updateData, null, 2)
+    );
 
     // Update the product
-    console.log("💾 Updating product in database...");
+    serverLogger.log("💾 Updating product in database...");
     const { data: updatedProduct, error: updateError } = await supabase
       .from("products")
       .update(updateData)
       .eq("id", id)
-      .select(`
+      .select(
+        `
         *,
         categories(name, slug)
-      `)
+      `
+      )
       .single();
 
     if (updateError) {
-      console.error("❌ Database update error:", updateError);
+      serverLogger.error("❌ Database update error:", updateError);
       return NextResponse.json(
-        { 
+        {
           error: "Failed to update product",
           details: updateError.message,
           code: updateError.code,
-          hint: updateError.hint
+          hint: updateError.hint,
         },
         { status: 500 }
       );
     }
 
     if (!updatedProduct) {
-      console.error("❌ Product not found after update");
-      return NextResponse.json(
-        { error: "Product not found" },
-        { status: 404 }
-      );
+      serverLogger.error("❌ Product not found after update");
+      return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
 
-    console.log("✅ Product updated successfully:", {
+    serverLogger.log("✅ Product updated successfully:", {
       id: updatedProduct.id,
       name: updatedProduct.name,
       sku: updatedProduct.sku,
-      category: updatedProduct.categories?.name
+      category: updatedProduct.categories?.name,
     });
 
     // Return success response
     return NextResponse.json({
       message: "Product updated successfully",
       data: updatedProduct,
-      timestamp: new Date().toISOString()
+      timestamp: new Date().toISOString(),
     });
-
   } catch (error) {
-    console.error("❌ PATCH /api/products/[id] error:", error);
-    
+    serverLogger.error("❌ PATCH /api/products/[id] error:", error);
+
     // Handle different types of errors
     if (error instanceof SyntaxError) {
       return NextResponse.json(
@@ -269,13 +285,14 @@ export async function PATCH(
         { status: 400 }
       );
     }
-    
+
     if (error instanceof Error) {
       return NextResponse.json(
-        { 
+        {
           error: "Internal server error",
           details: error.message,
-          stack: process.env.NODE_ENV === 'development' ? error.stack : undefined
+          stack:
+            process.env.NODE_ENV === "development" ? error.stack : undefined,
         },
         { status: 500 }
       );
@@ -306,7 +323,7 @@ export async function DELETE(
     const { error } = await supabase.from("products").delete().eq("id", id);
 
     if (error) {
-      console.error("Database error:", error);
+      serverLogger.error("Database error:", error);
       return NextResponse.json(
         { error: "Failed to delete product" },
         { status: 500 }
@@ -317,7 +334,9 @@ export async function DELETE(
       message: "Product deleted successfully",
     });
   } catch (error) {
-    console.error("API error:", error);
+    if (process.env.NODE_ENV === "development") {
+      console.error("API error:", error);
+    }
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

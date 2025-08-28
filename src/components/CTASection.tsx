@@ -13,7 +13,7 @@ export default function CTASection() {
 
           <p className="text-xl md:text-2xl text-secondary-200 mb-8 leading-relaxed">
             Join hundreds of healthcare facilities already benefiting from our
-            advanced medical equipment. Let's discuss how we can enhance your
+            advanced medical equipment. Let&apos;s discuss how we can enhance your
             patient care capabilities.
           </p>
 

@@ -1,4 +1,5 @@
 import { createBrowserClient } from "@supabase/ssr";
+import { logger } from "@/lib/logger";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
@@ -6,10 +7,13 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 // Client-side Supabase client with enhanced configuration
 export const createClientSupabase = () => {
   // Return null if environment variables are not configured
-  if (!supabaseUrl || !supabaseAnonKey || 
-      supabaseUrl === "https://placeholder.supabase.co" || 
-      supabaseAnonKey === "placeholder-key") {
-    console.log("🎭 Demo mode: Supabase environment variables not configured");
+  if (
+    !supabaseUrl ||
+    !supabaseAnonKey ||
+    supabaseUrl === "https://placeholder.supabase.co" ||
+    supabaseAnonKey === "placeholder-key"
+  ) {
+    logger.log("🎭 Demo mode: Supabase environment variables not configured");
     return null;
   }
 
@@ -19,16 +23,16 @@ export const createClientSupabase = () => {
         persistSession: true,
         autoRefreshToken: true,
         detectSessionInUrl: true,
-        flowType: 'pkce',
+        flowType: "pkce",
       },
       global: {
         headers: {
-          'x-my-custom-header': 'biomed-app',
+          "x-my-custom-header": "biomed-app",
         },
       },
     });
   } catch (error) {
-    console.error("Failed to create Supabase client:", error);
+    logger.error("Failed to create Supabase client:", error);
     return null;
   }
 };

@@ -40,7 +40,9 @@ export function useApi<T>(endpoint: string, options?: RequestInit) {
       setData(result);
     } catch (err) {
       setError(err instanceof Error ? err.message : "An error occurred");
-      console.error("API Error:", err);
+      if (process.env.NODE_ENV === "development") {
+        console.error("API Error:", err);
+      }
     } finally {
       setLoading(false);
     }

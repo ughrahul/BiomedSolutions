@@ -32,7 +32,10 @@ export default function Navbar() {
   const { settings } = useWebsiteSettings();
   const [isOpen, setIsOpen] = useState(false);
   const [user, setUser] = useState<{ id: string; email?: string } | null>(null);
-  const [profile, setProfile] = useState<{ full_name?: string; role?: string } | null>(null);
+  const [profile, setProfile] = useState<{
+    full_name?: string;
+    role?: string;
+  } | null>(null);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [windowWidth, setWindowWidth] = useState(0);
   const pathname = usePathname();
@@ -41,8 +44,8 @@ export default function Navbar() {
   useEffect(() => {
     const handleResize = () => setWindowWidth(window.innerWidth);
     setWindowWidth(window.innerWidth);
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
   }, []);
 
   // Fetch user data on mount and when auth state changes
@@ -58,8 +61,9 @@ export default function Navbar() {
         setProfile(null);
       }
     } catch (error) {
-      // eslint-disable-next-line no-console
-      console.error("Error fetching user data:", error);
+      if (process.env.NODE_ENV === "development") {
+        console.error("Error fetching user data:", error);
+      }
       setUser(null);
       setProfile(null);
     }
@@ -110,7 +114,7 @@ export default function Navbar() {
   return (
     <>
       {/* Top Info Bar */}
-      <motion.div 
+      <motion.div
         className="bg-gradient-to-r from-indigo-600 via-purple-600 to-blue-600 text-white text-xs sm:text-sm py-2 sm:py-3 border-b border-white/20 shadow-lg"
         initial={{ y: -40, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
@@ -119,14 +123,18 @@ export default function Navbar() {
         <div className="max-w-7xl mx-auto px-3 sm:px-4 lg:px-8">
           <div className="flex items-center justify-between">
             {/* Contact Info - Left Side */}
-            <motion.div 
+            <motion.div
               className="flex items-center space-x-2 sm:space-x-4 lg:space-x-6"
               initial={{ x: -30, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
-              transition={{ duration: 0.6, delay: 0.2, ease: [0.23, 1, 0.32, 1] }}
+              transition={{
+                duration: 0.6,
+                delay: 0.2,
+                ease: [0.23, 1, 0.32, 1],
+              }}
             >
               {/* Phone - Always visible */}
-              <motion.a 
+              <motion.a
                 href={`tel:${settings.contact.phone}`}
                 className="flex items-center space-x-1 sm:space-x-2 group cursor-pointer"
                 whileHover={{ scale: 1.05, x: 2 }}
@@ -139,13 +147,17 @@ export default function Navbar() {
                   <Phone className="w-3 h-3 sm:w-4 sm:h-4 text-cyan-300" />
                 </motion.div>
                 <span className="font-semibold text-white hover:text-cyan-200 transition-colors duration-300 text-xs sm:text-sm">
-                  {windowWidth < 640 ? settings.contact.phone.replace(/\s+/g, '') : settings.contact.phone}
+                  {windowWidth < 640
+                    ? settings.contact.phone.replace(/\s+/g, "")
+                    : settings.contact.phone}
                 </span>
-                <span className="text-cyan-300 font-bold text-xs sm:text-sm ml-1">|</span>
+                <span className="text-cyan-300 font-bold text-xs sm:text-sm ml-1">
+                  |
+                </span>
               </motion.a>
 
               {/* Email - Hidden on very small screens */}
-              <motion.a 
+              <motion.a
                 href={`mailto:${settings.contact.email}`}
                 className="hidden sm:flex items-center space-x-2 group cursor-pointer"
                 whileHover={{ scale: 1.05, x: 2 }}
@@ -153,19 +165,29 @@ export default function Navbar() {
               >
                 <motion.div
                   animate={{ y: [0, -2, 0] }}
-                  transition={{ duration: 1.5, repeat: Infinity, repeatDelay: 2 }}
+                  transition={{
+                    duration: 1.5,
+                    repeat: Infinity,
+                    repeatDelay: 2,
+                  }}
                 >
                   <Mail className="w-4 h-4 text-cyan-300" />
                 </motion.div>
                 <span className="font-semibold text-white hover:text-cyan-200 transition-colors duration-300 text-sm">
-                  {windowWidth < 768 ? settings.contact.email.split('@')[0] + '@...' : settings.contact.email}
+                  {windowWidth < 768
+                    ? settings.contact.email.split("@")[0] + "@..."
+                    : settings.contact.email}
                 </span>
-                <span className="text-cyan-300 font-bold text-xs sm:text-sm ml-1">|</span>
+                <span className="text-cyan-300 font-bold text-xs sm:text-sm ml-1">
+                  |
+                </span>
               </motion.a>
 
               {/* Address - Show on all screens */}
-              <motion.a 
-                href={`https://maps.google.com/?q=${encodeURIComponent(settings.contact.address)}`}
+              <motion.a
+                href={`https://maps.google.com/?q=${encodeURIComponent(
+                  settings.contact.address
+                )}`}
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center space-x-1.5 sm:space-x-2 group cursor-pointer"
@@ -179,24 +201,29 @@ export default function Navbar() {
                   <MapPin className="w-3 h-3 sm:w-4 sm:h-4 text-cyan-300" />
                 </motion.div>
                 <span className="font-semibold text-white hover:text-cyan-200 transition-colors duration-300 text-xs sm:text-sm max-w-20 sm:max-w-xs truncate">
-                  {windowWidth < 640 ? 'Maitighar' : settings.contact.address}
+                  {windowWidth < 640 ? "Maitighar" : settings.contact.address}
                 </span>
-                
               </motion.a>
-              
             </motion.div>
 
             {/* Status Info - Right Side */}
-            <motion.div 
+            <motion.div
               className="flex items-center space-x-2 sm:space-x-4"
               initial={{ x: 30, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
-              transition={{ duration: 0.6, delay: 0.3, ease: [0.23, 1, 0.32, 1] }}
+              transition={{
+                duration: 0.6,
+                delay: 0.3,
+                ease: [0.23, 1, 0.32, 1],
+              }}
             >
               {/* 24/7 Support - Show on all screens */}
-              <motion.div 
+              <motion.div
                 className="flex items-center space-x-2 bg-white/20 backdrop-blur-sm px-2 sm:px-3 py-1 sm:py-2 rounded-full border border-white/30"
-                whileHover={{ scale: 1.05, backgroundColor: "rgba(255, 255, 255, 0.3)" }}
+                whileHover={{
+                  scale: 1.05,
+                  backgroundColor: "rgba(255, 255, 255, 0.3)",
+                }}
                 transition={{ duration: 0.3 }}
               >
                 <motion.div
@@ -206,31 +233,30 @@ export default function Navbar() {
                   <Clock className="w-3 h-3 sm:w-4 sm:h-4 text-cyan-300" />
                 </motion.div>
                 <span className="font-semibold text-white text-xs sm:text-sm">
-                  {windowWidth < 768 ? '24/7' : '24/7 Premium Support'}
+                  {windowWidth < 768 ? "24/7" : "24/7 Premium Support"}
                 </span>
-                
               </motion.div>
 
               {/* Live Status - Always visible but compact */}
-              <motion.div 
+              <motion.div
                 className="flex items-center space-x-1 sm:space-x-2 bg-emerald-500/30 backdrop-blur-sm px-2 sm:px-3 py-1 sm:py-2 rounded-full border border-emerald-400/50"
                 whileHover={{ scale: 1.05 }}
                 transition={{ duration: 0.3 }}
               >
-                <motion.div 
+                <motion.div
                   className="w-2 h-2 sm:w-3 sm:h-3 bg-emerald-400 rounded-full"
-                  animate={{ 
+                  animate={{
                     scale: [1, 1.3, 1],
                     boxShadow: [
                       "0 0 0 0 rgba(74, 222, 128, 0.7)",
                       "0 0 0 4px rgba(74, 222, 128, 0)",
-                      "0 0 0 0 rgba(74, 222, 128, 0)"
-                    ]
+                      "0 0 0 0 rgba(74, 222, 128, 0)",
+                    ],
                   }}
                   transition={{ duration: 2, repeat: Infinity }}
                 />
                 <span className="text-xs sm:text-sm font-bold text-emerald-100">
-                  {windowWidth < 640 ? 'LIVE' : 'LIVE NOW'}
+                  {windowWidth < 640 ? "LIVE" : "LIVE NOW"}
                 </span>
               </motion.div>
             </motion.div>
@@ -239,7 +265,7 @@ export default function Navbar() {
       </motion.div>
 
       {/* Main Navbar */}
-      <motion.nav 
+      <motion.nav
         className="bg-white shadow-xl shadow-gray-900/10 border-b border-gray-200 sticky top-0 z-40"
         initial={{ y: -80, opacity: 0 }}
         animate={{ y: 0, opacity: 1 }}
@@ -251,10 +277,17 @@ export default function Navbar() {
             <motion.div
               initial={{ x: -50, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
-              transition={{ duration: 0.8, delay: 0.4, ease: [0.23, 1, 0.32, 1] }}
+              transition={{
+                duration: 0.8,
+                delay: 0.4,
+                ease: [0.23, 1, 0.32, 1],
+              }}
               whileHover={{ scale: 1.02 }}
             >
-              <Link href="/" className="flex items-center space-x-2 sm:space-x-3 md:space-x-4 flex-shrink-0">
+              <Link
+                href="/"
+                className="flex items-center space-x-2 sm:space-x-3 md:space-x-4 flex-shrink-0"
+              >
                 <motion.div
                   className="relative w-12 h-12 sm:w-16 sm:h-16 md:w-18 md:h-18 lg:w-20 lg:h-20 flex items-center justify-center flex-shrink-0"
                   whileHover={{
@@ -303,7 +336,11 @@ export default function Navbar() {
                     key={item.name}
                     initial={{ y: -30, opacity: 0 }}
                     animate={{ y: 0, opacity: 1 }}
-                    transition={{ duration: 0.6, delay: 0.1 * (index + 1), ease: [0.23, 1, 0.32, 1] }}
+                    transition={{
+                      duration: 0.6,
+                      delay: 0.1 * (index + 1),
+                      ease: [0.23, 1, 0.32, 1],
+                    }}
                   >
                     <Link
                       href={item.href}
@@ -317,14 +354,18 @@ export default function Navbar() {
                         <motion.div
                           layoutId="activeTab"
                           className="absolute inset-0 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-xl border-2 border-blue-200/80 shadow-md"
-                          transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                          transition={{
+                            type: "spring",
+                            bounce: 0.2,
+                            duration: 0.6,
+                          }}
                         />
                       )}
-                      <motion.span 
+                      <motion.span
                         className="relative z-10"
-                        whileHover={{ 
+                        whileHover={{
                           y: -2,
-                          textShadow: "0 4px 8px rgba(59, 130, 246, 0.3)"
+                          textShadow: "0 4px 8px rgba(59, 130, 246, 0.3)",
                         }}
                         transition={{ duration: 0.3, ease: "easeOut" }}
                       >
@@ -343,11 +384,15 @@ export default function Navbar() {
               })}
 
               {/* Auth Section */}
-              <motion.div 
+              <motion.div
                 className="ml-8"
                 initial={{ x: 50, opacity: 0 }}
                 animate={{ x: 0, opacity: 1 }}
-                transition={{ duration: 0.8, delay: 0.6, ease: [0.23, 1, 0.32, 1] }}
+                transition={{
+                  duration: 0.8,
+                  delay: 0.6,
+                  ease: [0.23, 1, 0.32, 1],
+                }}
               >
                 {user ? (
                   <div className="relative">
@@ -358,17 +403,17 @@ export default function Navbar() {
                       whileTap={{ scale: 0.98 }}
                       transition={{ duration: 0.2 }}
                     >
-                      <motion.div 
+                      <motion.div
                         className="w-9 h-9 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-xl flex items-center justify-center shadow-lg"
-                        whileHover={{ 
+                        whileHover={{
                           scale: 1.1,
-                          boxShadow: "0 8px 25px rgba(59, 130, 246, 0.4)" 
+                          boxShadow: "0 8px 25px rgba(59, 130, 246, 0.4)",
                         }}
                         transition={{ duration: 0.3 }}
                       >
                         <User className="w-4 h-4 text-white" />
                       </motion.div>
-                      <motion.span 
+                      <motion.span
                         className="text-base font-semibold text-gray-700"
                         whileHover={{ color: "#4f46e5" }}
                         transition={{ duration: 0.3 }}
@@ -383,7 +428,10 @@ export default function Navbar() {
                           initial={{ opacity: 0, scale: 0.95, y: -10 }}
                           animate={{ opacity: 1, scale: 1, y: 0 }}
                           exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                          transition={{ duration: 0.2, ease: [0.23, 1, 0.32, 1] }}
+                          transition={{
+                            duration: 0.2,
+                            ease: [0.23, 1, 0.32, 1],
+                          }}
                           className="absolute right-0 mt-3 w-64 bg-white rounded-2xl shadow-2xl shadow-gray-900/15 border border-gray-200 py-3 z-50"
                         >
                           <div className="px-5 py-4 border-b border-gray-100">
@@ -445,7 +493,7 @@ export default function Navbar() {
                         className="relative w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded-2xl flex items-center justify-center shadow-lg border border-blue-500/40 transition-all duration-300"
                         whileHover={{
                           boxShadow: "0 8px 25px rgba(59, 130, 246, 0.4)",
-                          rotate: 5
+                          rotate: 5,
                         }}
                         transition={{ duration: 0.3 }}
                       >
@@ -462,12 +510,12 @@ export default function Navbar() {
                           className="absolute inset-0 rounded-2xl bg-white/10"
                           animate={{
                             scale: [1, 1.05, 1],
-                            opacity: [0.3, 0.6, 0.3]
+                            opacity: [0.3, 0.6, 0.3],
                           }}
                           transition={{
                             duration: 2,
                             repeat: Infinity,
-                            ease: "easeInOut"
+                            ease: "easeInOut",
                           }}
                         />
 
@@ -492,7 +540,11 @@ export default function Navbar() {
               whileTap={{ scale: 0.95 }}
               initial={{ x: 50, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
-              transition={{ duration: 0.6, delay: 0.5, ease: [0.23, 1, 0.32, 1] }}
+              transition={{
+                duration: 0.6,
+                delay: 0.5,
+                ease: [0.23, 1, 0.32, 1],
+              }}
             >
               <motion.div
                 animate={{ rotate: isOpen ? 180 : 0 }}
@@ -529,7 +581,11 @@ export default function Navbar() {
                       key={item.name}
                       initial={{ x: -30, opacity: 0 }}
                       animate={{ x: 0, opacity: 1 }}
-                      transition={{ duration: 0.4, delay: index * 0.08, ease: [0.23, 1, 0.32, 1] }}
+                      transition={{
+                        duration: 0.4,
+                        delay: index * 0.08,
+                        ease: [0.23, 1, 0.32, 1],
+                      }}
                     >
                       <motion.div
                         whileHover={{ scale: 1.02, x: 4 }}
@@ -546,9 +602,9 @@ export default function Navbar() {
                           onClick={() => setIsOpen(false)}
                         >
                           <motion.span
-                            whileHover={{ 
+                            whileHover={{
                               y: -1,
-                              textShadow: "0 2px 4px rgba(59, 130, 246, 0.2)"
+                              textShadow: "0 2px 4px rgba(59, 130, 246, 0.2)",
                             }}
                             transition={{ duration: 0.2 }}
                           >
@@ -561,15 +617,19 @@ export default function Navbar() {
                 })}
 
                 {/* Mobile Auth Section */}
-                <motion.div 
+                <motion.div
                   className="border-t border-gray-200/80 pt-4 mt-4"
                   initial={{ y: 20, opacity: 0 }}
                   animate={{ y: 0, opacity: 1 }}
-                  transition={{ duration: 0.4, delay: 0.3, ease: [0.23, 1, 0.32, 1] }}
+                  transition={{
+                    duration: 0.4,
+                    delay: 0.3,
+                    ease: [0.23, 1, 0.32, 1],
+                  }}
                 >
                   {user ? (
                     <div className="space-y-4">
-                      <motion.div 
+                      <motion.div
                         className="px-4 py-3 bg-gray-50/90 backdrop-blur-sm rounded-xl border-2 border-gray-200/60 shadow-sm"
                         whileHover={{ scale: 1.01 }}
                         transition={{ duration: 0.2 }}
@@ -627,7 +687,7 @@ export default function Navbar() {
                           className="relative w-14 h-14 mx-auto bg-gradient-to-br from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 rounded-2xl flex items-center justify-center shadow-lg border border-blue-500/40 transition-all duration-300"
                           whileHover={{
                             boxShadow: "0 8px 25px rgba(59, 130, 246, 0.4)",
-                            rotate: 5
+                            rotate: 5,
                           }}
                           transition={{ duration: 0.3 }}
                         >
@@ -644,12 +704,12 @@ export default function Navbar() {
                             className="absolute inset-0 rounded-2xl bg-white/10"
                             animate={{
                               scale: [1, 1.05, 1],
-                              opacity: [0.3, 0.6, 0.3]
+                              opacity: [0.3, 0.6, 0.3],
                             }}
                             transition={{
                               duration: 2,
                               repeat: Infinity,
-                              ease: "easeInOut"
+                              ease: "easeInOut",
                             }}
                           />
 

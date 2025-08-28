@@ -1,10 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { motion } from "framer-motion";
-import { 
-  User, 
-  Building, 
+import Image from "next/image";
+import {
+  User,
+  Building,
   MapPin,
   Bell,
   Shield,
@@ -15,7 +16,7 @@ import {
   Globe,
   Upload,
   Mail,
-  Phone
+  Phone,
 } from "lucide-react";
 import { EnhancedCard } from "@/components/ui/enhanced-card";
 import { EnhancedButton } from "@/components/ui/enhanced-button";
@@ -23,6 +24,7 @@ import { EnhancedInput } from "@/components/ui/enhanced-input";
 import { getCurrentUser } from "@/lib/auth";
 import { useAdminProfile } from "@/contexts/AdminProfileContext";
 import toast from "react-hot-toast";
+import { logger } from "@/lib/logger";
 
 interface AdminProfileProps {
   className?: string;
@@ -44,7 +46,7 @@ interface AdminSettings {
   security: {
     two_factor_enabled: boolean;
     session_timeout: number;
-    password_strength: 'weak' | 'medium' | 'strong';
+    password_strength: "weak" | "medium" | "strong";
     login_notifications: boolean;
   };
   notifications: {
@@ -56,28 +58,34 @@ interface AdminSettings {
 }
 
 export default function AdminProfile({ className = "" }: AdminProfileProps) {
-  const { profile, updateProfile, saveProfile, loading: profileLoading } = useAdminProfile();
+  const {
+    profile,
+    updateProfile,
+    saveProfile,
+    loading: profileLoading,
+  } = useAdminProfile();
   const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [activeTab, setActiveTab] = useState('personal');
+  const [activeTab, setActiveTab] = useState("personal");
   const [settings, setSettings] = useState<AdminSettings>({
     personal: {
       full_name: profile.full_name,
       avatar_url: profile.avatar_url,
     },
     company: {
-      name: 'Biomed Solutions',
-      email: 'info@annapurnahospitals.com',
-      phone: '+977-980-120-335',
-      website: 'https://annapurnahospitals.com',
-      address: 'Annapurna Neurological Institute, Maitighar, Kathmandu, Nepal',
-      description: 'Leading provider of cutting-edge medical equipment and healthcare solutions.',
+      name: "Biomed Solutions",
+      email: "info@annapurnahospitals.com",
+      phone: "+977-980-120-335",
+      website: "https://annapurnahospitals.com",
+      address: "Annapurna Neurological Institute, Maitighar, Kathmandu, Nepal",
+      description:
+        "Leading provider of cutting-edge medical equipment and healthcare solutions.",
     },
     security: {
       two_factor_enabled: false,
       session_timeout: 30,
-      password_strength: 'medium',
+      password_strength: "medium",
       login_notifications: true,
     },
     notifications: {
@@ -88,25 +96,42 @@ export default function AdminProfile({ className = "" }: AdminProfileProps) {
     },
   });
 
-  const tabs = [
-    { id: 'personal', label: 'Personal Info', icon: User },
-  ];
+  const tabs = [{ id: "personal", label: "Personal Info", icon: User }];
 
+  const loadUserData = useCallback(async () => {
+    try {
+      const currentUser = await getCurrentUser();
+      setUser(currentUser);
 
+      // Update settings with current profile data
+      setSettings((prev) => ({
+        ...prev,
+        personal: {
+          ...prev.personal,
+          full_name: profile.full_name,
+          avatar_url: profile.avatar_url,
+        },
+      }));
+    } catch (error) {
+      logger.error("Error loading user data:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [profile.full_name, profile.avatar_url]);
 
   useEffect(() => {
     loadUserData();
-  }, []);
+  }, [loadUserData]);
 
   // Update settings when profile changes
   useEffect(() => {
-    setSettings(prev => ({
+    setSettings((prev) => ({
       ...prev,
       personal: {
         ...prev.personal,
         full_name: profile.full_name,
         avatar_url: profile.avatar_url,
-      }
+      },
     }));
   }, [profile]);
 
@@ -118,28 +143,12 @@ export default function AdminProfile({ className = "" }: AdminProfileProps) {
         avatar_url: settings.personal.avatar_url,
       });
     }
-  }, []);
-
-  const loadUserData = async () => {
-    try {
-      const currentUser = await getCurrentUser();
-      setUser(currentUser);
-      
-      // Update settings with current profile data
-      setSettings(prev => ({
-        ...prev,
-        personal: {
-          ...prev.personal,
-          full_name: profile.full_name,
-          avatar_url: profile.avatar_url,
-        }
-      }));
-    } catch (error) {
-      console.error('Error loading user data:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [
+    profile.full_name,
+    settings.personal.full_name,
+    settings.personal.avatar_url,
+    updateProfile,
+  ]);
 
   const handleSave = async () => {
     setSaving(true);
@@ -149,97 +158,99 @@ export default function AdminProfile({ className = "" }: AdminProfileProps) {
         full_name: settings.personal.full_name,
         avatar_url: settings.personal.avatar_url,
       });
-      
+
       // Save profile
       await saveProfile();
-      
-      toast.success('Profile updated successfully!');
-      console.log('Profile saved:', settings.personal);
+
+      toast.success("Profile updated successfully!");
+      logger.log("Profile saved:", settings.personal);
     } catch (error) {
-      console.error('Error saving profile:', error);
-      toast.error('Failed to save profile');
+      logger.error("Error saving profile:", error);
+      toast.error("Failed to save profile");
     } finally {
       setSaving(false);
     }
   };
 
   const updatePersonalSetting = (field: string, value: any) => {
-    setSettings(prev => ({
+    setSettings((prev) => ({
       ...prev,
       personal: {
         ...prev.personal,
-        [field]: value
-      }
+        [field]: value,
+      },
     }));
-    
+
     // Update profile immediately for real-time updates
     updateProfile({
-      [field]: value
+      [field]: value,
     });
   };
 
-  const handleAvatarUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarUpload = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
     const file = event.target.files?.[0];
     if (!file) return;
 
     try {
       // Create FormData for file upload
       const formData = new FormData();
-      formData.append('file', file);
-      formData.append('folder', 'admin-avatars');
+      formData.append("file", file);
+      formData.append("folder", "admin-avatars");
 
       // Upload image
-      const response = await fetch('/api/upload-image', {
-        method: 'POST',
+      const response = await fetch("/api/upload-image", {
+        method: "POST",
         body: formData,
       });
 
       if (!response.ok) {
-        throw new Error('Failed to upload image');
+        throw new Error("Failed to upload image");
       }
 
       const data = await response.json();
-      
+
       // Update profile with new avatar URL
-      updatePersonalSetting('avatar_url', data.url);
+      updatePersonalSetting("avatar_url", data.url);
       updateProfile({ avatar_url: data.url });
-      
-      toast.success('Profile picture updated successfully!');
+
+      toast.success("Profile picture updated successfully!");
     } catch (error) {
-      console.error('Error uploading avatar:', error);
-      toast.error('Failed to upload profile picture');
+      if (process.env.NODE_ENV === "development") {
+        console.error("Error uploading avatar:", error);
+      }
+      toast.error("Failed to upload profile picture");
     }
   };
 
   const updateCompanySetting = (field: string, value: any) => {
-    setSettings(prev => ({
+    setSettings((prev) => ({
       ...prev,
       company: {
         ...prev.company,
-        [field]: value
-      }
+        [field]: value,
+      },
     }));
   };
 
   const updateNotificationSetting = (field: string, value: boolean) => {
-    setSettings(prev => ({
+    setSettings((prev) => ({
       ...prev,
       notifications: {
         ...prev.notifications,
-        [field]: value
-      }
+        [field]: value,
+      },
     }));
   };
 
-
-
   const updateSecuritySetting = (field: string, value: any) => {
-    setSettings(prev => ({
+    setSettings((prev) => ({
       ...prev,
       security: {
         ...prev.security,
-        [field]: value
-      }
+        [field]: value,
+      },
     }));
   };
 
@@ -257,7 +268,9 @@ export default function AdminProfile({ className = "" }: AdminProfileProps) {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <p className="text-gray-600">Manage your account settings and preferences</p>
+          <p className="text-gray-600">
+            Manage your account settings and preferences
+          </p>
         </div>
         <EnhancedButton
           variant="primary"
@@ -280,8 +293,8 @@ export default function AdminProfile({ className = "" }: AdminProfileProps) {
                   onClick={() => setActiveTab(tab.id)}
                   className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-left transition-colors ${
                     activeTab === tab.id
-                      ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                      : 'text-gray-700 hover:bg-gray-50'
+                      ? "bg-blue-50 text-blue-700 border border-blue-200"
+                      : "text-gray-700 hover:bg-gray-50"
                   }`}
                 >
                   <tab.icon className="w-4 h-4" />
@@ -295,18 +308,22 @@ export default function AdminProfile({ className = "" }: AdminProfileProps) {
         {/* Content */}
         <div className="lg:col-span-3">
           <EnhancedCard variant="outline" padding="lg">
-            {activeTab === 'personal' && (
+            {activeTab === "personal" && (
               <div className="space-y-6">
-                <h3 className="text-lg font-semibold text-gray-900">Personal Information</h3>
-                
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Personal Information
+                </h3>
+
                 {/* Avatar */}
                 <div className="flex items-center gap-6">
                   <div className="relative">
                     {settings.personal.avatar_url ? (
                       <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-gray-200">
-                        <img
+                        <Image
                           src={settings.personal.avatar_url}
                           alt="Profile"
+                          width={80}
+                          height={80}
                           className="w-full h-full object-cover"
                         />
                       </div>
@@ -326,8 +343,12 @@ export default function AdminProfile({ className = "" }: AdminProfileProps) {
                     </label>
                   </div>
                   <div>
-                    <h4 className="font-medium text-gray-900">Profile Picture</h4>
-                    <p className="text-sm text-gray-600">Click the camera icon to update your profile picture</p>
+                    <h4 className="font-medium text-gray-900">
+                      Profile Picture
+                    </h4>
+                    <p className="text-sm text-gray-600">
+                      Click the camera icon to update your profile picture
+                    </p>
                   </div>
                 </div>
 
@@ -337,7 +358,9 @@ export default function AdminProfile({ className = "" }: AdminProfileProps) {
                     name="full-name"
                     label="Full Name"
                     value={settings.personal.full_name}
-                    onChange={(e) => updatePersonalSetting('full_name', e.target.value)}
+                    onChange={(e) =>
+                      updatePersonalSetting("full_name", e.target.value)
+                    }
                     icon={<User className="w-4 h-4" />}
                     autoComplete="name"
                   />
@@ -345,53 +368,63 @@ export default function AdminProfile({ className = "" }: AdminProfileProps) {
               </div>
             )}
 
-            {activeTab === 'company' && (
+            {activeTab === "company" && (
               <div className="space-y-6">
-                <h3 className="text-lg font-semibold text-gray-900">Company Information</h3>
-                
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Company Information
+                </h3>
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <EnhancedInput
                     id="company-name"
                     name="company-name"
                     label="Company Name"
                     value={settings.company.name}
-                    onChange={(e) => updateCompanySetting('name', e.target.value)}
+                    onChange={(e) =>
+                      updateCompanySetting("name", e.target.value)
+                    }
                     icon={<Building className="w-4 h-4" />}
                     autoComplete="organization"
                   />
-                  
+
                   <EnhancedInput
                     id="company-email"
                     name="company-email"
                     label="Company Email"
                     type="email"
                     value={settings.company.email}
-                    onChange={(e) => updateCompanySetting('email', e.target.value)}
+                    onChange={(e) =>
+                      updateCompanySetting("email", e.target.value)
+                    }
                     icon={<Mail className="w-4 h-4" />}
                     autoComplete="email"
                   />
-                  
+
                   <EnhancedInput
                     id="company-phone"
                     name="company-phone"
                     label="Company Phone"
                     value={settings.company.phone}
-                    onChange={(e) => updateCompanySetting('phone', e.target.value)}
+                    onChange={(e) =>
+                      updateCompanySetting("phone", e.target.value)
+                    }
                     icon={<Phone className="w-4 h-4" />}
                     autoComplete="tel"
                   />
-                  
+
                   <EnhancedInput
                     id="company-website"
                     name="company-website"
                     label="Website"
-                    value={settings.company.website || ''}
-                    onChange={(e) => updateCompanySetting('website', e.target.value)}
+                    value={settings.company.website || ""}
+                    onChange={(e) =>
+                      updateCompanySetting("website", e.target.value)
+                    }
                     icon={<Globe className="w-4 h-4" />}
                     autoComplete="url"
                   />
                 </div>
-                
+
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     <MapPin className="w-4 h-4 inline mr-2" />
@@ -401,7 +434,9 @@ export default function AdminProfile({ className = "" }: AdminProfileProps) {
                     id="company-address"
                     name="company-address"
                     value={settings.company.address}
-                    onChange={(e) => updateCompanySetting('address', e.target.value)}
+                    onChange={(e) =>
+                      updateCompanySetting("address", e.target.value)
+                    }
                     rows={3}
                     autoComplete="street-address"
                     className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -410,60 +445,87 @@ export default function AdminProfile({ className = "" }: AdminProfileProps) {
               </div>
             )}
 
-            {activeTab === 'notifications' && (
+            {activeTab === "notifications" && (
               <div className="space-y-6">
-                <h3 className="text-lg font-semibold text-gray-900">Notification Preferences</h3>
-                
-                <div className="space-y-4">
-                  {Object.entries(settings.notifications).map(([key, value]) => (
-                    <div key={key} className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0">
-                      <div>
-                        <h4 className="font-medium text-gray-900 capitalize">
-                          {key.replace('_', ' ')}
-                        </h4>
-                        <p className="text-sm text-gray-600">
-                          {key === 'email' && 'Receive notifications via email'}
-                          {key === 'browser' && 'Show browser notifications'}
-                          {key === 'inventory_alerts' && 'Get notified about inventory changes'}
-                          {key === 'new_orders' && 'Notifications for new orders'}
-                          {key === 'low_stock_alerts' && 'Alert when stock is running low'}
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Notification Preferences
+                </h3>
 
-                        </p>
+                <div className="space-y-4">
+                  {Object.entries(settings.notifications).map(
+                    ([key, value]) => (
+                      <div
+                        key={key}
+                        className="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0"
+                      >
+                        <div>
+                          <h4 className="font-medium text-gray-900 capitalize">
+                            {key.replace("_", " ")}
+                          </h4>
+                          <p className="text-sm text-gray-600">
+                            {key === "email" &&
+                              "Receive notifications via email"}
+                            {key === "browser" && "Show browser notifications"}
+                            {key === "inventory_alerts" &&
+                              "Get notified about inventory changes"}
+                            {key === "new_orders" &&
+                              "Notifications for new orders"}
+                            {key === "low_stock_alerts" &&
+                              "Alert when stock is running low"}
+                          </p>
+                        </div>
+                        <label className="relative inline-flex items-center cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={value}
+                            onChange={(e) =>
+                              updateNotificationSetting(key, e.target.checked)
+                            }
+                            className="sr-only peer"
+                          />
+                          <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                        </label>
                       </div>
-                      <label className="relative inline-flex items-center cursor-pointer">
-                        <input
-                          type="checkbox"
-                          checked={value}
-                          onChange={(e) => updateNotificationSetting(key, e.target.checked)}
-                          className="sr-only peer"
-                        />
-                        <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
-                      </label>
-                    </div>
-                  ))}
+                    )
+                  )}
                 </div>
               </div>
             )}
 
-
-
-            {activeTab === 'security' && (
+            {activeTab === "security" && (
               <div className="space-y-6">
-                <h3 className="text-lg font-semibold text-gray-900">Security Settings</h3>
-                
+                <h3 className="text-lg font-semibold text-gray-900">
+                  Security Settings
+                </h3>
+
                 <div className="space-y-6">
                   {/* Two-Factor Authentication */}
                   <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                     <div>
-                      <h4 className="font-medium text-gray-900">Two-Factor Authentication</h4>
-                      <p className="text-sm text-gray-600">Add an extra layer of security to your account</p>
+                      <h4 className="font-medium text-gray-900">
+                        Two-Factor Authentication
+                      </h4>
+                      <p className="text-sm text-gray-600">
+                        Add an extra layer of security to your account
+                      </p>
                     </div>
                     <EnhancedButton
-                      variant={settings.security.two_factor_enabled ? "error" : "primary"}
+                      variant={
+                        settings.security.two_factor_enabled
+                          ? "error"
+                          : "primary"
+                      }
                       size="sm"
-                      onClick={() => updateSecuritySetting('two_factor_enabled', !settings.security.two_factor_enabled)}
+                      onClick={() =>
+                        updateSecuritySetting(
+                          "two_factor_enabled",
+                          !settings.security.two_factor_enabled
+                        )
+                      }
                     >
-                      {settings.security.two_factor_enabled ? 'Disable' : 'Enable'}
+                      {settings.security.two_factor_enabled
+                        ? "Disable"
+                        : "Enable"}
                     </EnhancedButton>
                   </div>
 
@@ -474,7 +536,12 @@ export default function AdminProfile({ className = "" }: AdminProfileProps) {
                     </label>
                     <select
                       value={settings.security.session_timeout}
-                      onChange={(e) => updateSecuritySetting('session_timeout', Number(e.target.value))}
+                      onChange={(e) =>
+                        updateSecuritySetting(
+                          "session_timeout",
+                          Number(e.target.value)
+                        )
+                      }
                       className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     >
                       <option value={15}>15 minutes</option>
@@ -489,14 +556,23 @@ export default function AdminProfile({ className = "" }: AdminProfileProps) {
                   {/* Login Notifications */}
                   <div className="flex items-center justify-between">
                     <div>
-                      <h4 className="font-medium text-gray-900">Login Notifications</h4>
-                      <p className="text-sm text-gray-600">Get notified when someone logs into your account</p>
+                      <h4 className="font-medium text-gray-900">
+                        Login Notifications
+                      </h4>
+                      <p className="text-sm text-gray-600">
+                        Get notified when someone logs into your account
+                      </p>
                     </div>
                     <label className="relative inline-flex items-center cursor-pointer">
                       <input
                         type="checkbox"
                         checked={settings.security.login_notifications}
-                        onChange={(e) => updateSecuritySetting('login_notifications', e.target.checked)}
+                        onChange={(e) =>
+                          updateSecuritySetting(
+                            "login_notifications",
+                            e.target.checked
+                          )
+                        }
                         className="sr-only peer"
                       />
                       <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
@@ -505,7 +581,9 @@ export default function AdminProfile({ className = "" }: AdminProfileProps) {
 
                   {/* Change Password */}
                   <div className="pt-6 border-t">
-                    <h4 className="font-medium text-gray-900 mb-4">Change Password</h4>
+                    <h4 className="font-medium text-gray-900 mb-4">
+                      Change Password
+                    </h4>
                     <div className="space-y-4">
                       <EnhancedInput
                         type="password"

@@ -1,10 +1,31 @@
 "use client";
 
 import { useState } from "react";
-import { motion, useScroll, useTransform, AnimatePresence } from "framer-motion";
+import {
+  motion,
+  useScroll,
+  useTransform,
+  AnimatePresence,
+} from "framer-motion";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Eye, EyeOff, Mail, Lock, ArrowRight, Building2, Sparkles, Shield, Zap, Heart, Users, Award, X, Phone, MessageCircle } from "lucide-react";
+import {
+  Eye,
+  EyeOff,
+  Mail,
+  Lock,
+  ArrowRight,
+  Building2,
+  Sparkles,
+  Shield,
+  Zap,
+  Heart,
+  Users,
+  Award,
+  X,
+  Phone,
+  MessageCircle,
+} from "lucide-react";
 import { EnhancedButton } from "@/components/ui/enhanced-button";
 import { EnhancedInput } from "@/components/ui/enhanced-input";
 import { EnhancedCard } from "@/components/ui/enhanced-card";
@@ -18,7 +39,9 @@ export default function LoginPage() {
   const [password, setPassword] = useState("");
 
   const [isLoading, setIsLoading] = useState(false);
-  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  const [errors, setErrors] = useState<{ email?: string; password?: string }>(
+    {}
+  );
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [showForgotPassword, setShowForgotPassword] = useState(false);
 
@@ -27,9 +50,9 @@ export default function LoginPage() {
 
   const { scrollYProgress } = useScroll({
     target: ref,
-    offset: ["start start", "end start"]
+    offset: ["start start", "end start"],
   });
-  
+
   const y = useTransform(scrollYProgress, [0, 1], ["0%", "30%"]);
   const opacity = useTransform(scrollYProgress, [0, 1], [1, 0]);
 
@@ -38,8 +61,8 @@ export default function LoginPage() {
       setMousePosition({ x: e.clientX, y: e.clientY });
     };
 
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
+    window.addEventListener("mousemove", handleMouseMove);
+    return () => window.removeEventListener("mousemove", handleMouseMove);
   }, []);
 
   const floatingIcons = [
@@ -50,8 +73,6 @@ export default function LoginPage() {
     { icon: Users, delay: 2, position: "top-1/2 left-10" },
     { icon: Award, delay: 2.5, position: "top-1/3 right-10" },
   ];
-
-
 
   const validateForm = () => {
     const newErrors: { email?: string; password?: string } = {};
@@ -85,14 +106,13 @@ export default function LoginPage() {
       const result = await signInWithEmail(email, password);
 
       if (result.success) {
-
         toast.success(
           `Welcome back, ${
             result.profile?.full_name || "Admin"
           }! Redirecting to dashboard...`,
           {
             style: {
-              marginTop: '60px',
+              marginTop: "60px",
             },
             duration: 4000,
           }
@@ -102,25 +122,25 @@ export default function LoginPage() {
         toast.error(result.error || "Login failed. Please try again.");
       }
     } catch (error) {
-      console.error("Login error:", error);
+      if (process.env.NODE_ENV === "development") {
+        console.error("Login error:", error);
+      }
       toast.error("An unexpected error occurred. Please try again.");
     } finally {
       setIsLoading(false);
     }
   };
 
-
-
   return (
-    <div ref={ref} className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 flex items-start justify-center p-4 pt-8 lg:pt-16 relative overflow-hidden">
+    <div
+      ref={ref}
+      className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 flex items-start justify-center p-4 pt-8 lg:pt-16 relative overflow-hidden"
+    >
       {/* Enhanced Background Effects */}
-      <motion.div 
-        className="absolute inset-0"
-        style={{ y, opacity }}
-      >
+      <motion.div className="absolute inset-0" style={{ y, opacity }}>
         <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-20"></div>
         <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
-        
+
         {/* Mouse-following gradient */}
         <motion.div
           className="absolute w-96 h-96 bg-gradient-to-r from-cyan-500/30 to-purple-600/30 rounded-full blur-3xl pointer-events-none"
@@ -193,7 +213,7 @@ export default function LoginPage() {
             className="text-center"
           >
             <div className="flex items-center justify-center gap-3 mb-8">
-              <motion.div 
+              <motion.div
                 className="w-20 h-20 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-xl flex items-center justify-center shadow-2xl"
                 whileHover={{ scale: 1.05, rotate: 5 }}
                 transition={{ duration: 0.3 }}
@@ -204,9 +224,11 @@ export default function LoginPage() {
             <h1 className="text-4xl font-bold bg-gradient-to-r from-white to-cyan-300 bg-clip-text text-transparent mb-2">
               Biomed Solutions
             </h1>
-            <p className="text-cyan-300 text-xl font-medium mb-8">Admin Portal</p>
-            
-            <motion.h2 
+            <p className="text-cyan-300 text-xl font-medium mb-8">
+              Admin Portal
+            </p>
+
+            <motion.h2
               className="text-3xl md:text-4xl font-bold mb-4 leading-tight"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -233,25 +255,25 @@ export default function LoginPage() {
             className="backdrop-blur-xl border-white/20 shadow-2xl"
           >
             {/* Mobile Header */}
-                          <motion.div 
-                className="flex lg:hidden items-center justify-center gap-3 mb-8"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: 0.4 }}
+            <motion.div
+              className="flex lg:hidden items-center justify-center gap-3 mb-8"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.4 }}
+            >
+              <motion.div
+                className="w-12 h-12 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-xl flex items-center justify-center shadow-lg"
+                whileHover={{ scale: 1.05 }}
               >
-                <motion.div 
-                  className="w-12 h-12 bg-gradient-to-br from-cyan-400 to-blue-600 rounded-xl flex items-center justify-center shadow-lg"
-                  whileHover={{ scale: 1.05 }}
-                >
-                  <Building2 className="w-6 h-6 text-white" />
-                </motion.div>
-                <div className="text-center">
-                  <h1 className="text-xl font-bold text-white">
-                    Biomed Solutions
-                  </h1>
-                  <p className="text-cyan-300 text-sm">Admin Access</p>
-                </div>
+                <Building2 className="w-6 h-6 text-white" />
               </motion.div>
+              <div className="text-center">
+                <h1 className="text-xl font-bold text-white">
+                  Biomed Solutions
+                </h1>
+                <p className="text-cyan-300 text-sm">Admin Access</p>
+              </div>
+            </motion.div>
 
             {/* Form Header */}
             <motion.div
@@ -362,8 +384,6 @@ export default function LoginPage() {
                 </EnhancedButton>
               </motion.div>
             </motion.form>
-
-
           </EnhancedCard>
         </motion.div>
       </div>
@@ -406,7 +426,9 @@ export default function LoginPage() {
                       <Phone className="w-5 h-5 text-white" />
                     </div>
                     <div>
-                      <p className="text-white font-medium">Call Administrator</p>
+                      <p className="text-white font-medium">
+                        Call Administrator
+                      </p>
                       <p className="text-gray-300 text-sm">+977 9808418877</p>
                     </div>
                   </div>
@@ -453,8 +475,9 @@ export default function LoginPage() {
                     Password Reset Process
                   </p>
                   <p className="text-gray-300 text-sm">
-                    Our administrator will verify your identity and reset your password securely. 
-                    Please have your account details ready when contacting us.
+                    Our administrator will verify your identity and reset your
+                    password securely. Please have your account details ready
+                    when contacting us.
                   </p>
                 </div>
               </div>

@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createServerSupabase, getServerUser, getServerUserProfile } from "@/lib/supabase-server";
+import {
+  createServerSupabase,
+  getServerUser,
+  getServerUserProfile,
+} from "@/lib/supabase-server";
 import { withRateLimit, authRateLimit } from "@/lib/ratelimit";
 import { securityHeaders } from "@/lib/security";
 
@@ -42,7 +46,9 @@ export async function withAuth(request: NextRequest) {
 
     return { user, profile, supabase };
   } catch (error) {
-    console.error("Auth middleware error:", error);
+    if (process.env.NODE_ENV === "development") {
+      console.error("Auth middleware error:", error);
+    }
     return NextResponse.json(
       { error: "Internal Server Error", message: "Authentication failed" },
       {
@@ -65,7 +71,9 @@ export function withErrorHandling(handler: Function) {
 
       return response;
     } catch (error: any) {
-      console.error("API Error:", error);
+      if (process.env.NODE_ENV === "development") {
+        console.error("API Error:", error);
+      }
 
       const response = NextResponse.json(
         {

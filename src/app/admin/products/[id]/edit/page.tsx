@@ -8,12 +8,19 @@ import { ArrowLeft, Upload, X, Plus, Save, Package } from "lucide-react";
 import toast from "react-hot-toast";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import AdminPageWrapper from "@/components/admin/AdminPageWrapper";
+import { logger } from "@/lib/logger";
 
 // Simple input sanitization function
 const sanitizeInput = (input: string): string => {
-  return input.trim().replace(/[<>]/g, '');
+  return input.trim().replace(/[<>]/g, "");
 };
 
 // Product validation function
@@ -35,7 +42,7 @@ const validateProductData = (data: ProductFormData) => {
 
   return {
     isValid: errors.length === 0,
-    errors
+    errors,
   };
 };
 
@@ -63,7 +70,7 @@ export default function EditProductPage() {
   const params = useParams();
   const router = useRouter();
   const productId = params.id as string;
-  
+
   const [categories, setCategories] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -136,24 +143,36 @@ export default function EditProductPage() {
           name: productData.name || "",
           description: productData.description || "",
           short_description: productData.short_description || "",
-          full_description: productData.full_description || productData.description || "",
+          full_description:
+            productData.full_description || productData.description || "",
           sku: productData.sku || "",
           category_id: productData.category_id || "",
           images: Array.isArray(productData.images) ? productData.images : [],
           specifications: productData.specifications || {},
-          features: Array.isArray(productData.features) ? productData.features : [],
-          benefits: Array.isArray(productData.benefits) ? productData.benefits : [],
+          features: Array.isArray(productData.features)
+            ? productData.features
+            : [],
+          benefits: Array.isArray(productData.benefits)
+            ? productData.benefits
+            : [],
           warranty: productData.warranty || "1 year",
-          certifications: Array.isArray(productData.certifications) ? productData.certifications : [],
+          certifications: Array.isArray(productData.certifications)
+            ? productData.certifications
+            : [],
           rating: productData.rating || 4.5,
           review_count: productData.review_count || 0,
           tags: Array.isArray(productData.tags) ? productData.tags : [],
-          is_active: productData.is_active !== undefined ? productData.is_active : true,
-          is_featured: productData.is_featured !== undefined ? productData.is_featured : false,
+          is_active:
+            productData.is_active !== undefined ? productData.is_active : true,
+          is_featured:
+            productData.is_featured !== undefined
+              ? productData.is_featured
+              : false,
         });
-
       } catch (error) {
-        console.error("Error fetching data:", error);
+        if (process.env.NODE_ENV === "development") {
+          console.error("Error fetching data:", error);
+        }
         toast.error("Failed to load product data");
       } finally {
         setIsLoading(false);
@@ -241,7 +260,7 @@ export default function EditProductPage() {
     setIsSaving(true);
 
     try {
-      console.log("Updating product data:", formData);
+      logger.log("Updating product data:", formData);
 
       // Sanitize string inputs
       const sanitizedData = {
@@ -255,13 +274,13 @@ export default function EditProductPage() {
         updated_at: new Date().toISOString(),
       };
 
-      console.log("Sanitized data:", sanitizedData);
+      logger.log("Sanitized data:", sanitizedData);
 
       // Update product via API endpoint
       const response = await fetch(`/api/products/${productId}`, {
-        method: 'PATCH',
+        method: "PATCH",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(sanitizedData),
       });
@@ -269,18 +288,23 @@ export default function EditProductPage() {
       const result = await response.json();
 
       if (!response.ok) {
-        const errorMessage = result.error || result.details || 'Failed to update product';
-        const errorDetails = result.missingFields ? `Missing fields: ${result.missingFields.join(', ')}` : '';
-        const fullError = errorDetails ? `${errorMessage}. ${errorDetails}` : errorMessage;
+        const errorMessage =
+          result.error || result.details || "Failed to update product";
+        const errorDetails = result.missingFields
+          ? `Missing fields: ${result.missingFields.join(", ")}`
+          : "";
+        const fullError = errorDetails
+          ? `${errorMessage}. ${errorDetails}`
+          : errorMessage;
         throw new Error(fullError);
       }
 
-      console.log("Product updated successfully:", result);
+      logger.log("Product updated successfully:", result);
 
       toast.success("Product updated successfully!");
       router.push(`/admin/products/${productId}`);
     } catch (error: any) {
-      console.error("Error updating product:", error);
+      logger.error("Error updating product:", error);
       toast.error(error.message || "Failed to update product");
     } finally {
       setIsSaving(false);
@@ -308,7 +332,11 @@ export default function EditProductPage() {
       >
         <div className="flex items-center gap-4">
           <Link href={`/admin/products/${productId}`}>
-            <Button variant="ghost" size="sm" className="text-yellow-700 hover:bg-yellow-50 border border-yellow-200 hover:border-yellow-300">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-yellow-700 hover:bg-yellow-50 border border-yellow-200 hover:border-yellow-300"
+            >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Product
             </Button>
@@ -359,11 +387,13 @@ export default function EditProductPage() {
                         ? "border-red-500 focus:ring-red-500/30"
                         : "border-gray-200 focus:border-blue-400 focus:ring-blue-500/30"
                     }`}
-                    style={{ color: 'black', backgroundColor: 'white' }}
+                    style={{ color: "black", backgroundColor: "white" }}
                     required
                   />
                   {errors.name && (
-                    <p className="text-red-500 font-medium text-sm">{errors.name}</p>
+                    <p className="text-red-500 font-medium text-sm">
+                      {errors.name}
+                    </p>
                   )}
                 </div>
                 <div className="space-y-2">
@@ -380,25 +410,34 @@ export default function EditProductPage() {
                         ? "border-red-500 focus:ring-red-500/30"
                         : "border-gray-200 focus:border-blue-400 focus:ring-blue-500/30"
                     }`}
-                    style={{ color: 'black', backgroundColor: 'white' }}
+                    style={{ color: "black", backgroundColor: "white" }}
                     required
                   >
-                    <option value="" className="bg-white text-black">Select a category</option>
+                    <option value="" className="bg-white text-black">
+                      Select a category
+                    </option>
                     {categories.map((category) => (
-                      <option key={category.id} value={category.id} className="bg-white text-black">
+                      <option
+                        key={category.id}
+                        value={category.id}
+                        className="bg-white text-black"
+                      >
                         {category.name}
                       </option>
                     ))}
                   </select>
                   {errors.category_id && (
-                    <p className="text-red-500 font-medium text-sm">{errors.category_id}</p>
+                    <p className="text-red-500 font-medium text-sm">
+                      {errors.category_id}
+                    </p>
                   )}
                 </div>
               </div>
 
               <div className="space-y-2">
                 <label className="block text-lg font-bold text-gray-900">
-                  SKU (Stock Keeping Unit) <span className="text-red-500">*</span>
+                  SKU (Stock Keeping Unit){" "}
+                  <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -410,11 +449,13 @@ export default function EditProductPage() {
                       ? "border-red-500 focus:ring-red-500/30"
                       : "border-gray-200 focus:border-blue-400 focus:ring-blue-500/30"
                   }`}
-                  style={{ color: 'black', backgroundColor: 'white' }}
+                  style={{ color: "black", backgroundColor: "white" }}
                   required
                 />
                 {errors.sku && (
-                  <p className="text-red-500 font-medium text-sm">{errors.sku}</p>
+                  <p className="text-red-500 font-medium text-sm">
+                    {errors.sku}
+                  </p>
                 )}
               </div>
 
@@ -429,7 +470,7 @@ export default function EditProductPage() {
                     handleInputChange("short_description", e.target.value)
                   }
                   className="w-full h-24 rounded-xl border-2 border-gray-200 bg-white px-4 py-3 text-lg text-black placeholder-gray-500 focus:outline-none focus:ring-4 focus:border-blue-400 focus:ring-blue-500/30 transition-all duration-300 resize-none"
-                  style={{ color: 'black', backgroundColor: 'white' }}
+                  style={{ color: "black", backgroundColor: "white" }}
                   maxLength={500}
                 />
               </div>
@@ -449,11 +490,13 @@ export default function EditProductPage() {
                       ? "border-red-500 focus:ring-red-500/30"
                       : "border-gray-200 focus:border-blue-400 focus:ring-blue-500/30"
                   }`}
-                  style={{ color: 'black', backgroundColor: 'white' }}
+                  style={{ color: "black", backgroundColor: "white" }}
                   required
                 />
                 {errors.description && (
-                  <p className="text-red-500 font-medium text-sm">{errors.description}</p>
+                  <p className="text-red-500 font-medium text-sm">
+                    {errors.description}
+                  </p>
                 )}
               </div>
             </CardContent>
@@ -494,9 +537,14 @@ export default function EditProductPage() {
                       e.key === "Enter" && (e.preventDefault(), addFeature())
                     }
                     className="flex-1 h-12 rounded-lg border border-gray-200 bg-white px-4 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400"
-                    style={{ color: 'black', backgroundColor: 'white' }}
+                    style={{ color: "black", backgroundColor: "white" }}
                   />
-                  <Button type="button" onClick={addFeature} variant="outline" className="h-12">
+                  <Button
+                    type="button"
+                    onClick={addFeature}
+                    variant="outline"
+                    className="h-12"
+                  >
                     <Plus className="w-4 h-4" />
                   </Button>
                 </div>
@@ -533,7 +581,7 @@ export default function EditProductPage() {
                     value={newSpecKey}
                     onChange={(e) => setNewSpecKey(e.target.value)}
                     className="h-12 rounded-lg border border-gray-200 bg-white px-4 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400"
-                    style={{ color: 'black', backgroundColor: 'white' }}
+                    style={{ color: "black", backgroundColor: "white" }}
                   />
                   <div className="flex gap-2">
                     <input
@@ -546,7 +594,7 @@ export default function EditProductPage() {
                         (e.preventDefault(), addSpecification())
                       }
                       className="flex-1 h-12 rounded-lg border border-gray-200 bg-white px-4 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400"
-                      style={{ color: 'black', backgroundColor: 'white' }}
+                      style={{ color: "black", backgroundColor: "white" }}
                     />
                     <Button
                       type="button"
@@ -621,12 +669,19 @@ export default function EditProductPage() {
                         name="is_active"
                         value="true"
                         checked={formData.is_active === true}
-                        onChange={(e) => handleInputChange("is_active", e.target.value === "true")}
+                        onChange={(e) =>
+                          handleInputChange(
+                            "is_active",
+                            e.target.value === "true"
+                          )
+                        }
                         className="w-5 h-5 text-blue-600 border-gray-300 focus:ring-blue-500"
                       />
                       <div className="flex items-center space-x-2">
                         <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                        <span className="text-gray-900 font-medium">Active</span>
+                        <span className="text-gray-900 font-medium">
+                          Active
+                        </span>
                       </div>
                     </label>
                     <label className="flex items-center space-x-3 cursor-pointer">
@@ -635,17 +690,25 @@ export default function EditProductPage() {
                         name="is_active"
                         value="false"
                         checked={formData.is_active === false}
-                        onChange={(e) => handleInputChange("is_active", e.target.value === "true")}
+                        onChange={(e) =>
+                          handleInputChange(
+                            "is_active",
+                            e.target.value === "true"
+                          )
+                        }
                         className="w-5 h-5 text-blue-600 border-gray-300 focus:ring-blue-500"
                       />
                       <div className="flex items-center space-x-2">
                         <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
-                        <span className="text-gray-900 font-medium">Inactive</span>
+                        <span className="text-gray-900 font-medium">
+                          Inactive
+                        </span>
                       </div>
                     </label>
                   </div>
                   <p className="text-sm text-gray-600">
-                    Active products are visible to customers, inactive products are hidden
+                    Active products are visible to customers, inactive products
+                    are hidden
                   </p>
                 </div>
 
@@ -659,21 +722,30 @@ export default function EditProductPage() {
                       <input
                         type="checkbox"
                         checked={formData.is_featured}
-                        onChange={(e) => handleInputChange("is_featured", e.target.checked)}
+                        onChange={(e) =>
+                          handleInputChange("is_featured", e.target.checked)
+                        }
                         className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                       />
                       <div className="flex items-center space-x-2">
                         <div className="w-4 h-4 bg-yellow-500 rounded-full flex items-center justify-center">
-                          <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                          <svg
+                            className="w-2.5 h-2.5 text-white"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
                             <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                           </svg>
                         </div>
-                        <span className="text-gray-900 font-medium">Mark as Featured</span>
+                        <span className="text-gray-900 font-medium">
+                          Mark as Featured
+                        </span>
                       </div>
                     </label>
                   </div>
                   <p className="text-sm text-gray-600">
-                    Featured products appear prominently on the homepage and in featured sections
+                    Featured products appear prominently on the homepage and in
+                    featured sections
                   </p>
                 </div>
               </div>
@@ -683,7 +755,11 @@ export default function EditProductPage() {
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                   <div className="flex items-start space-x-3">
                     <div className="w-6 h-6 bg-yellow-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                      <svg
+                        className="w-3 h-3 text-white"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
                         <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                       </svg>
                     </div>
@@ -724,7 +800,7 @@ export default function EditProductPage() {
             type="submit"
             disabled={isSaving}
             className={`px-12 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 text-lg shadow-lg hover:shadow-xl transform hover:scale-105 ${
-              isSaving ? 'opacity-50 cursor-not-allowed' : ''
+              isSaving ? "opacity-50 cursor-not-allowed" : ""
             }`}
           >
             {isSaving ? (

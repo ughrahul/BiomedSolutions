@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import Image from "next/image";
 import {
   Plus,
   Edit,
@@ -59,24 +60,24 @@ export default function ProductManagement({
 
   // Real-time subscription for product updates
   const handleRealtimeUpdate = useCallback((payload: any) => {
-            // Real-time product update received
-    
-    if (payload.eventType === 'INSERT') {
+    // Real-time product update received
+
+    if (payload.eventType === "INSERT") {
       // New product added
-      setProducts(prev => [payload.new, ...prev]);
+      setProducts((prev) => [payload.new, ...prev]);
       toast.success("New product added in real-time!");
-    } else if (payload.eventType === 'UPDATE') {
+    } else if (payload.eventType === "UPDATE") {
       // Product updated
-      setProducts(prev => 
-        prev.map(product => 
+      setProducts((prev) =>
+        prev.map((product) =>
           product.id === payload.new.id ? payload.new : product
         )
       );
       toast.success("Product updated in real-time!");
-    } else if (payload.eventType === 'DELETE') {
+    } else if (payload.eventType === "DELETE") {
       // Product deleted
-      setProducts(prev => 
-        prev.filter(product => product.id !== payload.old.id)
+      setProducts((prev) =>
+        prev.filter((product) => product.id !== payload.old.id)
       );
       toast.success("Product deleted in real-time!");
     }
@@ -97,11 +98,19 @@ export default function ProductManagement({
         const data = await response.json();
         setProducts(data.products || []);
       } else {
-        console.error("Failed to fetch products:", response.status, response.statusText);
+        if (process.env.NODE_ENV === "development") {
+          console.error(
+            "Failed to fetch products:",
+            response.status,
+            response.statusText
+          );
+        }
         toast.error("Failed to fetch products");
       }
     } catch (error) {
-      console.error("Error fetching products:", error);
+      if (process.env.NODE_ENV === "development") {
+        console.error("Error fetching products:", error);
+      }
       toast.error("Error fetching products");
     } finally {
       setLoading(false);
@@ -110,7 +119,7 @@ export default function ProductManagement({
 
   const handleCreateProduct = () => {
     // Navigate to the dedicated new product page
-    window.location.href = '/admin/products/new';
+    window.location.href = "/admin/products/new";
   };
 
   const handleEditProduct = (product: Product) => {
@@ -146,7 +155,9 @@ export default function ProductManagement({
             category: "imaging",
           });
         } else {
-          console.error("Failed to create product:", result.error);
+          if (process.env.NODE_ENV === "development") {
+            console.error("Failed to create product:", result.error);
+          }
           toast.error(result.error || "Failed to create product");
         }
       } else if (selectedProduct) {
@@ -174,12 +185,16 @@ export default function ProductManagement({
           setIsEditing(false);
           setSelectedProduct(null);
         } else {
-          console.error("Failed to update product:", result.error);
+          if (process.env.NODE_ENV === "development") {
+            console.error("Failed to update product:", result.error);
+          }
           toast.error(result.error || "Failed to update product");
         }
       }
     } catch (error) {
-      console.error("Error saving product:", error);
+      if (process.env.NODE_ENV === "development") {
+        console.error("Error saving product:", error);
+      }
       toast.error("Error saving product");
     } finally {
       setSaving(false);
@@ -187,11 +202,16 @@ export default function ProductManagement({
   };
 
   const handleDeleteProduct = async (productId: string) => {
-    if (!confirm("Are you sure you want to delete this product? This action cannot be undone.")) return;
+    if (
+      !confirm(
+        "Are you sure you want to delete this product? This action cannot be undone."
+      )
+    )
+      return;
 
     try {
       setDeleting(productId);
-      
+
       const response = await fetch(`/api/products/${productId}`, {
         method: "DELETE",
       });
@@ -203,11 +223,15 @@ export default function ProductManagement({
         // Refresh products list
         await fetchProducts();
       } else {
-        console.error("Failed to delete product:", result.error);
+        if (process.env.NODE_ENV === "development") {
+          console.error("Failed to delete product:", result.error);
+        }
         toast.error(result.error || "Failed to delete product");
       }
     } catch (error) {
-      console.error("Error deleting product:", error);
+      if (process.env.NODE_ENV === "development") {
+        console.error("Error deleting product:", error);
+      }
       toast.error("Error deleting product");
     } finally {
       setDeleting(null);
@@ -220,20 +244,20 @@ export default function ProductManagement({
       try {
         // Show loading state
         toast.loading("Uploading image...");
-        
+
         // Create FormData for file upload
         const formData = new FormData();
-        formData.append('file', file);
-        formData.append('folder', 'products');
-        
+        formData.append("file", file);
+        formData.append("folder", "products");
+
         // Upload to Supabase storage via API
-        const response = await fetch('/api/upload-image', {
-          method: 'POST',
+        const response = await fetch("/api/upload-image", {
+          method: "POST",
           body: formData,
         });
-        
+
         const result = await response.json();
-        
+
         if (response.ok && result.url) {
           setFormData((prev) => ({ ...prev, image_url: result.url }));
           toast.success("Image uploaded successfully!");
@@ -241,7 +265,9 @@ export default function ProductManagement({
           throw new Error(result.error || "Upload failed");
         }
       } catch (error) {
-        console.error("Image upload error:", error);
+        if (process.env.NODE_ENV === "development") {
+          console.error("Image upload error:", error);
+        }
         toast.error("Failed to upload image. Please try again.");
       }
     }
@@ -321,9 +347,9 @@ export default function ProductManagement({
             </div>
 
             <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Description <span className="text-red-500">*</span>
-                </label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Description <span className="text-red-500">*</span>
+              </label>
               <textarea
                 value={formData.description}
                 onChange={(e) =>
@@ -341,9 +367,9 @@ export default function ProductManagement({
 
             {/* Product Image */}
             <div>
-                              <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Product Image <span className="text-red-500">*</span>
-                </label>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Product Image <span className="text-red-500">*</span>
+              </label>
               <div className="space-y-4">
                 <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
                   <input
@@ -366,9 +392,11 @@ export default function ProductManagement({
 
                 {formData.image_url && (
                   <div className="relative">
-                    <img
+                    <Image
                       src={formData.image_url}
                       alt="Product preview"
+                      width={400}
+                      height={192}
                       className="w-full h-48 object-cover rounded-lg"
                     />
                     <button
@@ -421,7 +449,10 @@ export default function ProductManagement({
                 onClick={handleSaveProduct}
                 icon={<Save className="w-4 h-4" />}
                 disabled={
-                  !formData.name || !formData.description || !formData.image_url || saving
+                  !formData.name ||
+                  !formData.description ||
+                  !formData.image_url ||
+                  saving
                 }
                 loading={saving}
               >
@@ -462,7 +493,12 @@ export default function ProductManagement({
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 min-h-[400px] relative">
         {loading ? (
           Array.from({ length: 6 }, (_, index) => (
-            <EnhancedCard key={index} variant="outline" padding="lg" animated={false}>
+            <EnhancedCard
+              key={index}
+              variant="outline"
+              padding="lg"
+              animated={false}
+            >
               <div className="animate-pulse">
                 <div className="w-full h-48 bg-gray-200 rounded-lg mb-4"></div>
                 <div className="h-4 bg-gray-200 rounded mb-2"></div>
@@ -492,31 +528,48 @@ export default function ProductManagement({
             <div
               key={product.id}
               className="block"
-              style={{ 
+              style={{
                 opacity: 1,
-                visibility: 'visible',
-                display: 'block'
+                visibility: "visible",
+                display: "block",
               }}
             >
-                <EnhancedCard variant="outline" padding="lg" hover="both" animated={false}>
+              <EnhancedCard
+                variant="outline"
+                padding="lg"
+                hover="both"
+                animated={false}
+              >
                 <div className="space-y-4">
                   <div className="relative">
-                    <img
-                      src={product.image_url || (product.images && product.images.length > 0 ? (typeof product.images[0] === 'string' ? product.images[0] : product.images[0]?.url || "/assets/images/placeholder-product.svg") : "/assets/images/placeholder-product.svg")}
+                    <Image
+                      src={
+                        product.image_url ||
+                        (product.images && product.images.length > 0
+                          ? typeof product.images[0] === "string"
+                            ? product.images[0]
+                            : product.images[0]?.url ||
+                              "/assets/images/placeholder-product.svg"
+                          : "/assets/images/placeholder-product.svg")
+                      }
                       alt={product.name}
+                      width={400}
+                      height={192}
                       className="w-full h-48 object-cover rounded-lg"
-                      onError={(e) => {
-                        e.currentTarget.src =
-                          "/assets/images/placeholder-product.svg";
-                      }}
                     />
                     <div className="absolute top-2 right-2 flex flex-col gap-1">
                       <span className="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full capitalize">
-                        {product.category || (product.categories?.name || 'Unknown')}
+                        {product.category ||
+                          product.categories?.name ||
+                          "Unknown"}
                       </span>
                       {product.is_featured && (
                         <span className="bg-yellow-500 text-white text-xs px-2 py-1 rounded-full flex items-center gap-1">
-                          <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
+                          <svg
+                            className="w-3 h-3"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
                             <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                           </svg>
                           Featured

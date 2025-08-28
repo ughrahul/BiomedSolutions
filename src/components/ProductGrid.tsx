@@ -3,7 +3,15 @@
 import Link from "next/link";
 import Image from "next/image";
 import { motion } from "framer-motion";
-import { Star, ArrowRight, ShoppingCart, Heart, Eye, Zap, Loader2 } from "lucide-react";
+import {
+  Star,
+  ArrowRight,
+  ShoppingCart,
+  Heart,
+  Eye,
+  Zap,
+  Loader2,
+} from "lucide-react";
 import { useState, useEffect, useCallback, useRef } from "react";
 import { EnhancedCard } from "@/components/ui/enhanced-card";
 import { EnhancedButton } from "@/components/ui/enhanced-button";
@@ -36,71 +44,83 @@ export default function ProductGrid({
   const itemsPerPage = 16; // Show 16 products per page
 
   // Transform database data to Product type
-  const transformProductData = useCallback((item: any): Product => ({
-    id: item.id,
-    name: item.name,
-    slug: item.name.toLowerCase().replace(/\s+/g, '-'),
-    category: item.categories?.name || "Medical Equipment",
-    category_id: item.category_id,
-    description: item.description,
-    short_description: item.short_description || item.description?.substring(0, 150) + '...',
-    full_description: item.description,
-    sku: item.sku,
-    image_url: item.images?.[0] || "/assets/images/placeholder-product.svg",
-    images: item.images?.map((url: string, index: number) => ({
-      id: `${item.id}-${index}`,
-      url,
-      alt: item.name,
-      isPrimary: index === 0,
-      order: index + 1,
-    })) || [
-      {
-        id: `${item.id}-placeholder`,
-        url: "/assets/images/placeholder-product.svg",
+  const transformProductData = useCallback(
+    (item: any): Product => ({
+      id: item.id,
+      name: item.name,
+      slug: item.name.toLowerCase().replace(/\s+/g, "-"),
+      category: item.categories?.name || "Medical Equipment",
+      category_id: item.category_id,
+      description: item.description,
+      short_description:
+        item.short_description || item.description?.substring(0, 150) + "...",
+      full_description: item.description,
+      sku: item.sku,
+      image_url: item.images?.[0] || "/assets/images/placeholder-product.svg",
+      images: item.images?.map((url: string, index: number) => ({
+        id: `${item.id}-${index}`,
+        url,
         alt: item.name,
-        isPrimary: true,
-        order: 1,
-      }
-    ],
-    features: item.features || [],
-    specifications: Array.isArray(item.specifications) 
-      ? item.specifications 
-      : item.specifications 
-        ? Object.entries(item.specifications).map(([name, value]) => ({ name, value: String(value) }))
+        isPrimary: index === 0,
+        order: index + 1,
+      })) || [
+        {
+          id: `${item.id}-placeholder`,
+          url: "/assets/images/placeholder-product.svg",
+          alt: item.name,
+          isPrimary: true,
+          order: 1,
+        },
+      ],
+      features: item.features || [],
+      specifications: Array.isArray(item.specifications)
+        ? item.specifications
+        : item.specifications
+        ? Object.entries(item.specifications).map(([name, value]) => ({
+            name,
+            value: String(value),
+          }))
         : [],
-    benefits: [],
-    warranty: "1 year manufacturer warranty",
-    certifications: ["CE Marked", "FDA Approved"],
-    rating: 4.5,
-    review_count: Math.floor(Math.random() * 50) + 10,
-    tags: item.features?.slice(0, 3) || [],
-    is_active: item.is_active,
-    is_featured: item.is_featured,
-    created_at: item.created_at,
-    updated_at: item.updated_at,
-  }), []);
+      benefits: [],
+      warranty: "1 year manufacturer warranty",
+      certifications: ["CE Marked", "FDA Approved"],
+      rating: 4.5,
+      review_count: Math.floor(Math.random() * 50) + 10,
+      tags: item.features?.slice(0, 3) || [],
+      is_active: item.is_active,
+      is_featured: item.is_featured,
+      created_at: item.created_at,
+      updated_at: item.updated_at,
+    }),
+    []
+  );
 
   // Real-time product updates
-  const handleRealtimeUpdate = useCallback((payload: any) => {
-            // Real-time product update received
-    
-    switch (payload.eventType) {
-      case 'INSERT':
-        // Add new product to the list
-        const newProduct = transformProductData(payload.new);
-        setProducts(prev => [newProduct, ...prev]);
-        break;
-      case 'UPDATE':
-        // Update existing product
-        const updatedProduct = transformProductData(payload.new);
-        setProducts(prev => prev.map(p => p.id === updatedProduct.id ? updatedProduct : p));
-        break;
-      case 'DELETE':
-        // Remove deleted product
-        setProducts(prev => prev.filter(p => p.id !== payload.old.id));
-        break;
-    }
-  }, [transformProductData]);
+  const handleRealtimeUpdate = useCallback(
+    (payload: any) => {
+      // Real-time product update received
+
+      switch (payload.eventType) {
+        case "INSERT":
+          // Add new product to the list
+          const newProduct = transformProductData(payload.new);
+          setProducts((prev) => [newProduct, ...prev]);
+          break;
+        case "UPDATE":
+          // Update existing product
+          const updatedProduct = transformProductData(payload.new);
+          setProducts((prev) =>
+            prev.map((p) => (p.id === updatedProduct.id ? updatedProduct : p))
+          );
+          break;
+        case "DELETE":
+          // Remove deleted product
+          setProducts((prev) => prev.filter((p) => p.id !== payload.old.id));
+          break;
+      }
+    },
+    [transformProductData]
+  );
 
   // Store the callback in a ref to avoid dependency issues
   const handleRealtimeUpdateRef = useRef(handleRealtimeUpdate);
@@ -112,14 +132,14 @@ export default function ProductGrid({
     if (!supabase) return;
 
     const channel = supabase
-      .channel('product-changes')
+      .channel("product-changes")
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: '*',
-          schema: 'public',
-          table: 'products',
-          filter: 'is_active=eq.true'
+          event: "*",
+          schema: "public",
+          table: "products",
+          filter: "is_active=eq.true",
         },
         (payload) => handleRealtimeUpdateRef.current(payload)
       )
@@ -144,26 +164,40 @@ export default function ProductGrid({
         // If no database connection, show sample products instead of empty state
         const sampleProducts: Product[] = [
           {
-            id: 'sample-1',
-            name: 'Digital ECG Machine',
-            description: 'Advanced 12-lead ECG machine with high-resolution display and automatic interpretation.',
-            short_description: 'Advanced 12-lead ECG machine with automatic interpretation',
-            category: 'Diagnostic Equipment',
-            category_id: 'sample-cat-1',
-            sku: 'ECG-DIG-001',
-            image_url: '/assets/images/placeholder-product.svg',
-            images: [{ id: 'sample-1-img', url: '/assets/images/placeholder-product.svg', alt: 'Digital ECG Machine', isPrimary: true, order: 1 }],
-            features: ['12-lead ECG recording', 'Automatic interpretation', 'Wireless connectivity'],
+            id: "sample-1",
+            name: "Digital ECG Machine",
+            description:
+              "Advanced 12-lead ECG machine with high-resolution display and automatic interpretation.",
+            short_description:
+              "Advanced 12-lead ECG machine with automatic interpretation",
+            category: "Diagnostic Equipment",
+            category_id: "sample-cat-1",
+            sku: "ECG-DIG-001",
+            image_url: "/assets/images/placeholder-product.svg",
+            images: [
+              {
+                id: "sample-1-img",
+                url: "/assets/images/placeholder-product.svg",
+                alt: "Digital ECG Machine",
+                isPrimary: true,
+                order: 1,
+              },
+            ],
+            features: [
+              "12-lead ECG recording",
+              "Automatic interpretation",
+              "Wireless connectivity",
+            ],
             specifications: [
-              { name: 'Display', value: '10.1 inch touchscreen' },
-              { name: 'Connectivity', value: 'WiFi, Bluetooth' },
-              { name: 'Power', value: 'Battery + AC' }
+              { name: "Display", value: "10.1 inch touchscreen" },
+              { name: "Connectivity", value: "WiFi, Bluetooth" },
+              { name: "Power", value: "Battery + AC" },
             ],
             is_active: true,
             is_featured: true,
             created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          }
+            updated_at: new Date().toISOString(),
+          },
         ];
         setProducts(sampleProducts);
         setLoading(false);
@@ -172,10 +206,12 @@ export default function ProductGrid({
 
       const { data, error: supabaseError } = await supabase
         .from("products")
-        .select(`
+        .select(
+          `
           *,
           categories(name, slug)
-        `)
+        `
+        )
         .eq("is_active", true)
         .order("created_at", { ascending: false });
 
@@ -187,11 +223,12 @@ export default function ProductGrid({
       const transformedProducts: Product[] = (data || []).map((item) => ({
         id: item.id,
         name: item.name,
-        slug: item.name.toLowerCase().replace(/\s+/g, '-'),
+        slug: item.name.toLowerCase().replace(/\s+/g, "-"),
         category: item.categories?.name || "Medical Equipment",
         category_id: item.category_id,
         description: item.description,
-        short_description: item.short_description || item.description?.substring(0, 150) + '...',
+        short_description:
+          item.short_description || item.description?.substring(0, 150) + "...",
         full_description: item.description,
         sku: item.sku,
         image_url: item.images?.[0] || "/assets/images/placeholder-product.svg",
@@ -208,14 +245,17 @@ export default function ProductGrid({
             alt: item.name,
             isPrimary: true,
             order: 1,
-          }
+          },
         ],
         features: item.features || [],
-        specifications: Array.isArray(item.specifications) 
-          ? item.specifications 
-          : item.specifications 
-            ? Object.entries(item.specifications).map(([name, value]) => ({ name, value: String(value) }))
-            : [],
+        specifications: Array.isArray(item.specifications)
+          ? item.specifications
+          : item.specifications
+          ? Object.entries(item.specifications).map(([name, value]) => ({
+              name,
+              value: String(value),
+            }))
+          : [],
         benefits: [],
         warranty: "1 year manufacturer warranty",
         certifications: ["CE Marked", "FDA Approved"],
@@ -230,7 +270,9 @@ export default function ProductGrid({
 
       setProducts(transformedProducts);
     } catch (error) {
-      console.error("Error fetching products:", error);
+      if (process.env.NODE_ENV === "development") {
+        console.error("Error fetching products:", error);
+      }
       setError("Failed to load products. Please try again.");
     } finally {
       setLoading(false);
@@ -262,9 +304,9 @@ export default function ProductGrid({
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
     // Smooth scroll to top of products section
-    const productsSection = document.getElementById('products-grid');
+    const productsSection = document.getElementById("products-grid");
     if (productsSection) {
-      productsSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      productsSection.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   };
 
@@ -279,8 +321,6 @@ export default function ProductGrid({
       return newFavorites;
     });
   };
-
-
 
   const renderStars = (rating: number) => {
     return Array.from({ length: 5 }, (_, i) => (
@@ -346,9 +386,7 @@ export default function ProductGrid({
               Unable to load products
             </h3>
             <p className="text-gray-600 mb-6">{error}</p>
-            <EnhancedButton onClick={fetchProducts}>
-              Try Again
-            </EnhancedButton>
+            <EnhancedButton onClick={fetchProducts}>Try Again</EnhancedButton>
           </motion.div>
         </div>
       </section>
@@ -367,12 +405,29 @@ export default function ProductGrid({
               className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
             >
               <div className="text-sm text-gray-600">
-                Found <span className="font-semibold text-gray-900">{totalItems}</span> products
+                Found{" "}
+                <span className="font-semibold text-gray-900">
+                  {totalItems}
+                </span>{" "}
+                products
                 {searchQuery && (
-                  <span> matching "<span className="font-semibold text-gray-900">{searchQuery}</span>"</span>
+                  <span>
+                    {" "}
+                    matching &quot;
+                    <span className="font-semibold text-gray-900">
+                      {searchQuery}
+                    </span>
+                    &quot;
+                  </span>
                 )}
                 {selectedCategory && (
-                  <span> in <span className="font-semibold text-gray-900">{selectedCategory}</span></span>
+                  <span>
+                    {" "}
+                    in{" "}
+                    <span className="font-semibold text-gray-900">
+                      {selectedCategory}
+                    </span>
+                  </span>
                 )}
               </div>
               {totalPages > 1 && (
@@ -400,12 +455,16 @@ export default function ProductGrid({
                   <div className="sm:w-1/3">
                     <div className="relative h-48 sm:h-32 md:h-40 lg:h-48 rounded-lg sm:rounded-xl overflow-hidden">
                       <Image
-                        src={product.image_url || "/assets/images/placeholder-product.svg"}
+                        src={
+                          product.image_url ||
+                          "/assets/images/placeholder-product.svg"
+                        }
                         alt={product.name}
                         fill
                         className="object-cover transition-transform duration-300 hover:scale-110"
                         onError={(e) => {
-                          e.currentTarget.src = "/assets/images/placeholder-product.svg";
+                          e.currentTarget.src =
+                            "/assets/images/placeholder-product.svg";
                         }}
                       />
                       <div className="absolute top-4 right-4">
@@ -459,14 +518,16 @@ export default function ProductGrid({
 
                       {product.features && product.features.length > 0 && (
                         <div className="flex flex-wrap gap-1.5 sm:gap-2 mb-3 sm:mb-4">
-                          {product.features.slice(0, 3).map((feature, index) => (
-                            <span
-                              key={index}
-                              className="px-2 sm:px-3 py-0.5 sm:py-1 bg-gray-100 text-gray-700 text-xs sm:text-sm rounded-full"
-                            >
-                              {feature}
-                            </span>
-                          ))}
+                          {product.features
+                            .slice(0, 3)
+                            .map((feature, index) => (
+                              <span
+                                key={index}
+                                className="px-2 sm:px-3 py-0.5 sm:py-1 bg-gray-100 text-gray-700 text-xs sm:text-sm rounded-full"
+                              >
+                                {feature}
+                              </span>
+                            ))}
                         </div>
                       )}
                     </div>
@@ -489,16 +550,26 @@ export default function ProductGrid({
                             icon={<Eye className="w-3 h-3 sm:w-4 sm:h-4" />}
                             className="text-xs sm:text-sm px-2 sm:px-3 py-1.5 sm:py-2 min-h-[32px] touch-manipulation"
                           >
-                            <span className="hidden sm:inline">View Details</span>
+                            <span className="hidden sm:inline">
+                              View Details
+                            </span>
                             <span className="sm:hidden">View</span>
                           </EnhancedButton>
                         </Link>
                         <EnhancedButton
                           variant="primary"
                           size="sm"
-                          icon={<ShoppingCart className="w-3 h-3 sm:w-4 sm:h-4" />}
+                          icon={
+                            <ShoppingCart className="w-3 h-3 sm:w-4 sm:h-4" />
+                          }
                           onClick={() => {
-                            window.open("mailto:" + settings.contact.email + "?subject=Inquiry about " + product.name, "_self");
+                            window.open(
+                              "mailto:" +
+                                settings.contact.email +
+                                "?subject=Inquiry about " +
+                                product.name,
+                              "_self"
+                            );
                           }}
                           className="text-xs sm:text-sm px-2 sm:px-3 py-1.5 sm:py-2 min-h-[32px] touch-manipulation"
                         >
@@ -540,12 +611,27 @@ export default function ProductGrid({
             className="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
           >
             <div className="text-sm text-gray-600">
-              Found <span className="font-semibold text-gray-900">{totalItems}</span> products
+              Found{" "}
+              <span className="font-semibold text-gray-900">{totalItems}</span>{" "}
+              products
               {searchQuery && (
-                <span> matching "<span className="font-semibold text-gray-900">{searchQuery}</span>"</span>
+                <span>
+                  {" "}
+                  matching &quot;
+                  <span className="font-semibold text-gray-900">
+                    {searchQuery}
+                  </span>
+                  &quot;
+                </span>
               )}
               {selectedCategory && (
-                <span> in <span className="font-semibold text-gray-900">{selectedCategory}</span></span>
+                <span>
+                  {" "}
+                  in{" "}
+                  <span className="font-semibold text-gray-900">
+                    {selectedCategory}
+                  </span>
+                </span>
               )}
             </div>
             {totalPages > 1 && (
@@ -556,11 +642,11 @@ export default function ProductGrid({
           </motion.div>
         )}
 
-              {/* Products Grid */}
-      <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
+        {/* Products Grid */}
+        <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
           {currentProducts.map((product) => (
             <motion.div key={product.id} variants={itemVariants}>
-                              <EnhancedCard
+              <EnhancedCard
                 variant="medical"
                 hover="both"
                 padding="none"
@@ -568,7 +654,10 @@ export default function ProductGrid({
               >
                 <div className="relative h-32 xs:h-36 sm:h-40 md:h-48 lg:h-56 overflow-hidden rounded-t-lg sm:rounded-t-xl md:rounded-t-2xl">
                   <Image
-                    src={product.image_url || "/assets/images/placeholder-product.svg"}
+                    src={
+                      product.image_url ||
+                      "/assets/images/placeholder-product.svg"
+                    }
                     alt={product.name}
                     fill
                     className="object-cover transition-transform duration-500 group-hover:scale-110"
@@ -639,9 +728,7 @@ export default function ProductGrid({
                   {/* Actions */}
                   <div className="mt-auto pt-2 sm:pt-3 border-t border-gray-100">
                     <div className="flex items-center justify-center mb-1 sm:mb-2">
-                      <div className="text-xs text-gray-500">
-                        Available
-                      </div>
+                      <div className="text-xs text-gray-500">Available</div>
                     </div>
 
                     <Link href={`/products/${product.id}`} className="block">
@@ -658,7 +745,7 @@ export default function ProductGrid({
                 </div>
               </EnhancedCard>
             </motion.div>
-                      ))}
+          ))}
         </div>
 
         {filteredProducts.length === 0 && !loading && (

@@ -47,17 +47,19 @@ export default function VideoBackground({
       setVideoLoaded(true);
       setIsLoading(false);
       onVideoLoad?.();
-      
+
       // Add a small delay to ensure smooth transition
       setTimeout(() => {
-        video.style.opacity = '1';
+        video.style.opacity = "1";
       }, 100);
     };
 
     const handleError = () => {
       setVideoError(true);
       setIsLoading(false);
-      console.warn('Video failed to load, using poster image');
+      if (process.env.NODE_ENV === "development") {
+        console.warn("Video failed to load, using poster image");
+      }
       onVideoError?.();
     };
 
@@ -71,33 +73,33 @@ export default function VideoBackground({
       setIsLoading(true);
     };
 
-    video.addEventListener('loadstart', handleLoadStart);
-    video.addEventListener('loadeddata', handleLoadedData);
-    video.addEventListener('error', handleError);
-    video.addEventListener('canplay', handleCanPlay);
+    video.addEventListener("loadstart", handleLoadStart);
+    video.addEventListener("loadeddata", handleLoadedData);
+    video.addEventListener("error", handleError);
+    video.addEventListener("canplay", handleCanPlay);
 
     return () => {
-      video.removeEventListener('loadstart', handleLoadStart);
-      video.removeEventListener('loadeddata', handleLoadedData);
-      video.removeEventListener('error', handleError);
-      video.removeEventListener('canplay', handleCanPlay);
+      video.removeEventListener("loadstart", handleLoadStart);
+      video.removeEventListener("loadeddata", handleLoadedData);
+      video.removeEventListener("error", handleError);
+      video.removeEventListener("canplay", handleCanPlay);
     };
   }, [onVideoLoad, onVideoError]);
 
   return (
     <div className="relative w-full h-full">
       {/* Poster Image - Always visible first */}
-      <div 
+      <div
         className={`absolute inset-0 w-full h-full object-cover transition-opacity duration-1000 ${className}`}
         style={{
           backgroundImage: `url(${posterSrc})`,
-          backgroundSize: 'cover',
-          backgroundPosition: 'center',
+          backgroundSize: "cover",
+          backgroundPosition: "center",
           filter: filter,
           opacity: videoLoaded ? 0 : 1,
         }}
       />
-      
+
       {/* Video - Fades in when loaded */}
       <video
         ref={videoRef}
@@ -117,17 +119,17 @@ export default function VideoBackground({
         {/* Fallback text if video fails completely */}
         <p className="sr-only">Video not supported</p>
       </video>
-      
+
       {/* Overlay gradients */}
       <div className={`absolute inset-0 ${overlayClassName}`}>
         <div className="absolute inset-0 bg-gradient-to-br from-cyan-900/40 via-blue-900/30 to-purple-900/40" />
         <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/30" />
         <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 via-transparent to-blue-500/20" />
       </div>
-      
+
       {/* Loading indicator */}
       {showLoadingIndicator && isLoading && !videoError && (
-        <motion.div 
+        <motion.div
           className="absolute inset-0 flex items-center justify-center"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}

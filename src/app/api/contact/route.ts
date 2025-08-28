@@ -1,6 +1,7 @@
 import { NextResponse, NextRequest } from "next/server";
 import { createAdminSupabaseClient } from "@/lib/supabase-admin";
 import type { CreateContactMessage } from "@/types/message";
+import { serverLogger } from "@/lib/logger";
 
 export async function GET() {
   try {
@@ -8,7 +9,10 @@ export async function GET() {
 
     if (!supabase) {
       return NextResponse.json(
-        { error: "Database not configured. Please check your Supabase environment variables." },
+        {
+          error:
+            "Database not configured. Please check your Supabase environment variables.",
+        },
         { status: 500 }
       );
     }
@@ -20,21 +24,22 @@ export async function GET() {
       .order("created_at", { ascending: false });
 
     // If table doesn't exist, provide helpful error message
-    if (error && error.code === '42P01') {
-      console.log("📋 Contact messages table doesn't exist");
+    if (error && error.code === "42P01") {
+      serverLogger.log("📋 Contact messages table doesn't exist");
       return NextResponse.json(
-        { 
-          error: "Contact messages table not found. Please create the table manually in Supabase SQL Editor using the provided script.",
+        {
+          error:
+            "Contact messages table not found. Please create the table manually in Supabase SQL Editor using the provided script.",
           setupInstructions: {
             step1: "Go to Supabase Dashboard → SQL Editor",
             step2: "Run the complete-setup.sql script",
-            step3: "Refresh this page"
-          }
+            step3: "Refresh this page",
+          },
         },
         { status: 404 }
       );
     } else if (error) {
-      console.error("Database error:", error);
+      serverLogger.error("Database error:", error);
       return NextResponse.json(
         { error: "Failed to fetch messages from database" },
         { status: 500 }
@@ -46,7 +51,7 @@ export async function GET() {
       total: messages?.length || 0,
     });
   } catch (error) {
-    console.error("Contact API GET error:", error);
+    serverLogger.error("Contact API GET error:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }
@@ -88,7 +93,9 @@ export async function POST(request: NextRequest) {
     const supabase = createAdminSupabaseClient();
 
     if (!supabase) {
-      console.error("❌ Supabase admin client not available");
+      if (process.env.NODE_ENV === "development") {
+        console.error("❌ Supabase admin client not available");
+      }
       return NextResponse.json(
         { error: "Database connection not available. Please try again later." },
         { status: 500 }
@@ -101,21 +108,31 @@ export async function POST(request: NextRequest) {
         .from("contact_messages")
         .select("id")
         .limit(1);
-      
-      if (tableCheckError && tableCheckError.code === '42P01') {
+
+      if (tableCheckError && tableCheckError.code === "42P01") {
         // Table doesn't exist, create it
-        console.log("📋 Creating contact_messages table...");
-        const { error: createTableError } = await supabase.rpc('create_contact_messages_table');
+        serverLogger.log("📋 Creating contact_messages table...");
+        const { error: createTableError } = await supabase.rpc(
+          "create_contact_messages_table"
+        );
         if (createTableError) {
-          console.error("❌ Failed to create contact_messages table:", createTableError);
+          serverLogger.error(
+            "❌ Failed to create contact_messages table:",
+            createTableError
+          );
           return NextResponse.json(
-            { error: "Database setup incomplete. Please contact administrator." },
+            {
+              error: "Database setup incomplete. Please contact administrator.",
+            },
             { status: 500 }
           );
         }
       }
     } catch (tableError) {
-      console.warn("⚠️ Table check failed, proceeding with insert:", tableError);
+      serverLogger.warn(
+        "⚠️ Table check failed, proceeding with insert:",
+        tableError
+      );
     }
 
     // Insert message into database with enhanced data
@@ -135,55 +152,69 @@ export async function POST(request: NextRequest) {
       .select();
 
     if (error) {
-      console.error("❌ Database error inserting inquiry:", error);
-      
+      serverLogger.error("❌ Database error inserting inquiry:", error);
+
       // Provide more specific error messages
-      if (error.code === '23505') {
+      if (error.code === "23505") {
         return NextResponse.json(
-          { error: "A message with this email already exists. Please wait before sending another." },
+          {
+            error:
+              "A message with this email already exists. Please wait before sending another.",
+          },
           { status: 400 }
         );
-      } else if (error.code === '23514') {
+      } else if (error.code === "23514") {
         return NextResponse.json(
-          { error: "Invalid data provided. Please check your input and try again." },
+          {
+            error:
+              "Invalid data provided. Please check your input and try again.",
+          },
           { status: 400 }
         );
       } else {
         return NextResponse.json(
-          { error: "Failed to send message. Please try again in a few moments." },
+          {
+            error: "Failed to send message. Please try again in a few moments.",
+          },
           { status: 500 }
         );
       }
     }
 
     // Log successful submission for admin monitoring
-    console.log(`✅ New inquiry received from ${email}`);
+    serverLogger.log(`✅ New inquiry received from ${email}`);
 
     // Send real-time notification to admin dashboard
     try {
-      await supabase
-        .channel('admin-notifications')
-        .send({
-          type: 'broadcast',
-          event: 'new-inquiry',
-          payload: {
-            id: data[0].id,
-            name: data[0].name,
-            email: data[0].email,
-            timestamp: new Date().toISOString(),
-          }
-        });
+      await supabase.channel("admin-notifications").send({
+        type: "broadcast",
+        event: "new-inquiry",
+        payload: {
+          id: data[0].id,
+          name: data[0].name,
+          email: data[0].email,
+          timestamp: new Date().toISOString(),
+        },
+      });
     } catch (notificationError) {
-      console.warn("⚠️ Failed to send real-time notification:", notificationError);
+      if (process.env.NODE_ENV === "development") {
+        console.warn(
+          "⚠️ Failed to send real-time notification:",
+          notificationError
+        );
+      }
     }
 
     return NextResponse.json({
-      message: "Message sent successfully! We'll get back to you within 24 hours.",
+      message:
+        "Message sent successfully! We'll get back to you within 24 hours.",
       data: data[0],
       success: true,
     });
   } catch (error) {
-    console.error("❌ Contact API error:", error);
+    if (process.env.NODE_ENV === "development") {
+      console.error("❌ Contact API error:", error);
+    }
     return NextResponse.json(
       { error: "Internal server error. Please try again later." },
       { status: 500 }

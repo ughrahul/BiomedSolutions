@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { useState, useEffect } from "react";
+import Image from "next/image";
 import {
   Package,
   Users,
@@ -44,11 +45,11 @@ export default function AdminDashboard() {
   const fetchStats = async () => {
     try {
       setLoading(true);
-      
+
       // Fetch dashboard stats
-      const response = await fetch('/api/dashboard-stats');
+      const response = await fetch("/api/dashboard-stats");
       const data = await response.json();
-      
+
       if (data.error) {
         throw new Error(data.error);
       }
@@ -58,7 +59,9 @@ export default function AdminDashboard() {
         totalMessages: data.totalMessages || 0,
       });
     } catch (error) {
-      console.error('Error fetching stats:', error);
+      if (process.env.NODE_ENV === "development") {
+        console.error("Error fetching stats:", error);
+      }
     } finally {
       setLoading(false);
     }
@@ -68,21 +71,26 @@ export default function AdminDashboard() {
   const fetchRecentProducts = async () => {
     try {
       setProductsLoading(true);
-      const response = await fetch('/api/products');
-      
+      const response = await fetch("/api/products");
+
       if (response.ok) {
         const data = await response.json();
         // Sort by created_at in descending order and get the 3 most recent products
-        const sortedProducts = (data.products || []).sort((a: Product, b: Product) => 
-          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        const sortedProducts = (data.products || []).sort(
+          (a: Product, b: Product) =>
+            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
         );
         const recent = sortedProducts.slice(0, 3);
         setRecentProducts(recent);
       } else {
-        console.error('Failed to fetch recent products');
+        if (process.env.NODE_ENV === "development") {
+          console.error("Failed to fetch recent products");
+        }
       }
     } catch (error) {
-      console.error('Error fetching recent products:', error);
+      if (process.env.NODE_ENV === "development") {
+        console.error("Error fetching recent products:", error);
+      }
     } finally {
       setProductsLoading(false);
     }
@@ -96,17 +104,17 @@ export default function AdminDashboard() {
     fetchRecentProducts();
 
     // Subscribe to products table changes
-    const productsChannel = subscribeToTable('products', (payload) => {
-              // Products update received
-      if (payload.eventType === 'INSERT') {
-        setStats(prev => ({
+    const productsChannel = subscribeToTable("products", (payload) => {
+      // Products update received
+      if (payload.eventType === "INSERT") {
+        setStats((prev) => ({
           ...prev,
           totalProducts: prev.totalProducts + 1,
         }));
         // Refresh recent products when new product is added
         fetchRecentProducts();
-      } else if (payload.eventType === 'DELETE') {
-        setStats(prev => ({
+      } else if (payload.eventType === "DELETE") {
+        setStats((prev) => ({
           ...prev,
           totalProducts: Math.max(0, prev.totalProducts - 1),
         }));
@@ -138,8 +146,6 @@ export default function AdminDashboard() {
       showMessageStats: true,
     },
   ];
-
-
 
   const containerVariants = {
     hidden: { opacity: 0 },
@@ -174,8 +180,8 @@ export default function AdminDashboard() {
           Dashboard Overview
         </h1>
         <p className="text-lg sm:text-xl text-gray-600">
-          Welcome back! Here's what's happening with your medical equipment
-          business.
+          Welcome back! Here&apos;s what&apos;s happening with your medical
+          equipment business.
         </p>
       </motion.div>
 
@@ -206,11 +212,15 @@ export default function AdminDashboard() {
                         <div className="flex items-center gap-4 text-sm">
                           <div className="flex items-center gap-2">
                             <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                            <span className="text-gray-600">{unreadCount} unread</span>
+                            <span className="text-gray-600">
+                              {unreadCount} unread
+                            </span>
                           </div>
                           <div className="flex items-center gap-2">
                             <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                            <span className="text-gray-600">{readCount} read</span>
+                            <span className="text-gray-600">
+                              {readCount} read
+                            </span>
                           </div>
                         </div>
                         <button
@@ -250,10 +260,10 @@ export default function AdminDashboard() {
                 <h2 className="text-2xl font-bold text-gray-900">
                   Recent Products
                 </h2>
-                <EnhancedButton 
-                  variant="outline" 
+                <EnhancedButton
+                  variant="outline"
                   size="sm"
-                  onClick={() => window.location.href = '/admin/products'}
+                  onClick={() => (window.location.href = "/admin/products")}
                 >
                   View All
                 </EnhancedButton>
@@ -263,7 +273,9 @@ export default function AdminDashboard() {
               {productsLoading ? (
                 <div className="p-6 text-center">
                   <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-                  <p className="text-gray-600 mt-2">Loading recent products...</p>
+                  <p className="text-gray-600 mt-2">
+                    Loading recent products...
+                  </p>
                 </div>
               ) : recentProducts.length === 0 ? (
                 <div className="p-6 text-center">
@@ -275,29 +287,33 @@ export default function AdminDashboard() {
                   <div
                     key={product.id}
                     className="p-6 hover:bg-gray-50 transition-colors cursor-pointer"
-                    onClick={() => window.location.href = `/admin/products/${product.id}`}
+                    onClick={() =>
+                      (window.location.href = `/admin/products/${product.id}`)
+                    }
                   >
                     <div className="flex items-start gap-4">
                       {/* Product Image */}
                       <div className="flex-shrink-0">
                         <div className="w-16 h-16 rounded-lg overflow-hidden bg-gray-100">
-                          <img
+                          <Image
                             src={
-                              product.images && Array.isArray(product.images) && product.images.length > 0
-                                ? typeof product.images[0] === 'string'
+                              product.images &&
+                              Array.isArray(product.images) &&
+                              product.images.length > 0
+                                ? typeof product.images[0] === "string"
                                   ? product.images[0]
-                                  : (product.images[0] as any)?.url || (product.images[0] as any)?.src
+                                  : (product.images[0] as any)?.url ||
+                                    (product.images[0] as any)?.src
                                 : "/assets/images/placeholder-product.svg"
                             }
                             alt={product.name}
+                            width={64}
+                            height={64}
                             className="w-full h-full object-cover"
-                            onError={(e) => {
-                              e.currentTarget.src = "/assets/images/placeholder-product.svg";
-                            }}
                           />
                         </div>
                       </div>
-                      
+
                       {/* Product Info */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-3 mb-2">
@@ -332,10 +348,12 @@ export default function AdminDashboard() {
                 <h2 className="text-2xl font-bold text-gray-900">
                   Recent Contact Messages
                 </h2>
-                <EnhancedButton 
-                  variant="outline" 
+                <EnhancedButton
+                  variant="outline"
                   size="sm"
-                  onClick={() => window.location.href = '/admin/contact-messages'}
+                  onClick={() =>
+                    (window.location.href = "/admin/contact-messages")
+                  }
                 >
                   View All Messages
                 </EnhancedButton>
@@ -363,21 +381,25 @@ export default function AdminDashboard() {
               <EnhancedButton
                 variant="primary"
                 icon={<Package className="w-5 h-5" />}
-                onClick={() => window.location.href = '/admin/products/new'}
+                onClick={() => (window.location.href = "/admin/products/new")}
               >
                 Add New Product
               </EnhancedButton>
               <EnhancedButton
                 variant="medical"
                 icon={<Mail className="w-5 h-5" />}
-                onClick={() => window.location.href = '/admin/contact-messages'}
+                onClick={() =>
+                  (window.location.href = "/admin/contact-messages")
+                }
               >
                 Contact Messages
               </EnhancedButton>
               <EnhancedButton
                 variant="medical"
                 icon={<Settings className="w-5 h-5" />}
-                onClick={() => window.location.href = '/admin/website-settings'}
+                onClick={() =>
+                  (window.location.href = "/admin/website-settings")
+                }
               >
                 Website Settings
               </EnhancedButton>
@@ -385,8 +407,6 @@ export default function AdminDashboard() {
           </div>
         </EnhancedCard>
       </motion.div>
-
-
     </AdminPageWrapper>
   );
 }

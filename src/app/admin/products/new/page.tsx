@@ -9,12 +9,20 @@ import toast from "react-hot-toast";
 import Link from "next/link";
 import { generateSKU } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import AdminPageWrapper from "@/components/admin/AdminPageWrapper";
+import Image from "next/image";
+import { logger } from "@/lib/logger";
 
 // Simple input sanitization function
 const sanitizeInput = (input: string): string => {
-  return input.trim().replace(/[<>]/g, '');
+  return input.trim().replace(/[<>]/g, "");
 };
 
 // Product validation function
@@ -36,7 +44,7 @@ const validateProductData = (data: ProductFormData) => {
 
   return {
     isValid: errors.length === 0,
-    errors
+    errors,
   };
 };
 
@@ -111,7 +119,9 @@ export default function NewProductPage() {
         if (error) throw error;
         setCategories(data || []);
       } catch (error) {
-        console.error("Error fetching categories:", error);
+        if (process.env.NODE_ENV === "development") {
+          console.error("Error fetching categories:", error);
+        }
       }
     };
 
@@ -148,7 +158,7 @@ export default function NewProductPage() {
       toast.error("Database connection not available");
       return;
     }
-    
+
     const files = event.target.files;
     if (!files || files.length === 0) return;
 
@@ -193,7 +203,9 @@ export default function NewProductPage() {
 
       toast.success(`${imageUrls.length} image(s) uploaded successfully`);
     } catch (error: any) {
-      console.error("Error uploading images:", error);
+      if (process.env.NODE_ENV === "development") {
+        console.error("Error uploading images:", error);
+      }
       toast.error(error.message || "Failed to upload images");
     } finally {
       setImageUploading(false);
@@ -327,7 +339,7 @@ export default function NewProductPage() {
     setIsLoading(true);
 
     try {
-      console.log("Submitting form data:", formData);
+      logger.log("Submitting form data:", formData);
 
       // Sanitize string inputs
       const sanitizedData = {
@@ -340,13 +352,13 @@ export default function NewProductPage() {
         warranty: sanitizeInput(formData.warranty),
       };
 
-      console.log("Sanitized data:", sanitizedData);
+      logger.log("Sanitized data:", sanitizedData);
 
       // Submit to API endpoint
-      const response = await fetch('/api/products', {
-        method: 'POST',
+      const response = await fetch("/api/products", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify(sanitizedData),
       });
@@ -354,18 +366,23 @@ export default function NewProductPage() {
       const result = await response.json();
 
       if (!response.ok) {
-        const errorMessage = result.error || result.details || 'Failed to create product';
-        const errorDetails = result.missingFields ? `Missing fields: ${result.missingFields.join(', ')}` : '';
-        const fullError = errorDetails ? `${errorMessage}. ${errorDetails}` : errorMessage;
+        const errorMessage =
+          result.error || result.details || "Failed to create product";
+        const errorDetails = result.missingFields
+          ? `Missing fields: ${result.missingFields.join(", ")}`
+          : "";
+        const fullError = errorDetails
+          ? `${errorMessage}. ${errorDetails}`
+          : errorMessage;
         throw new Error(fullError);
       }
 
-      console.log("Product created successfully:", result);
+      logger.log("Product created successfully:", result);
 
       toast.success("Product created successfully!");
       router.push(`/admin/products/${result.data.id}`);
     } catch (error: any) {
-      console.error("Error creating product:", error);
+      logger.error("Error creating product:", error);
       toast.error(error.message || "Failed to create product");
     } finally {
       setIsLoading(false);
@@ -383,7 +400,11 @@ export default function NewProductPage() {
       >
         <div className="flex items-center gap-4">
           <Link href="/admin/products">
-            <Button variant="ghost" size="sm" className="text-yellow-700 hover:bg-yellow-50 border border-yellow-200 hover:border-yellow-300">
+            <Button
+              variant="ghost"
+              size="sm"
+              className="text-yellow-700 hover:bg-yellow-50 border border-yellow-200 hover:border-yellow-300"
+            >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Products
             </Button>
@@ -440,7 +461,9 @@ export default function NewProductPage() {
                     autoComplete="off"
                   />
                   {errors.name && (
-                    <p className="text-red-500 font-medium text-sm">{errors.name}</p>
+                    <p className="text-red-500 font-medium text-sm">
+                      {errors.name}
+                    </p>
                   )}
                 </div>
                 <div className="space-y-2">
@@ -462,22 +485,31 @@ export default function NewProductPage() {
                     required
                     autoComplete="off"
                   >
-                    <option value="" className="bg-white text-gray-900">Select a category</option>
+                    <option value="" className="bg-white text-gray-900">
+                      Select a category
+                    </option>
                     {categories.map((category) => (
-                      <option key={category.id} value={category.id} className="bg-white text-gray-900">
+                      <option
+                        key={category.id}
+                        value={category.id}
+                        className="bg-white text-gray-900"
+                      >
                         {category.name}
                       </option>
                     ))}
                   </select>
                   {errors.category_id && (
-                    <p className="text-red-500 font-medium text-sm">{errors.category_id}</p>
+                    <p className="text-red-500 font-medium text-sm">
+                      {errors.category_id}
+                    </p>
                   )}
                 </div>
               </div>
 
               <div className="space-y-2">
                 <label className="block text-lg font-bold text-gray-900">
-                  SKU (Stock Keeping Unit) <span className="text-red-500">*</span>
+                  SKU (Stock Keeping Unit){" "}
+                  <span className="text-red-500">*</span>
                 </label>
                 <input
                   type="text"
@@ -495,9 +527,14 @@ export default function NewProductPage() {
                   readOnly
                   autoComplete="off"
                 />
-                <p className="text-sm text-gray-600">SKU is automatically generated based on product name and category</p>
+                <p className="text-sm text-gray-600">
+                  SKU is automatically generated based on product name and
+                  category
+                </p>
                 {errors.sku && (
-                  <p className="text-red-500 font-medium text-sm">{errors.sku}</p>
+                  <p className="text-red-500 font-medium text-sm">
+                    {errors.sku}
+                  </p>
                 )}
               </div>
 
@@ -539,11 +576,11 @@ export default function NewProductPage() {
                   required
                 />
                 {errors.description && (
-                  <p className="text-red-500 font-medium text-sm">{errors.description}</p>
+                  <p className="text-red-500 font-medium text-sm">
+                    {errors.description}
+                  </p>
                 )}
               </div>
-
-
             </CardContent>
           </Card>
         </motion.div>
@@ -594,9 +631,11 @@ export default function NewProductPage() {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {formData.images.map((image, index) => (
                     <div key={index} className="relative group">
-                      <img
+                      <Image
                         src={image}
                         alt={`Product ${index + 1}`}
+                        width={128}
+                        height={128}
                         className="w-full h-32 object-cover rounded-lg border border-gray-200"
                       />
                       <button
@@ -649,7 +688,12 @@ export default function NewProductPage() {
                     }
                     className="flex-1 h-12 rounded-lg border border-gray-200 bg-white px-4 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400"
                   />
-                  <Button type="button" onClick={addFeature} variant="outline" className="h-12">
+                  <Button
+                    type="button"
+                    onClick={addFeature}
+                    variant="outline"
+                    className="h-12"
+                  >
                     <Plus className="w-4 h-4" />
                   </Button>
                 </div>
@@ -803,7 +847,12 @@ export default function NewProductPage() {
                     className="flex-1 h-12 rounded-lg border border-gray-200 bg-white px-4 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400"
                     autoComplete="off"
                   />
-                  <Button type="button" onClick={addBenefit} variant="outline" className="h-12">
+                  <Button
+                    type="button"
+                    onClick={addBenefit}
+                    variant="outline"
+                    className="h-12"
+                  >
                     <Plus className="w-4 h-4" />
                   </Button>
                 </div>
@@ -842,12 +891,18 @@ export default function NewProductPage() {
                     value={newCertification}
                     onChange={(e) => setNewCertification(e.target.value)}
                     onKeyPress={(e) =>
-                      e.key === "Enter" && (e.preventDefault(), addCertification())
+                      e.key === "Enter" &&
+                      (e.preventDefault(), addCertification())
                     }
                     className="flex-1 h-12 rounded-lg border border-gray-200 bg-white px-4 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400"
                     autoComplete="off"
                   />
-                  <Button type="button" onClick={addCertification} variant="outline" className="h-12">
+                  <Button
+                    type="button"
+                    onClick={addCertification}
+                    variant="outline"
+                    className="h-12"
+                  >
                     <Plus className="w-4 h-4" />
                   </Button>
                 </div>
@@ -888,7 +943,12 @@ export default function NewProductPage() {
                     }
                     className="flex-1 h-12 rounded-lg border border-gray-200 bg-white px-4 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-400"
                   />
-                  <Button type="button" onClick={addTag} variant="outline" className="h-12">
+                  <Button
+                    type="button"
+                    onClick={addTag}
+                    variant="outline"
+                    className="h-12"
+                  >
                     <Plus className="w-4 h-4" />
                   </Button>
                 </div>
@@ -946,7 +1006,10 @@ export default function NewProductPage() {
                     placeholder="4.5"
                     value={formData.rating || ""}
                     onChange={(e) =>
-                      handleInputChange("rating", parseFloat(e.target.value) || 0)
+                      handleInputChange(
+                        "rating",
+                        parseFloat(e.target.value) || 0
+                      )
                     }
                     className="w-full h-14 rounded-xl border-2 border-gray-200 bg-white px-4 text-lg text-gray-900 focus:outline-none focus:ring-4 focus:border-blue-400 focus:ring-blue-500/30 transition-all duration-300"
                   />
@@ -961,7 +1024,10 @@ export default function NewProductPage() {
                     placeholder="0"
                     value={formData.review_count || ""}
                     onChange={(e) =>
-                      handleInputChange("review_count", parseInt(e.target.value) || 0)
+                      handleInputChange(
+                        "review_count",
+                        parseInt(e.target.value) || 0
+                      )
                     }
                     className="w-full h-14 rounded-xl border-2 border-gray-200 bg-white px-4 text-lg text-gray-900 focus:outline-none focus:ring-4 focus:border-blue-400 focus:ring-blue-500/30 transition-all duration-300"
                   />
@@ -1017,12 +1083,19 @@ export default function NewProductPage() {
                         name="is_active"
                         value="true"
                         checked={formData.is_active === true}
-                        onChange={(e) => handleInputChange("is_active", e.target.value === "true")}
+                        onChange={(e) =>
+                          handleInputChange(
+                            "is_active",
+                            e.target.value === "true"
+                          )
+                        }
                         className="w-5 h-5 text-blue-600 border-gray-300 focus:ring-blue-500"
                       />
                       <div className="flex items-center space-x-2">
                         <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                        <span className="text-gray-900 font-medium">Active</span>
+                        <span className="text-gray-900 font-medium">
+                          Active
+                        </span>
                       </div>
                     </label>
                     <label className="flex items-center space-x-3 cursor-pointer">
@@ -1031,17 +1104,25 @@ export default function NewProductPage() {
                         name="is_active"
                         value="false"
                         checked={formData.is_active === false}
-                        onChange={(e) => handleInputChange("is_active", e.target.value === "true")}
+                        onChange={(e) =>
+                          handleInputChange(
+                            "is_active",
+                            e.target.value === "true"
+                          )
+                        }
                         className="w-5 h-5 text-blue-600 border-gray-300 focus:ring-blue-500"
                       />
                       <div className="flex items-center space-x-2">
                         <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
-                        <span className="text-gray-900 font-medium">Inactive</span>
+                        <span className="text-gray-900 font-medium">
+                          Inactive
+                        </span>
                       </div>
                     </label>
                   </div>
                   <p className="text-sm text-gray-600">
-                    Active products are visible to customers, inactive products are hidden
+                    Active products are visible to customers, inactive products
+                    are hidden
                   </p>
                 </div>
 
@@ -1055,21 +1136,30 @@ export default function NewProductPage() {
                       <input
                         type="checkbox"
                         checked={formData.is_featured}
-                        onChange={(e) => handleInputChange("is_featured", e.target.checked)}
+                        onChange={(e) =>
+                          handleInputChange("is_featured", e.target.checked)
+                        }
                         className="w-5 h-5 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
                       />
                       <div className="flex items-center space-x-2">
                         <div className="w-4 h-4 bg-yellow-500 rounded-full flex items-center justify-center">
-                          <svg className="w-2.5 h-2.5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                          <svg
+                            className="w-2.5 h-2.5 text-white"
+                            fill="currentColor"
+                            viewBox="0 0 20 20"
+                          >
                             <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                           </svg>
                         </div>
-                        <span className="text-gray-900 font-medium">Mark as Featured</span>
+                        <span className="text-gray-900 font-medium">
+                          Mark as Featured
+                        </span>
                       </div>
                     </label>
                   </div>
                   <p className="text-sm text-gray-600">
-                    Featured products appear prominently on the homepage and in featured sections
+                    Featured products appear prominently on the homepage and in
+                    featured sections
                   </p>
                 </div>
               </div>
@@ -1079,7 +1169,11 @@ export default function NewProductPage() {
                 <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
                   <div className="flex items-start space-x-3">
                     <div className="w-6 h-6 bg-yellow-500 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
-                      <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                      <svg
+                        className="w-3 h-3 text-white"
+                        fill="currentColor"
+                        viewBox="0 0 20 20"
+                      >
                         <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
                       </svg>
                     </div>
@@ -1120,7 +1214,7 @@ export default function NewProductPage() {
             type="submit"
             disabled={isLoading}
             className={`px-12 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 text-lg shadow-lg hover:shadow-xl transform hover:scale-105 ${
-              isLoading ? 'opacity-50 cursor-not-allowed' : ''
+              isLoading ? "opacity-50 cursor-not-allowed" : ""
             }`}
           >
             {isLoading ? (

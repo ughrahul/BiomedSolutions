@@ -20,15 +20,19 @@ export const createServerSupabase = async () => {
           cookieStore.set({ name, value, ...options });
         } catch (error) {
           // Handle the case where cookies can't be set (e.g., in middleware)
-          console.warn('Failed to set cookie:', name, error);
+          if (process.env.NODE_ENV === "development") {
+            console.warn("Failed to set cookie:", name, error);
+          }
         }
       },
       remove(name: string, options: any) {
         try {
-          cookieStore.set({ name, value: '', ...options });
+          cookieStore.set({ name, value: "", ...options });
         } catch (error) {
           // Handle the case where cookies can't be removed
-          console.warn('Failed to remove cookie:', name, error);
+          if (process.env.NODE_ENV === "development") {
+            console.warn("Failed to remove cookie:", name, error);
+          }
         }
       },
     },
@@ -43,12 +47,17 @@ export const createServerSupabase = async () => {
 export const getServerUser = async () => {
   try {
     const supabase = await createServerSupabase();
-    
+
     // First check if we have a session
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-    
+    const {
+      data: { session },
+      error: sessionError,
+    } = await supabase.auth.getSession();
+
     if (sessionError) {
-      console.error("Session error:", sessionError);
+      if (process.env.NODE_ENV === "development") {
+        console.error("Session error:", sessionError);
+      }
       return null;
     }
 
@@ -57,16 +66,23 @@ export const getServerUser = async () => {
     }
 
     // If we have a session, get the user
-    const { data: { user }, error: userError } = await supabase.auth.getUser();
-    
+    const {
+      data: { user },
+      error: userError,
+    } = await supabase.auth.getUser();
+
     if (userError) {
-      console.error("User error:", userError);
+      if (process.env.NODE_ENV === "development") {
+        console.error("User error:", userError);
+      }
       return null;
     }
 
     return user;
   } catch (error) {
-    console.error("Server auth error:", error);
+    if (process.env.NODE_ENV === "development") {
+      console.error("Server auth error:", error);
+    }
     return null;
   }
 };
@@ -75,7 +91,7 @@ export const getServerUser = async () => {
 export const getServerUserProfile = async (userId: string) => {
   try {
     const supabase = await createServerSupabase();
-    
+
     const { data: profile, error } = await supabase
       .from("profiles")
       .select("*")
@@ -83,13 +99,17 @@ export const getServerUserProfile = async (userId: string) => {
       .single();
 
     if (error) {
-      console.error("Error fetching server profile:", error);
+      if (process.env.NODE_ENV === "development") {
+        console.error("Error fetching server profile:", error);
+      }
       return null;
     }
 
     return profile;
   } catch (error) {
-    console.error("Server profile error:", error);
+    if (process.env.NODE_ENV === "development") {
+      console.error("Server profile error:", error);
+    }
     return null;
   }
 };

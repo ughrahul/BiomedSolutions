@@ -4,21 +4,21 @@ import { createAdminSupabaseClient } from "@/lib/supabase-admin";
 export async function POST(request: NextRequest) {
   try {
     const formData = await request.formData();
-    const file = formData.get('file') as File;
-    const folder = formData.get('folder') as string || 'products';
+    const file = formData.get("file") as File;
+    const folder = (formData.get("folder") as string) || "products";
 
     if (!file) {
-      return NextResponse.json(
-        { error: "No file provided" },
-        { status: 400 }
-      );
+      return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
     // Validate file type
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp'];
+    const allowedTypes = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
     if (!allowedTypes.includes(file.type)) {
       return NextResponse.json(
-        { error: "Invalid file type. Only JPEG, PNG, and WebP images are allowed." },
+        {
+          error:
+            "Invalid file type. Only JPEG, PNG, and WebP images are allowed.",
+        },
         { status: 400 }
       );
     }
@@ -42,8 +42,10 @@ export async function POST(request: NextRequest) {
 
     // Generate unique filename
     const timestamp = Date.now();
-    const fileExtension = file.name.split('.').pop();
-    const fileName = `${folder}/${timestamp}-${Math.random().toString(36).substring(2)}.${fileExtension}`;
+    const fileExtension = file.name.split(".").pop();
+    const fileName = `${folder}/${timestamp}-${Math.random()
+      .toString(36)
+      .substring(2)}.${fileExtension}`;
 
     // Convert file to buffer
     const bytes = await file.arrayBuffer();
@@ -51,15 +53,17 @@ export async function POST(request: NextRequest) {
 
     // Upload to Supabase storage
     const { data, error } = await supabase.storage
-      .from('product-images')
+      .from("product-images")
       .upload(fileName, buffer, {
         contentType: file.type,
-        cacheControl: '3600',
-        upsert: false
+        cacheControl: "3600",
+        upsert: false,
       });
 
     if (error) {
-      console.error("Storage upload error:", error);
+      if (process.env.NODE_ENV === "development") {
+        console.error("Storage upload error:", error);
+      }
       return NextResponse.json(
         { error: "Failed to upload image" },
         { status: 500 }
@@ -68,17 +72,18 @@ export async function POST(request: NextRequest) {
 
     // Get public URL
     const { data: urlData } = supabase.storage
-      .from('product-images')
+      .from("product-images")
       .getPublicUrl(fileName);
 
     return NextResponse.json({
       url: urlData.publicUrl,
       fileName: fileName,
-      message: "Image uploaded successfully"
+      message: "Image uploaded successfully",
     });
-
   } catch (error) {
-    console.error("Upload error:", error);
+    if (process.env.NODE_ENV === "development") {
+      console.error("Upload error:", error);
+    }
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

@@ -1,6 +1,7 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect } from "react";
+import { logger } from "@/lib/logger";
 
 interface AdminProfile {
   full_name: string;
@@ -18,42 +19,48 @@ interface AdminProfileContextType {
   refreshProfile: () => Promise<void>;
 }
 
-const AdminProfileContext = createContext<AdminProfileContextType | undefined>(undefined);
+const AdminProfileContext = createContext<AdminProfileContextType | undefined>(
+  undefined
+);
 
 export const useAdminProfile = () => {
   const context = useContext(AdminProfileContext);
   if (!context) {
-    throw new Error('useAdminProfile must be used within an AdminProfileProvider');
+    throw new Error(
+      "useAdminProfile must be used within an AdminProfileProvider"
+    );
   }
   return context;
 };
 
-export const AdminProfileProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const AdminProfileProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
   const [profile, setProfile] = useState<AdminProfile>({
-    full_name: 'Admin User',
+    full_name: "Admin User",
   });
   const [loading, setLoading] = useState(false);
 
   const refreshProfile = async () => {
     try {
-      const response = await fetch('/api/admin-profile');
+      const response = await fetch("/api/admin-profile");
       if (response.ok) {
         const data = await response.json();
         if (data.profile) {
           setProfile(data.profile);
           // Also save to localStorage for offline access
-          localStorage.setItem('admin-profile', JSON.stringify(data.profile));
+          localStorage.setItem("admin-profile", JSON.stringify(data.profile));
         }
       }
     } catch (error) {
-      console.error('Error fetching profile:', error);
+      logger.error("Error fetching profile:", error);
       // Fallback to localStorage if API fails
-      const savedProfile = localStorage.getItem('admin-profile');
+      const savedProfile = localStorage.getItem("admin-profile");
       if (savedProfile) {
         try {
           setProfile(JSON.parse(savedProfile));
         } catch (error) {
-          console.error('Error parsing saved profile:', error);
+          logger.error("Error parsing saved profile:", error);
         }
       }
     }
@@ -64,10 +71,10 @@ export const AdminProfileProvider: React.FC<{ children: React.ReactNode }> = ({ 
   }, []);
 
   const updateProfile = (updates: Partial<AdminProfile>) => {
-    setProfile(prev => {
+    setProfile((prev) => {
       const newProfile = { ...prev, ...updates };
       // Save to localStorage immediately for persistence
-      localStorage.setItem('admin-profile', JSON.stringify(newProfile));
+      localStorage.setItem("admin-profile", JSON.stringify(newProfile));
       return newProfile;
     });
   };
@@ -76,10 +83,10 @@ export const AdminProfileProvider: React.FC<{ children: React.ReactNode }> = ({ 
     setLoading(true);
     try {
       // Save to database via API
-      const response = await fetch('/api/admin-profile', {
-        method: 'PUT',
+      const response = await fetch("/api/admin-profile", {
+        method: "PUT",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           full_name: profile.full_name,
@@ -89,20 +96,20 @@ export const AdminProfileProvider: React.FC<{ children: React.ReactNode }> = ({ 
 
       if (!response.ok) {
         const errorData = await response.json();
-        throw new Error(errorData.error || 'Failed to save profile');
+        throw new Error(errorData.error || "Failed to save profile");
       }
 
       const data = await response.json();
-      
+
       // Update profile with the response from database
       if (data.profile) {
         setProfile(data.profile);
-        localStorage.setItem('admin-profile', JSON.stringify(data.profile));
+        localStorage.setItem("admin-profile", JSON.stringify(data.profile));
       }
-      
-      console.log('Profile saved to database:', data.profile);
+
+      logger.log("Profile saved to database:", data.profile);
     } catch (error) {
-      console.error('Error saving profile:', error);
+      logger.error("Error saving profile:", error);
       throw error;
     } finally {
       setLoading(false);

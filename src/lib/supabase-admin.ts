@@ -1,4 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
+import { serverLogger } from "@/lib/logger";
 
 // Server-side Supabase client with service role key
 export const createAdminSupabaseClient = () => {
@@ -6,7 +7,7 @@ export const createAdminSupabaseClient = () => {
   const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
   if (!supabaseUrl || !supabaseServiceKey) {
-    console.warn("Supabase admin client: Missing environment variables");
+    serverLogger.warn("Supabase admin client: Missing environment variables");
     return null;
   }
 
@@ -24,7 +25,9 @@ export async function initializeAdminUser() {
   const supabase = createAdminSupabaseClient();
 
   if (!supabase) {
-    console.log("Supabase not configured - skipping admin user initialization");
+    serverLogger.log(
+      "Supabase not configured - skipping admin user initialization"
+    );
     return;
   }
 
@@ -37,7 +40,7 @@ export async function initializeAdminUser() {
       .single();
 
     if (existingProfile) {
-      console.log("Admin user already exists");
+      serverLogger.log("Admin user already exists");
       return;
     }
 
@@ -54,7 +57,7 @@ export async function initializeAdminUser() {
       });
 
     if (authError) {
-      console.error("Error creating admin user:", authError);
+      serverLogger.error("Error creating admin user:", authError);
       return;
     }
 
@@ -67,7 +70,7 @@ export async function initializeAdminUser() {
     });
 
     if (profileError) {
-      console.error("Error creating admin profile:", profileError);
+      serverLogger.error("Error creating admin profile:", profileError);
       return;
     }
 
@@ -84,11 +87,11 @@ export async function initializeAdminUser() {
       });
 
     if (settingsError) {
-      console.error("Error creating admin settings:", settingsError);
+      serverLogger.error("Error creating admin settings:", settingsError);
     }
 
-    console.log("Admin user initialized successfully");
+    serverLogger.log("Admin user initialized successfully");
   } catch (error) {
-    console.error("Error initializing admin user:", error);
+    serverLogger.error("Error initializing admin user:", error);
   }
 }

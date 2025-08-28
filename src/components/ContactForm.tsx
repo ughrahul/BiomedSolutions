@@ -42,7 +42,12 @@ export default function ContactForm() {
       try {
         await fetch("/api/setup-database", { method: "POST" });
       } catch (setupError) {
-        console.warn("Database setup failed, proceeding with contact form:", setupError);
+        if (process.env.NODE_ENV === "development") {
+          console.warn(
+            "Database setup failed, proceeding with contact form:",
+            setupError
+          );
+        }
       }
 
       const response = await fetch("/api/contact", {
@@ -73,7 +78,9 @@ export default function ContactForm() {
         throw new Error(result.error || "Failed to send message");
       }
     } catch (error) {
-      console.error("Error sending message:", error);
+      if (process.env.NODE_ENV === "development") {
+        console.error("Error sending message:", error);
+      }
       setError(
         error instanceof Error
           ? error.message
@@ -110,17 +117,23 @@ export default function ContactForm() {
                   Message Sent Successfully!
                 </h3>
                 <p className="text-gray-600 text-lg mb-6">
-                  Thank you for contacting us. We've received your message and will get back to you within 24 hours.
+                  Thank you for contacting us. We&apos;ve received your message
+                  and will get back to you within 24 hours.
                 </p>
                 <div className="bg-green-50 border border-green-200 rounded-xl p-4 mb-6">
                   <div className="flex items-center justify-center gap-2 text-green-700">
                     <CheckCircle className="w-5 h-5" />
-                    <span className="font-medium">Real-time notification sent to admin</span>
+                    <span className="font-medium">
+                      Real-time notification sent to admin
+                    </span>
                   </div>
                 </div>
                 <p className="text-sm text-gray-500">
                   You can also reach us directly at{" "}
-                  <a href={`tel:${settings.contact.phone}`} className="text-cyan-600 hover:text-cyan-700 font-medium">
+                  <a
+                    href={`tel:${settings.contact.phone}`}
+                    className="text-cyan-600 hover:text-cyan-700 font-medium"
+                  >
                     {settings.contact.phone}
                   </a>
                 </p>
@@ -133,7 +146,10 @@ export default function ContactForm() {
   }
 
   return (
-    <section id="contact-form" className="py-12 bg-gradient-to-br from-blue-50 via-cyan-50 to-white">
+    <section
+      id="contact-form"
+      className="py-12 bg-gradient-to-br from-blue-50 via-cyan-50 to-white"
+    >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto">
           <motion.div
@@ -150,7 +166,8 @@ export default function ContactForm() {
               </span>
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Get expert consultation on medical equipment. Our team responds within 24 hours.
+              Get expert consultation on medical equipment. Our team responds
+              within 24 hours.
             </p>
           </motion.div>
 

@@ -21,7 +21,7 @@ export default function NotFound() {
         <div className="space-y-6">
           <h1 className="text-4xl font-bold text-gray-900">Page Not Found</h1>
           <p className="text-lg text-gray-600">
-            Sorry, we couldn't find the page you're looking for. The page may have been moved, deleted, or you entered the wrong URL.
+            Sorry, we couldn&apos;t find the page you&apos;re looking for. The page may have been moved, deleted, or you entered the wrong URL.
           </p>
 
           {/* Action Buttons */}

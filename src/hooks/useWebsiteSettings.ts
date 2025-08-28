@@ -24,7 +24,8 @@ const defaultSettings: WebsiteSettings = {
   contact: {
     phone: "+977-980-120-335",
     email: "hingmang75@gmail.com",
-    address: "Annapurna Neurological Institute & Allied Sciences, Maitighar Mandala-10, Kathmandu 44600, Nepal",
+    address:
+      "Annapurna Neurological Institute & Allied Sciences, Maitighar Mandala-10, Kathmandu 44600, Nepal",
     whatsapp: "+977-980-120-335",
     businessHours:
       "Monday - Friday: 8:00 AM - 6:00 PM, Saturday: 9:00 AM - 4:00 PM",
@@ -79,17 +80,16 @@ export function useWebsiteSettings() {
           "website-social-settings"
         );
 
-        if (
-          localContactSettings &&
-          localSocialSettings
-        ) {
+        if (localContactSettings && localSocialSettings) {
           try {
             setSettings({
               contact: JSON.parse(localContactSettings),
               social: JSON.parse(localSocialSettings),
             });
           } catch (parseError) {
-            console.warn("Error parsing localStorage settings:", parseError);
+            if (process.env.NODE_ENV === "development") {
+              console.warn("Error parsing localStorage settings:", parseError);
+            }
           }
         }
       }
@@ -107,7 +107,9 @@ export function useWebsiteSettings() {
         }));
       }
     } catch (error) {
-      console.error("Error loading website settings:", error);
+      if (process.env.NODE_ENV === "development") {
+        console.error("Error loading website settings:", error);
+      }
       // Use default settings on error
       setSettings(defaultSettings);
     } finally {

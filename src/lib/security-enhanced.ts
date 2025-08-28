@@ -14,20 +14,24 @@ export function sanitizeInput(input: string): string {
     .slice(0, 1000); // Limit length
 }
 
-export function validateEmail(email: string): { isValid: boolean; error?: string } {
+export function validateEmail(email: string): {
+  isValid: boolean;
+  error?: string;
+} {
   const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-  
+
   if (!email) return { isValid: false, error: "Email is required" };
   if (email.length > 254) return { isValid: false, error: "Email too long" };
-  if (!emailRegex.test(email)) return { isValid: false, error: "Invalid email format" };
-  
+  if (!emailRegex.test(email))
+    return { isValid: false, error: "Invalid email format" };
+
   return { isValid: true };
 }
 
 export function validatePassword(password: string): {
   isValid: boolean;
   errors: string[];
-  strength: 'weak' | 'medium' | 'strong';
+  strength: "weak" | "medium" | "strong";
 } {
   const errors: string[] = [];
 
@@ -56,23 +60,25 @@ export function validatePassword(password: string): {
   }
 
   // Check for common passwords
-  const commonPasswords = ['password', '123456', 'admin', 'user', 'guest'];
-  if (commonPasswords.some(common => password.toLowerCase().includes(common))) {
+  const commonPasswords = ["password", "123456", "admin", "user", "guest"];
+  if (
+    commonPasswords.some((common) => password.toLowerCase().includes(common))
+  ) {
     errors.push("Password contains common words");
   }
 
   // Determine strength
-  let strength: 'weak' | 'medium' | 'strong' = 'weak';
+  let strength: "weak" | "medium" | "strong" = "weak";
   if (password.length >= 12 && errors.length === 0) {
-    strength = 'strong';
+    strength = "strong";
   } else if (password.length >= 8 && errors.length <= 2) {
-    strength = 'medium';
+    strength = "medium";
   }
 
   return {
     isValid: errors.length === 0,
     errors,
-    strength
+    strength,
   };
 }
 
@@ -83,27 +89,33 @@ export async function validateApiRequest(request: NextRequest): Promise<{
   clientInfo: any;
 }> {
   const errors: string[] = [];
-  const userAgent = request.headers.get('user-agent') || '';
-  const origin = request.headers.get('origin') || '';
-  const referer = request.headers.get('referer') || '';
-  
+  const userAgent = request.headers.get("user-agent") || "";
+  const origin = request.headers.get("origin") || "";
+  const referer = request.headers.get("referer") || "";
+
   // Check for suspicious patterns
-  if (userAgent.toLowerCase().includes('bot') && !userAgent.includes('googlebot')) {
+  if (
+    userAgent.toLowerCase().includes("bot") &&
+    !userAgent.includes("googlebot")
+  ) {
     errors.push("Suspicious user agent detected");
   }
 
   // Validate content type for POST requests
-  if (['POST', 'PUT', 'PATCH'].includes(request.method)) {
-    const contentType = request.headers.get('content-type') || '';
-    if (!contentType.includes('application/json')) {
+  if (["POST", "PUT", "PATCH"].includes(request.method)) {
+    const contentType = request.headers.get("content-type") || "";
+    if (!contentType.includes("application/json")) {
       errors.push("Invalid content type");
     }
   }
 
   // Rate limiting per IP
-  const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown';
+  const ip =
+    request.headers.get("x-forwarded-for") ||
+    request.headers.get("x-real-ip") ||
+    "unknown";
   const rateLimitResult = await checkRateLimit(ip, request.url);
-  
+
   if (!rateLimitResult.success) {
     errors.push("Rate limit exceeded");
   }
@@ -117,20 +129,20 @@ export async function validateApiRequest(request: NextRequest): Promise<{
       origin,
       referer,
       method: request.method,
-      url: request.url
-    }
+      url: request.url,
+    },
   };
 }
 
 // SQL injection prevention for dynamic queries
 export function sanitizeForDatabase(input: any): any {
-  if (typeof input === 'string') {
-    return input.replace(/['";\\]/g, '');
+  if (typeof input === "string") {
+    return input.replace(/['";\\]/g, "");
   }
   if (Array.isArray(input)) {
     return input.map(sanitizeForDatabase);
   }
-  if (typeof input === 'object' && input !== null) {
+  if (typeof input === "object" && input !== null) {
     const sanitized: any = {};
     for (const [key, value] of Object.entries(input)) {
       sanitized[sanitizeForDatabase(key)] = sanitizeForDatabase(value);
@@ -153,16 +165,18 @@ export function validateFileUpload(
   error?: string;
 } {
   const {
-    allowedTypes = ['image/jpeg', 'image/png', 'image/webp'],
+    allowedTypes = ["image/jpeg", "image/png", "image/webp"],
     maxSize = 5 * 1024 * 1024, // 5MB
-    allowedExtensions = ['.jpg', '.jpeg', '.png', '.webp']
+    allowedExtensions = [".jpg", ".jpeg", ".png", ".webp"],
   } = options;
 
   // Check file type
   if (!allowedTypes.includes(file.type)) {
     return {
       isValid: false,
-      error: `File type ${file.type} is not allowed. Allowed types: ${allowedTypes.join(', ')}`
+      error: `File type ${
+        file.type
+      } is not allowed. Allowed types: ${allowedTypes.join(", ")}`,
     };
   }
 
@@ -170,16 +184,20 @@ export function validateFileUpload(
   if (file.size > maxSize) {
     return {
       isValid: false,
-      error: `File size ${(file.size / 1024 / 1024).toFixed(2)}MB exceeds maximum allowed size of ${(maxSize / 1024 / 1024).toFixed(2)}MB`
+      error: `File size ${(file.size / 1024 / 1024).toFixed(
+        2
+      )}MB exceeds maximum allowed size of ${(maxSize / 1024 / 1024).toFixed(
+        2
+      )}MB`,
     };
   }
 
   // Check file extension
-  const fileExtension = '.' + file.name.split('.').pop()?.toLowerCase();
+  const fileExtension = "." + file.name.split(".").pop()?.toLowerCase();
   if (!allowedExtensions.includes(fileExtension)) {
     return {
       isValid: false,
-      error: `File extension ${fileExtension} is not allowed`
+      error: `File extension ${fileExtension} is not allowed`,
     };
   }
 
@@ -187,16 +205,18 @@ export function validateFileUpload(
   if (/[<>:"/\\|?*\x00-\x1f]/.test(file.name)) {
     return {
       isValid: false,
-      error: "File name contains invalid characters"
+      error: "File name contains invalid characters",
     };
   }
 
   // Check for executable extensions
-  const dangerousExtensions = ['.exe', '.bat', '.cmd', '.scr', '.pif', '.js'];
-  if (dangerousExtensions.some(ext => file.name.toLowerCase().endsWith(ext))) {
+  const dangerousExtensions = [".exe", ".bat", ".cmd", ".scr", ".pif", ".js"];
+  if (
+    dangerousExtensions.some((ext) => file.name.toLowerCase().endsWith(ext))
+  ) {
     return {
       isValid: false,
-      error: "Executable files are not allowed"
+      error: "Executable files are not allowed",
     };
   }
 
@@ -205,18 +225,26 @@ export function validateFileUpload(
 
 // CSRF Protection with session validation
 export function generateCSRFToken(): string {
-  return crypto.randomBytes(32).toString('hex');
+  return crypto.randomBytes(32).toString("hex");
 }
 
-export function validateCSRFToken(token: string, sessionToken: string): boolean {
-  if (!token || !sessionToken || token.length !== 64 || sessionToken.length !== 64) {
+export function validateCSRFToken(
+  token: string,
+  sessionToken: string
+): boolean {
+  if (
+    !token ||
+    !sessionToken ||
+    token.length !== 64 ||
+    sessionToken.length !== 64
+  ) {
     return false;
   }
-  
+
   try {
     return crypto.timingSafeEqual(
-      Buffer.from(token, 'hex'),
-      Buffer.from(sessionToken, 'hex')
+      Buffer.from(token, "hex"),
+      Buffer.from(sessionToken, "hex")
     );
   } catch {
     return false;
@@ -242,35 +270,42 @@ export async function checkRateLimit(
       reset: result.reset,
     };
   } catch (error) {
-    console.error("Rate limiting error:", error);
+    if (process.env.NODE_ENV === "development") {
+      console.error("Rate limiting error:", error);
+    }
     return { success: true }; // Allow request if rate limiting fails
   }
 }
 
 // Data encryption for sensitive information
 export function encryptSensitiveData(data: string, key?: string): string {
-  const algorithm = 'aes-256-gcm';
-  const secretKey = key || process.env.ENCRYPTION_KEY || 'fallback-key-change-in-production';
+  const algorithm = "aes-256-gcm";
+  const secretKey =
+    key || process.env.ENCRYPTION_KEY || "fallback-key-change-in-production";
   const iv = crypto.randomBytes(16);
-  
+
   const cipher = crypto.createCipher(algorithm, secretKey);
-  let encrypted = cipher.update(data, 'utf8', 'hex');
-  encrypted += cipher.final('hex');
-  
-  return `${iv.toString('hex')}:${encrypted}`;
+  let encrypted = cipher.update(data, "utf8", "hex");
+  encrypted += cipher.final("hex");
+
+  return `${iv.toString("hex")}:${encrypted}`;
 }
 
-export function decryptSensitiveData(encryptedData: string, key?: string): string {
-  const algorithm = 'aes-256-gcm';
-  const secretKey = key || process.env.ENCRYPTION_KEY || 'fallback-key-change-in-production';
-  
-  const [ivHex, encrypted] = encryptedData.split(':');
-  const iv = Buffer.from(ivHex, 'hex');
-  
+export function decryptSensitiveData(
+  encryptedData: string,
+  key?: string
+): string {
+  const algorithm = "aes-256-gcm";
+  const secretKey =
+    key || process.env.ENCRYPTION_KEY || "fallback-key-change-in-production";
+
+  const [ivHex, encrypted] = encryptedData.split(":");
+  const iv = Buffer.from(ivHex, "hex");
+
   const decipher = crypto.createDecipher(algorithm, secretKey);
-  let decrypted = decipher.update(encrypted, 'hex', 'utf8');
-  decrypted += decipher.final('utf8');
-  
+  let decrypted = decipher.update(encrypted, "hex", "utf8");
+  decrypted += decipher.final("utf8");
+
   return decrypted;
 }
 
@@ -294,22 +329,30 @@ export const enhancedSecurityHeaders = {
     "base-uri 'self'",
     "form-action 'self'",
     "frame-ancestors 'none'",
-    "upgrade-insecure-requests"
-  ].join("; ")
+    "upgrade-insecure-requests",
+  ].join("; "),
 };
 
 // Audit logging for security events
 export interface SecurityAuditLog {
-  event: 'login' | 'logout' | 'failed_login' | 'password_change' | 'data_access' | 'admin_action';
+  event:
+    | "login"
+    | "logout"
+    | "failed_login"
+    | "password_change"
+    | "data_access"
+    | "admin_action";
   userId?: string;
   ip: string;
   userAgent: string;
   details?: any;
-  severity: 'low' | 'medium' | 'high' | 'critical';
+  severity: "low" | "medium" | "high" | "critical";
   timestamp: Date;
 }
 
-export function createSecurityAuditLog(log: Omit<SecurityAuditLog, 'timestamp'>): SecurityAuditLog {
+export function createSecurityAuditLog(
+  log: Omit<SecurityAuditLog, "timestamp">
+): SecurityAuditLog {
   return {
     ...log,
     timestamp: new Date(),
@@ -318,17 +361,17 @@ export function createSecurityAuditLog(log: Omit<SecurityAuditLog, 'timestamp'>)
 
 // Input sanitization for different contexts
 export const sanitizers = {
-  html: (input: string) => input.replace(/[<>]/g, ''),
-  sql: (input: string) => input.replace(/['";\\]/g, ''),
-  filename: (input: string) => input.replace(/[^a-zA-Z0-9._-]/g, ''),
-  alphanumeric: (input: string) => input.replace(/[^a-zA-Z0-9]/g, ''),
-  phone: (input: string) => input.replace(/[^0-9+\-() ]/g, ''),
+  html: (input: string) => input.replace(/[<>]/g, ""),
+  sql: (input: string) => input.replace(/['";\\]/g, ""),
+  filename: (input: string) => input.replace(/[^a-zA-Z0-9._-]/g, ""),
+  alphanumeric: (input: string) => input.replace(/[^a-zA-Z0-9]/g, ""),
+  phone: (input: string) => input.replace(/[^0-9+\-() ]/g, ""),
   url: (input: string) => {
     try {
       new URL(input);
       return input;
     } catch {
-      return '';
+      return "";
     }
-  }
-}; 
+  },
+};

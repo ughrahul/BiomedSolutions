@@ -114,12 +114,16 @@ export default function AdminLogin() {
                   Remember me
                 </span>
               </label>
-              <a
-                href="#"
+              <button
+                type="button"
                 className="text-sm text-primary-400 hover:text-primary-300 transition-colors duration-300"
+                onClick={() => {
+                  // TODO: Implement forgot password functionality
+                  alert("Forgot password functionality not implemented yet");
+                }}
               >
                 Forgot password?
-              </a>
+              </button>
             </div>
 
             <button
