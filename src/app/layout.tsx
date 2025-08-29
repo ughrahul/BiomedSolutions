@@ -6,19 +6,22 @@ import ConditionalLayout from "@/components/ConditionalLayout";
 import DemoModeBanner from "@/components/DemoModeBanner";
 import React from "react";
 import { suppressMapsErrors } from "@/lib/utils";
+import Script from "next/script";
+import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://biomedsolutions.com.np"),
-  title: "Biomed Solutions",
+  metadataBase: new URL("https://biomedsolution.com.np"),
+  title: "Biomed Solution - Healthcare & Medical Services in Nepal",
   description:
-    "Biomed Solutions is Nepal's premier provider of advanced medical equipment and healthcare technology solutions. We supply, maintain, and support medical devices from globally recognized brands for hospitals and clinics in Maitighar, Kathmandu.",
+    "Biomed Solution provides healthcare trading and services since 2015 under ANIAS.",
   keywords:
-    "medical equipment Nepal, healthcare technology, ECG machines, X-ray units, ultrasound scanners, defibrillators, medical devices Kathmandu, hospital equipment, Biomed Solutions, Maitighar",
-  authors: [{ name: "Biomed Solutions" }],
-  creator: "Biomed Solutions",
-  publisher: "Biomed Solutions",
+    "medical equipment Nepal, healthcare technology, ECG machines, X-ray units, ultrasound scanners, defibrillators, medical devices Kathmandu, hospital equipment, Biomed Solution, Maitighar",
+  authors: [{ name: "Biomed Solution" }],
+  creator: "Biomed Solution",
+  publisher: "Biomed Solution",
   robots: "index, follow",
   icons: {
     icon: [
@@ -34,26 +37,26 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://biomedsolutions.com.np",
-    title: "Biomed Solutions",
+    url: "https://biomedsolution.com.np",
+    title: "Biomed Solution",
     description:
       "Nepal's premier provider of advanced medical equipment and healthcare technology solutions. Professional medical devices for hospitals and clinics.",
-    siteName: "Biomed Solutions",
+    siteName: "Biomed Solution",
     images: [
       {
         url: "/assets/images/logo.png",
         width: 1200,
         height: 630,
-        alt: "Biomed Solutions",
+        alt: "Biomed Solution",
       },
     ],
   },
   twitter: {
     card: "summary_large_image",
-    title: "Biomed Solutions",
+    title: "Biomed Solution",
     description:
       "Nepal's premier provider of advanced medical equipment and healthcare technology solutions.",
-    creator: "@biomedsolutions",
+    creator: "@biomedsolution",
     images: ["/assets/images/logo.png"],
   },
 };
@@ -64,10 +67,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   // Suppress console errors for browser extensions and development tools
-  if (typeof window !== 'undefined') {
+  if (typeof window !== "undefined") {
     suppressMapsErrors();
   }
-  
+
   return (
     <html lang="en" className="scroll-smooth" data-scroll-behavior="smooth">
       <head>
@@ -81,12 +84,40 @@ export default function RootLayout({
           href="https://fonts.gstatic.com"
           crossOrigin=""
         />
+
+        <Script
+          id="organization-schema"
+          type="application/ld+json"
+          strategy="afterInteractive"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Organization",
+              name: "Biomed Solution",
+              url: "https://biomedsolution.com.np",
+              logo: "https://biomedsolution.com.np/assets/images/logo.png",
+              images: [
+                {
+                  url: "https://biomedsolution.com.np/assets/images/logo.png",
+                  width: 1200,
+                  height: 630,
+                  alt: "Biomed Solution",
+                },
+              ],
+            }),
+          }}
+        />
       </head>
-      <body className={`${inter.variable} font-sans antialiased`} suppressHydrationWarning={true}>
+      <body
+        className={`${inter.variable} font-sans antialiased`}
+        suppressHydrationWarning={true}
+      >
         <Providers>
           <DemoModeBanner />
           <ConditionalLayout>{children}</ConditionalLayout>
         </Providers>
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
