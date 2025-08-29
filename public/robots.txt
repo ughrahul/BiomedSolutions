@@ -1,0 +1,9 @@
+# *
+User-agent: *
+Allow: /
+
+# Host
+Host: https://biomedsolution.com.np
+
+# Sitemaps
+Sitemap: https://biomedsolution.com.np/sitemap.xml
