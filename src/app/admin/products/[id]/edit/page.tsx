@@ -8,6 +8,7 @@ import { ArrowLeft, Upload, X, Plus, Save, Package } from "lucide-react";
 import toast from "react-hot-toast";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
+import { generateSKU } from "@/lib/utils";
 import {
   Card,
   CardContent,
@@ -95,7 +96,7 @@ export default function EditProductPage() {
     benefits: [],
     warranty: "1 year",
     certifications: [],
-    rating: 4.5,
+    rating: 0,
     review_count: 0,
     tags: [],
     is_active: true,
@@ -159,8 +160,12 @@ export default function EditProductPage() {
           certifications: Array.isArray(productData.certifications)
             ? productData.certifications
             : [],
-          rating: productData.rating || 4.5,
-          review_count: productData.review_count || 0,
+          rating:
+            typeof productData.rating === "number" ? productData.rating : 0,
+          review_count:
+            typeof productData.review_count === "number"
+              ? productData.review_count
+              : 0,
           tags: Array.isArray(productData.tags) ? productData.tags : [],
           is_active:
             productData.is_active !== undefined ? productData.is_active : true,
@@ -452,6 +457,35 @@ export default function EditProductPage() {
                   style={{ color: "black", backgroundColor: "white" }}
                   required
                 />
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-gray-600">
+                    SKU can be manually edited or auto-generated
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (formData.name && formData.category_id) {
+                        const category = categories.find(
+                          (c) => c.id === formData.category_id
+                        );
+                        if (category) {
+                          const autoSKU = generateSKU(
+                            formData.name,
+                            category.slug
+                          );
+                          handleInputChange("sku", autoSKU);
+                        }
+                      } else {
+                        toast.error(
+                          "Please enter product name and select category first"
+                        );
+                      }
+                    }}
+                    className="text-sm text-blue-600 hover:text-blue-700 font-medium underline hover:no-underline transition-all duration-200"
+                  >
+                    Generate SKU
+                  </button>
+                </div>
                 {errors.sku && (
                   <p className="text-red-500 font-medium text-sm">
                     {errors.sku}

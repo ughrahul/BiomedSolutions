@@ -1,20 +1,50 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Inter, Poppins, Space_Grotesk } from "next/font/google";
 import "./globals.css";
 import Providers from "@/components/providers";
 import ConditionalLayout from "@/components/ConditionalLayout";
 import DemoModeBanner from "@/components/DemoModeBanner";
+import ErrorBoundary from "@/components/ErrorBoundary";
 import React from "react";
-import { suppressMapsErrors } from "@/lib/utils";
+import DynamicHead from "@/components/DynamicHead";
+
 import Script from "next/script";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
+// Optimized font loading with next/font (no manual <link> tags)
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
+  preload: true,
+  fallback: ["system-ui", "arial"],
+});
+
+const poppins = Poppins({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-poppins",
+  display: "swap",
+  preload: true,
+  fallback: ["system-ui", "sans-serif"],
+});
+
+const spaceGrotesk = Space_Grotesk({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
+  variable: "--font-space-grotesk",
+  display: "swap",
+  preload: true,
+  fallback: ["system-ui", "monospace"],
+});
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://biomedsolution.com.np"),
-  title: "Biomed Solution - Healthcare & Medical Services in Nepal",
+  title: {
+    default: "Biomed Solution",
+    template: "%s | Biomed Solution",
+  },
   description:
     "Biomed Solution provides healthcare trading and services since 2015 under ANIAS.",
   keywords:
@@ -66,23 +96,20 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // Suppress console errors for browser extensions and development tools
-  if (typeof window !== "undefined") {
-    suppressMapsErrors();
-  }
-
   return (
-    <html lang="en" className="scroll-smooth" data-scroll-behavior="smooth">
+    <html lang="en" data-scroll-behavior="smooth">
       <head>
         <meta
           name="viewport"
           content="width=device-width, initial-scale=1, viewport-fit=cover"
         />
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
+
+        {/* Preconnect for critical external domains (keep non-font domains if needed) */}
+        <link rel="dns-prefetch" href="https://maps.googleapis.com" />
         <link
           rel="preconnect"
-          href="https://fonts.gstatic.com"
-          crossOrigin=""
+          href="https://maps.googleapis.com"
+          crossOrigin="anonymous"
         />
 
         <Script
@@ -109,15 +136,22 @@ export default function RootLayout({
         />
       </head>
       <body
-        className={`${inter.variable} font-sans antialiased`}
+        className={`${inter.variable} ${poppins.variable} ${spaceGrotesk.variable} font-sans antialiased`}
         suppressHydrationWarning={true}
       >
-        <Providers>
-          <DemoModeBanner />
-          <ConditionalLayout>{children}</ConditionalLayout>
-        </Providers>
-        <Analytics />
-        <SpeedInsights />
+        <ErrorBoundary>
+          <Providers>
+            <DemoModeBanner />
+            <ConditionalLayout>{children}</ConditionalLayout>
+            {/* Dynamic title and favicon per route */}
+            <DynamicHead />
+          </Providers>
+          {/* Mount client-side dynamic head updater */}
+          {/* eslint-disable-next-line @next/next/no-head-element */}
+
+          <Analytics />
+          <SpeedInsights />
+        </ErrorBoundary>
       </body>
     </html>
   );

@@ -54,8 +54,15 @@ export default function Navbar() {
       const currentUser = await getCurrentUser();
       if (currentUser) {
         setUser(currentUser);
-        const userProfile = await getUserProfile(currentUser.id);
-        setProfile(userProfile);
+        try {
+          const userProfile = await getUserProfile(currentUser.id);
+          setProfile(userProfile);
+        } catch (profileError) {
+          if (process.env.NODE_ENV === "development") {
+            console.error("Error fetching user profile:", profileError);
+          }
+          setProfile(null);
+        }
       } else {
         setUser(null);
         setProfile(null);
@@ -298,7 +305,7 @@ export default function Navbar() {
                 >
                   <Image
                     src="/assets/images/logo.png"
-                    alt="Biomed Solutions Logo"
+                    alt="Biomed Solution Logo"
                     width={80}
                     height={80}
                     className="w-full h-full object-contain filter drop-shadow-lg"
@@ -311,7 +318,7 @@ export default function Navbar() {
                     whileHover={{ scale: 1.02 }}
                     transition={{ duration: 0.3 }}
                   >
-                    Biomed Solutions
+                    Biomed Solution
                   </motion.h1>
                   <motion.p
                     className="text-xs sm:text-sm md:text-base text-gray-600 hidden sm:block font-medium"

@@ -1,6 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminSupabaseClient } from "@/lib/supabase-admin";
 
+// Utility function to handle auth session missing errors
+function isAuthSessionMissingError(error: any): boolean {
+  if (!error) return false;
+  
+  const errorMessage = error.message || error.toString() || '';
+  return errorMessage.toLowerCase().includes('auth session missing') ||
+         errorMessage.toLowerCase().includes('authsessionmissingerror');
+}
+
 // Add console for logging
 const console = globalThis.console;
 
@@ -20,10 +29,33 @@ export async function GET() {
       error: authError,
     } = await supabase.auth.getUser();
 
-    if (authError || !user) {
+    if (authError) {
+      // Handle specific auth session missing error
+      if (isAuthSessionMissingError(authError)) {
+        if (process.env.NODE_ENV === "development") {
+          console.log("No active session - user not authenticated");
+        }
+        return NextResponse.json(
+          {
+            error: "User not authenticated",
+            details: "Please login to access admin features",
+          },
+          { status: 401 }
+        );
+      }
       if (process.env.NODE_ENV === "development") {
         console.error("Error getting current user:", authError);
       }
+      return NextResponse.json(
+        {
+          error: "User not authenticated",
+          details: "Please login to access admin features",
+        },
+        { status: 401 }
+      );
+    }
+
+    if (!user) {
       return NextResponse.json(
         {
           error: "User not authenticated",
@@ -96,10 +128,33 @@ export async function PUT(request: NextRequest) {
       error: authError,
     } = await supabase.auth.getUser();
 
-    if (authError || !user) {
+    if (authError) {
+      // Handle specific auth session missing error
+      if (isAuthSessionMissingError(authError)) {
+        if (process.env.NODE_ENV === "development") {
+          console.log("No active session - user not authenticated");
+        }
+        return NextResponse.json(
+          {
+            error: "User not authenticated",
+            details: "Please login to update your profile",
+          },
+          { status: 401 }
+        );
+      }
       if (process.env.NODE_ENV === "development") {
         console.error("Error getting current user:", authError);
       }
+      return NextResponse.json(
+        {
+          error: "User not authenticated",
+          details: "Please login to update your profile",
+        },
+        { status: 401 }
+      );
+    }
+
+    if (!user) {
       return NextResponse.json(
         {
           error: "User not authenticated",

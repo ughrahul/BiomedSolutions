@@ -33,12 +33,26 @@ export default function ProductHero({
   const [localSearch, setLocalSearch] = useState(searchValue);
 
   useEffect(() => {
+    let rafId: number | null = null;
+    let lastX = 0;
+    let lastY = 0;
+
     const handleMouseMove = (e: MouseEvent) => {
-      setMousePosition({ x: e.clientX, y: e.clientY });
+      lastX = e.clientX;
+      lastY = e.clientY;
+      if (rafId == null) {
+        rafId = requestAnimationFrame(() => {
+          setMousePosition({ x: lastX, y: lastY });
+          rafId = null;
+        });
+      }
     };
 
-    window.addEventListener('mousemove', handleMouseMove);
-    return () => window.removeEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mousemove', handleMouseMove, { passive: true });
+    return () => {
+      window.removeEventListener('mousemove', handleMouseMove);
+      if (rafId != null) cancelAnimationFrame(rafId);
+    };
   }, []);
 
   const floatingIcons = [

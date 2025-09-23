@@ -82,10 +82,11 @@ export default function ProductGrid({
           }))
         : [],
       benefits: [],
-      warranty: "1 year manufacturer warranty",
+      warranty: item.warranty || "1 year manufacturer warranty",
       certifications: ["CE Marked", "FDA Approved"],
-      rating: 4.5,
-      review_count: Math.floor(Math.random() * 50) + 10,
+      rating: typeof item.rating === "number" ? item.rating : 0,
+      review_count:
+        typeof item.review_count === "number" ? item.review_count : 0,
       tags: item.features?.slice(0, 3) || [],
       is_active: item.is_active,
       is_featured: item.is_featured,
@@ -257,10 +258,11 @@ export default function ProductGrid({
             }))
           : [],
         benefits: [],
-        warranty: "1 year manufacturer warranty",
+        warranty: item.warranty || "1 year manufacturer warranty",
         certifications: ["CE Marked", "FDA Approved"],
-        rating: 4.5,
-        review_count: Math.floor(Math.random() * 50) + 10,
+        rating: typeof item.rating === "number" ? item.rating : 0,
+        review_count:
+          typeof item.review_count === "number" ? item.review_count : 0,
         tags: item.features?.slice(0, 3) || [],
         is_active: item.is_active,
         is_featured: item.is_featured,

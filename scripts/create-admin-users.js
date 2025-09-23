@@ -114,7 +114,7 @@ async function createAdminUsers() {
     } else if (profiles && profiles.length > 0) {
       const adminSettings = profiles.map((profile) => ({
         user_id: profile.user_id,
-        company_name: "Biomed Solutions",
+        company_name: "Biomed Solution",
         company_address:
           "Annapurna Neurological Institute, Maitighar, Kathmandu, Nepal",
         company_phone: "+977-980-120-335",

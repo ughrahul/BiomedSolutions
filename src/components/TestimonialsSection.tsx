@@ -10,7 +10,7 @@ const testimonials = [
     role: "Neurologist",
     hospital: "ANIAS Hospital",
     content:
-      "The Deep Brain Stimulation system from Biomed Solutions has transformed our treatment of movement disorders. Their expertise and support have been invaluable for our patients.",
+      "The Deep Brain Stimulation system from Biomed Solution has transformed our treatment of movement disorders. Their expertise and support have been invaluable for our patients.",
     rating: 5,
     image: "/assets/images/logo.png",
   },
@@ -20,7 +20,7 @@ const testimonials = [
     role: "Neurosurgeon",
     hospital: "Kathmandu Medical Center",
     content:
-      "The Neuronavigation System has significantly improved our surgical precision. Biomed Solutions' collaboration with international partners brings world-class technology to Nepal.",
+      "The Neuronavigation System has significantly improved our surgical precision. Biomed Solution's collaboration with international partners brings world-class technology to Nepal.",
     rating: 5,
     image: "/assets/images/logo.png",
   },
@@ -40,7 +40,7 @@ const testimonials = [
     role: "Hospital Administrator",
     hospital: "Provincial Hospital",
     content:
-      "Biomed Solutions provides quality medical equipment at affordable costs. Their maintenance services ensure our devices work optimally, supporting healthcare delivery across Nepal.",
+      "Biomed Solution provides quality medical equipment at affordable costs. Their maintenance services ensure our devices work optimally, supporting healthcare delivery across Nepal.",
     rating: 5,
     image: "/assets/images/logo.png",
   },

@@ -26,9 +26,20 @@ export default function AboutHero() {
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
+    let rafId: number | null = null;
+    let lastX = 0;
+    let lastY = 0;
+
     const handleMouseMove = (e: Event) => {
       const mouseEvent = e as MouseEvent;
-      setMousePosition({ x: mouseEvent.clientX, y: mouseEvent.clientY });
+      lastX = mouseEvent.clientX;
+      lastY = mouseEvent.clientY;
+      if (rafId == null) {
+        rafId = requestAnimationFrame(() => {
+          setMousePosition({ x: lastX, y: lastY });
+          rafId = null;
+        });
+      }
     };
 
     // Generate particles only on client side to avoid hydration issues
@@ -47,13 +58,16 @@ export default function AboutHero() {
     };
 
     if (typeof window !== 'undefined') {
-      window.addEventListener('mousemove', handleMouseMove);
+      window.addEventListener('mousemove', handleMouseMove as EventListener, { passive: true });
       generateParticles();
     }
     
     return () => {
       if (typeof window !== 'undefined') {
-        window.removeEventListener('mousemove', handleMouseMove);
+        window.removeEventListener('mousemove', handleMouseMove as EventListener);
+      }
+      if (rafId != null) {
+        cancelAnimationFrame(rafId);
       }
     };
   }, []);
@@ -126,7 +140,7 @@ export default function AboutHero() {
             transition={{ duration: 0.3 }}
           >
             <Award className="w-4 h-4 mr-2" />
-            About Biomed Solutions
+            About Biomed Solution
           </motion.span>
 
           <motion.h1

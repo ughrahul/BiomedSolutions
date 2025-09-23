@@ -79,7 +79,7 @@ export async function initializeAdminUser() {
       .from("admin_settings")
       .insert({
         user_id: authUser.user.id,
-        company_name: "Biomed Solutions",
+        company_name: "Biomed Solution",
         company_address:
           "Annapurna Neurological Institute, Maitighar, Kathmandu, Nepal",
         company_phone: "+977-980-120-335",

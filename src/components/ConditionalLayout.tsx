@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import Navbar from "@/components/navbar";
 import Footer from "@/components/footer";
-
+import LoadingSpinner from "@/components/LoadingSpinner";
 import BackToTop from "@/components/back-to-top";
 import { Toaster } from "react-hot-toast";
 
@@ -28,9 +28,7 @@ export default function ConditionalLayout({
   if (!mounted) {
     return (
       <div className="min-h-screen bg-white">
-        <div className="flex justify-center items-center h-screen">
-          <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
-        </div>
+        <LoadingSpinner size="lg" text="Loading application..." />
       </div>
     );
   }

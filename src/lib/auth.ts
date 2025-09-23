@@ -1,10 +1,7 @@
 import { createClientSupabase } from "@/lib/supabase";
-import {
-  createProfileWithAdmin,
-  getProfileWithAdmin,
-  upsertProfileWithAdmin,
-} from "@/lib/auth-admin";
+import { createProfileWithAdmin } from "@/lib/auth-admin";
 import { logger } from "@/lib/logger";
+import { isAuthSessionMissingError } from "@/lib/utils";
 
 // Client-side auth functions with session validation
 export async function getCurrentUser() {
@@ -20,12 +17,27 @@ export async function getCurrentUser() {
       error,
     } = await supabase.auth.getUser();
 
-    if (error || !user) {
+    if (error) {
+      // Handle specific auth session missing error
+      if (isAuthSessionMissingError(error)) {
+        logger.log("No active session - user not authenticated");
+        return null;
+      }
+      logger.error("Auth error:", error);
+      return null;
+    }
+
+    if (!user) {
       return null;
     }
 
     return user;
   } catch (error) {
+    // Handle any other errors gracefully
+    if (isAuthSessionMissingError(error)) {
+      logger.log("No active session - user not authenticated");
+      return null;
+    }
     logger.error("Error getting current user:", error);
     return null;
   }
@@ -89,18 +101,23 @@ export async function signOut() {
   }
 
   try {
-    // Update last login time before signing out
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (user) {
-      await supabase
-        .from("profiles")
-        .update({
-          last_login: new Date().toISOString(),
-          login_count: supabase.rpc("increment", { row: "login_count" }),
-        })
-        .eq("user_id", user.id);
+    // Try to get current user, but don't fail if no session exists
+    try {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+      if (user) {
+        await supabase
+          .from("profiles")
+          .update({
+            last_login: new Date().toISOString(),
+            login_count: supabase.rpc("increment", { row: "login_count" }),
+          })
+          .eq("user_id", user.id);
+      }
+    } catch (userError) {
+      // If no session exists, that's fine - we're signing out anyway
+      logger.log("No active session to sign out from");
     }
 
     const { error } = await supabase.auth.signOut();

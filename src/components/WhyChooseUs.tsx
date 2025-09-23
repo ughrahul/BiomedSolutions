@@ -45,7 +45,7 @@ export default function WhyChooseUs() {
       <div className="container-custom">
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-orbitron font-bold mb-6">
-            Why Choose <span className="gradient-text">Biomed Solutions</span>
+            Why Choose <span className="gradient-text">Biomed Solution</span>
           </h2>
           <p className="text-xl text-secondary-300 max-w-3xl mx-auto">
             Discover what sets us apart in the medical equipment industry and

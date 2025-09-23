@@ -7,7 +7,6 @@ import {
   Edit,
   Trash2,
   Package,
-  Calendar,
   Tag,
   Eye,
   EyeOff,
@@ -24,6 +23,7 @@ import {
   Award,
   Clock,
 } from "lucide-react";
+import { SafeCalendar as Calendar } from "@/components/ui/safe-icons";
 import { Button } from "@/components/ui/button";
 import {
   Card,

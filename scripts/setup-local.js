@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Quick Local Setup Script for Biomed Solutions
+ * Quick Local Setup Script for Biomed Solution
  * This script helps set up the project for local development
  */
 

@@ -21,6 +21,7 @@ import Image from "next/image";
 import { EnhancedButton } from "@/components/ui/enhanced-button";
 import { EnhancedCard } from "@/components/ui/enhanced-card";
 import { Product } from "@/types/product";
+import { useWebsiteSettings } from "@/hooks/useWebsiteSettings";
 
 interface ProductDetailHeroProps {
   product: Product;
@@ -29,6 +30,7 @@ interface ProductDetailHeroProps {
 export default function ProductDetailHero({ product }: ProductDetailHeroProps) {
   const [selectedImageIndex, setSelectedImageIndex] = useState(0);
   const [isFavorited, setIsFavorited] = useState(false);
+  const { settings } = useWebsiteSettings();
 
   // Safely get images array
   const images = product.images || [];
@@ -286,7 +288,7 @@ export default function ProductDetailHero({ product }: ProductDetailHeroProps) {
                     Request Quote
                   </EnhancedButton>
                 </Link>
-                <a href="tel:+1234567890" className="flex-1 w-full">
+                <a href={`tel:${settings.contact.phone}`} className="flex-1 w-full">
                   <EnhancedButton
                     variant="outline"
                     size="default"

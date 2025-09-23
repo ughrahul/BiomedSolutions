@@ -1,6 +1,15 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 
+// Utility function to handle auth session missing errors
+function isAuthSessionMissingError(error: any): boolean {
+  if (!error) return false;
+  
+  const errorMessage = error.message || error.toString() || '';
+  return errorMessage.toLowerCase().includes('auth session missing') ||
+         errorMessage.toLowerCase().includes('authsessionmissingerror');
+}
+
 const supabaseUrl =
   process.env.NEXT_PUBLIC_SUPABASE_URL || "https://your-project.supabase.co";
 const supabaseAnonKey =
@@ -55,8 +64,15 @@ export const getServerUser = async () => {
     } = await supabase.auth.getSession();
 
     if (sessionError) {
+      // Handle specific auth session missing error
+      if (isAuthSessionMissingError(sessionError)) {
+        if (process.env.NODE_ENV === "development") {
+          // No active session - user not authenticated
+        }
+        return null;
+      }
       if (process.env.NODE_ENV === "development") {
-        console.error("Session error:", sessionError);
+        // Session error occurred
       }
       return null;
     }
@@ -72,17 +88,31 @@ export const getServerUser = async () => {
     } = await supabase.auth.getUser();
 
     if (userError) {
+      // Handle specific auth session missing error
+      if (isAuthSessionMissingError(userError)) {
+        if (process.env.NODE_ENV === "development") {
+          // No active session - user not authenticated
+        }
+        return null;
+      }
       if (process.env.NODE_ENV === "development") {
-        console.error("User error:", userError);
+        // User error occurred
       }
       return null;
     }
 
     return user;
   } catch (error) {
-    if (process.env.NODE_ENV === "development") {
-      console.error("Server auth error:", error);
+    // Handle any other errors gracefully
+    if (isAuthSessionMissingError(error)) {
+      if (process.env.NODE_ENV === "development") {
+        // No active session - user not authenticated
+      }
+      return null;
     }
+          if (process.env.NODE_ENV === "development") {
+        // Server auth error occurred
+      }
     return null;
   }
 };
@@ -100,7 +130,7 @@ export const getServerUserProfile = async (userId: string) => {
 
     if (error) {
       if (process.env.NODE_ENV === "development") {
-        console.error("Error fetching server profile:", error);
+        // Error fetching server profile
       }
       return null;
     }
@@ -108,7 +138,7 @@ export const getServerUserProfile = async (userId: string) => {
     return profile;
   } catch (error) {
     if (process.env.NODE_ENV === "development") {
-      console.error("Server profile error:", error);
+      // Server profile error occurred
     }
     return null;
   }

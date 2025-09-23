@@ -1,24 +1,20 @@
 import { createBrowserClient } from "@supabase/ssr";
 import { logger } from "@/lib/logger";
+import { env } from "@/lib/env";
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+const supabaseUrl = env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseAnonKey = env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
 
 // Client-side Supabase client with enhanced configuration
 export const createClientSupabase = () => {
   // Return null if environment variables are not configured
-  if (
-    !supabaseUrl ||
-    !supabaseAnonKey ||
-    supabaseUrl === "https://placeholder.supabase.co" ||
-    supabaseAnonKey === "placeholder-key"
-  ) {
+  if (env.isDemoMode()) {
     logger.log("🎭 Demo mode: Supabase environment variables not configured");
     return null;
   }
 
   try {
-    return createBrowserClient(supabaseUrl, supabaseAnonKey, {
+    const client = createBrowserClient(supabaseUrl, supabaseAnonKey, {
       auth: {
         persistSession: true,
         autoRefreshToken: true,
@@ -31,6 +27,17 @@ export const createClientSupabase = () => {
         },
       },
     });
+
+    // Add error handling for refresh token issues
+    if (typeof window !== "undefined") {
+      client.auth.onAuthStateChange((event, session) => {
+        if (event === 'TOKEN_REFRESHED') {
+          logger.log("✅ Token refreshed successfully");
+        }
+      });
+    }
+
+    return client;
   } catch (error) {
     logger.error("Failed to create Supabase client:", error);
     return null;

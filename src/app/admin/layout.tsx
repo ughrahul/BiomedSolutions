@@ -255,7 +255,7 @@ export default function AdminLayout({
               <div className="w-12 h-12 bg-gradient-to-br from-cyan-500/20 to-blue-500/20 rounded-xl backdrop-blur-sm border border-white/20 flex items-center justify-center">
                 <Image
                   src="/assets/images/logo.png"
-                  alt="Biomed Solutions"
+                  alt="Biomed Solution"
                   width={40}
                   height={40}
                   className="w-10 h-10 object-contain filter drop-shadow-md"
@@ -264,7 +264,7 @@ export default function AdminLayout({
               </div>
               <div>
                 <h1 className="text-xl font-bold text-gray-900">Admin Panel</h1>
-                <p className="text-sm text-gray-600">Biomed Solutions</p>
+                <p className="text-sm text-gray-600">Biomed Solution</p>
               </div>
             </Link>
             <button

@@ -19,12 +19,6 @@ export async function GET() {
           hospitalPhone: "01-5356568",
           supportPhone: "980120335/61",
         },
-        social: {
-          facebook: "https://facebook.com/annapurnahospitals",
-          twitter: "https://twitter.com/annapurnahospitals",
-          instagram: "https://instagram.com/annapurnahospitals",
-          linkedin: "https://linkedin.com/company/annapurnahospitals",
-        },
       };
 
       return NextResponse.json(defaultSettings);
@@ -52,12 +46,6 @@ export async function GET() {
         hospitalPhone: "01-5356568",
         supportPhone: "980120335/61",
       },
-      social: {
-        facebook: "https://facebook.com/annapurnahospitals",
-        twitter: "https://twitter.com/annapurnahospitals",
-        instagram: "https://instagram.com/annapurnahospitals",
-        linkedin: "https://linkedin.com/company/annapurnahospitals",
-      },
     };
 
     // Override with database values if they exist
@@ -66,11 +54,6 @@ export async function GET() {
         const field = setting.key.replace("contact_", "");
         if (Object.prototype.hasOwnProperty.call(settings.contact, field)) {
           settings.contact[field] = setting.value;
-        }
-      } else if (setting.key.startsWith("social_")) {
-        const field = setting.key.replace("social_", "");
-        if (Object.prototype.hasOwnProperty.call(settings.social, field)) {
-          settings.social[field] = setting.value;
         }
       }
     });
@@ -87,7 +70,7 @@ export async function GET() {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { contact, social } = body;
+    const { contact } = body;
 
     const supabase = createAdminSupabaseClient();
 
@@ -115,19 +98,6 @@ export async function POST(request: NextRequest) {
         });
       });
     }
-
-    // Social settings
-    if (social) {
-      Object.entries(social).forEach(([key, value]) => {
-        updates.push({
-          key: `social_${key}`,
-          value: value as string,
-          updated_at: new Date().toISOString(),
-        });
-      });
-    }
-
-
 
     // Upsert all settings
     const { error } = await supabase

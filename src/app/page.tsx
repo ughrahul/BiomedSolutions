@@ -1,8 +1,8 @@
 "use client";
 
+import React from "react";
 import { motion, useScroll, useTransform, useInView } from "framer-motion";
 import { useState, useEffect, useRef } from "react";
-import { logger } from "@/lib/logger";
 
 // Performance optimization: Detect mobile devices and reduce animations
 const useDevicePerformance = () => {
@@ -32,19 +32,9 @@ const useDevicePerformance = () => {
 };
 
 // Performance context for mobile optimization
-const PerformanceContext = React.createContext({ isLowPerformance: false });
-
-// Performance-optimized Motion wrapper that uses context
-const OptimizedMotion = ({ children, ...props }: any) => {
-  const { isLowPerformance } = React.useContext(PerformanceContext);
-
-  if (isLowPerformance) {
-    // On mobile, use static div instead of motion.div for better performance
-    return <div {...props}>{children}</div>;
-  }
-
-  return <motion.div {...props}>{children}</motion.div>;
-};
+const PerformanceContext = React.createContext<{ isLowPerformance: boolean }>({
+  isLowPerformance: false,
+});
 import Link from "next/link";
 import {
   ArrowRight,
@@ -61,35 +51,14 @@ import {
   Building2,
   Settings,
   Smile,
-  Mail,
   MapPin,
   ExternalLink,
   Quote,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { EnhancedButton } from "@/components/ui/enhanced-button";
-import { EnhancedInput } from "@/components/ui/enhanced-input";
-import { EnhancedCard } from "@/components/ui/enhanced-card";
-import { Badge } from "@/components/ui/badge";
-import { useWebsiteSettings } from "@/hooks/useWebsiteSettings";
-import ClientOnly from "@/components/ClientOnly";
-import VideoBackground from "@/components/VideoBackground";
-import HeroSection from "@/components/HeroSection";
-import ServicesSection from "@/components/ServicesSection";
-import StatsSection from "@/components/StatsSection";
-import FeaturedProducts from "@/components/FeaturedProducts";
-import TestimonialsSection from "@/components/TestimonialsSection";
-import CTASection from "@/components/CTASection";
-import SectionDivider from "@/components/SectionDivider";
-import CompanyStory from "@/components/CompanyStory";
-import ValuesSection from "@/components/ValuesSection";
-import WhyChooseUs from "@/components/WhyChooseUs";
-import TeamSection from "@/components/TeamSection";
-
-import DemoModeBanner from "@/components/DemoModeBanner";
 import Image from "next/image";
-import React from "react";
+import VideoBackground from "@/components/VideoBackground";
 
 // Floating animation variants
 const floatingAnimation = {
@@ -135,7 +104,7 @@ const cardVariants = {
   },
 };
 
-// Stats data based on reference (Biomed Solutions)
+// Stats data based on reference (Biomed Solution)
 const stats = [
   {
     label: "Hospitals Served",
@@ -192,6 +161,7 @@ const services = [
 ];
 
 // Featured products are now dynamically loaded from FeaturedProducts component
+import FeaturedProducts from "@/components/FeaturedProducts";
 
 // Testimonials based on reference
 const testimonials = [
@@ -199,7 +169,7 @@ const testimonials = [
     name: "Dr. A. Sharma",
     role: "Chief Cardiologist, National Hospital",
     content:
-      "The reliability and precision of Biomed Solutions' equipment have significantly improved our diagnostic capabilities.",
+      "The reliability and precision of Biomed Solution's equipment have significantly improved our diagnostic capabilities.",
     avatar: "/assets/images/logo.png",
     rating: 5,
   },
@@ -215,21 +185,19 @@ const testimonials = [
     name: "Dr. S. K.C.",
     role: "Head of Surgery, City Medical Center",
     content:
-      "Biomed Solutions is more than a supplier; they are a partner in our mission to provide the best healthcare.",
+      "Biomed Solution is more than a supplier; they are a partner in our mission to provide the best healthcare.",
     avatar: "/assets/images/logo.png",
     rating: 5,
   },
 ];
 
 export default function HomePage() {
-  const { settings, mounted } = useWebsiteSettings();
   const { isMobile, isLowPerformance } = useDevicePerformance();
 
   // Performance context value
   const performanceValue = { isLowPerformance };
 
   const heroRef = useRef(null);
-  const servicesRef = useRef(null);
   const statsRef = useRef(null);
   const testimonialsRef = useRef(null);
   const mapRef = useRef(null);
@@ -238,11 +206,6 @@ export default function HomePage() {
   const heroInView = useInView(heroRef, {
     once: true,
     margin: isLowPerformance ? "-30px" : "-100px",
-    amount: isLowPerformance ? 0.1 : 0.3,
-  });
-  const servicesInView = useInView(servicesRef, {
-    once: true,
-    margin: isLowPerformance ? "-20px" : "-100px",
     amount: isLowPerformance ? 0.1 : 0.3,
   });
   const statsInView = useInView(statsRef, {
@@ -261,7 +224,7 @@ export default function HomePage() {
     amount: isLowPerformance ? 0.1 : 0.3,
   });
 
-  // Scroll-based animations - always call hooks in same order
+  // Scroll-based animations
   const { scrollY } = useScroll();
   const heroY = useTransform(
     scrollY,
@@ -269,117 +232,65 @@ export default function HomePage() {
     [0, isLowPerformance ? 30 : 80]
   );
 
-  // Scroll speed detection for responsive animations
-  const [scrollSpeed, setScrollSpeed] = useState(0);
-  const [lastScrollY, setLastScrollY] = useState(0);
-  const [lastScrollTime, setLastScrollTime] = useState(0);
-
-  useEffect(() => {
-    // Initialize the time on client side
-    setLastScrollTime(Date.now());
-
-    // Suppress Google Maps API console errors
-    // suppressMapsErrors(); // This function is no longer imported
-  }, []);
-
-  useEffect(() => {
-    // Skip scroll speed detection on mobile/low performance devices for better performance
-    if (isLowPerformance) {
-      setScrollSpeed(0);
-      return;
-    }
-
-    let scrollTimeout: NodeJS.Timeout;
-
-    const handleScroll = () => {
-      const currentTime = Date.now();
-      const currentScrollY = window.scrollY;
-      const timeDiff = currentTime - lastScrollTime;
-      const scrollDiff = Math.abs(currentScrollY - lastScrollY);
-
-      if (timeDiff > 0) {
-        const speed = scrollDiff / timeDiff;
-        setScrollSpeed(speed);
-        setLastScrollY(currentScrollY);
-        setLastScrollTime(currentTime);
-      }
-
-      // Debounce scroll speed reset for better performance
-      clearTimeout(scrollTimeout);
-      scrollTimeout = setTimeout(() => {
-        setScrollSpeed(0);
-      }, 100);
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => {
-      clearTimeout(scrollTimeout);
-      window.removeEventListener("scroll", handleScroll);
-    };
-  }, [lastScrollY, lastScrollTime, isLowPerformance]);
-
-  // Dynamic animation duration - optimized for mobile performance
-  const getAnimationDuration = () => {
-    if (isLowPerformance) return 0.3; // Faster animations on mobile
-    return scrollSpeed > 2 ? 0.4 : 0.8;
-  };
-
   // Animated counter state for each stat
   const [counters, setCounters] = useState<number[]>(stats.map(() => 0));
 
-  // Animate counters when in view - Ultra-mobile optimized
+  // Animate counters when in view - Optimized for smooth animation
   useEffect(() => {
     if (!statsInView) return;
 
-    const targets = stats.map((stat) => parseInt(stat.value));
-    const startTime = performance.now();
-    const duration = isLowPerformance ? 1500 : 2000; // Faster on mobile
+    // Reset counters to 0 when section comes into view
+    setCounters(stats.map(() => 0));
 
-    let animationId: number;
-    let lastUpdate = 0;
-    let lastCounters = [...counters];
-    // Even lower frame rate on mobile for maximum performance
-    const updateInterval = isLowPerformance ? 1000 / 15 : 1000 / 24;
+    // Small delay to ensure reset is complete before animation starts
+    const animationTimeout = setTimeout(() => {
+      const targets = stats.map((stat) => parseInt(stat.value) || 0);
+      const startTime = performance.now();
+      const duration = isLowPerformance ? 2000 : 2500; // Slightly longer for smoother animation
 
-    const animate = (currentTime: number) => {
-      // Throttle updates for maximum performance
-      if (currentTime - lastUpdate < updateInterval) {
-        animationId = requestAnimationFrame(animate);
-        return;
-      }
+      let animationId: number;
+      let lastCounters = targets.map(() => 0);
 
-      const elapsed = currentTime - startTime;
-      const progress = Math.min(elapsed / duration, 1);
+      const animate = (currentTime: number) => {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
 
-      const newCounters = targets.map((target) => {
-        const currentValue = Math.floor(target * progress);
-        return Math.min(currentValue, target);
-      });
+        // Use easing function for smoother animation
+        const easeOutQuart = 1 - Math.pow(1 - progress, 4);
 
-      // Only update state if values actually changed
-      const hasChanged = newCounters.some(
-        (value, index) => value !== lastCounters[index]
-      );
-      if (hasChanged) {
-        setCounters(newCounters);
-        lastCounters = [...newCounters];
-      }
+        const newCounters = targets.map((target) => {
+          const currentValue = Math.floor(target * easeOutQuart);
+          return Math.min(currentValue, target);
+        });
 
-      lastUpdate = currentTime;
+        // Only update state if values actually changed
+        const hasChanged = newCounters.some(
+          (value, index) => value !== lastCounters[index]
+        );
 
-      if (progress < 1) {
-        animationId = requestAnimationFrame(animate);
-      }
-    };
+        if (hasChanged) {
+          setCounters(newCounters);
+          lastCounters = [...newCounters];
+        }
 
-    animationId = requestAnimationFrame(animate);
+        if (progress < 1) {
+          animationId = requestAnimationFrame(animate);
+        }
+      };
+
+      animationId = requestAnimationFrame(animate);
+
+      return () => {
+        if (animationId) {
+          cancelAnimationFrame(animationId);
+        }
+      };
+    }, 100);
 
     return () => {
-      if (animationId) {
-        cancelAnimationFrame(animationId);
-      }
+      clearTimeout(animationTimeout);
     };
-  }, [statsInView, stats, isLowPerformance]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [statsInView, isLowPerformance]); // Removed counters dependency; 'stats' is module-constant
 
   // Client-side component for floating particles to avoid hydration mismatch
   const FloatingParticles = () => {
@@ -392,8 +303,10 @@ export default function HomePage() {
         delay: number;
       }>
     >([]);
+    const [mounted, setMounted] = useState(false);
 
     useEffect(() => {
+      setMounted(true);
       const generateParticles = () => {
         const newParticles = Array.from({ length: 20 }, (_, i) => ({
           id: i,
@@ -407,6 +320,8 @@ export default function HomePage() {
 
       generateParticles();
     }, []);
+
+    if (!mounted) return null;
 
     return (
       <div className="absolute inset-0 overflow-hidden z-5">
@@ -434,91 +349,6 @@ export default function HomePage() {
     );
   };
 
-  // Enhanced Video Background Component
-  const EnhancedVideoBackground = () => {
-    const [videoLoaded, setVideoLoaded] = useState(false);
-    const [videoError, setVideoError] = useState(false);
-    const videoRef = useRef<HTMLVideoElement>(null);
-
-    useEffect(() => {
-      const video = videoRef.current;
-      if (!video) return;
-
-      const handleLoadedData = () => {
-        setVideoLoaded(true);
-        // Add a small delay to ensure smooth transition
-        setTimeout(() => {
-          video.style.opacity = "1";
-        }, 100);
-      };
-
-      const handleError = () => {
-        setVideoError(true);
-        if (process.env.NODE_ENV === "development") {
-          console.warn("Video failed to load, using poster image");
-        }
-      };
-
-      const handleCanPlay = () => {
-        // Video is ready to play
-        setVideoLoaded(true);
-      };
-
-      video.addEventListener("loadeddata", handleLoadedData);
-      video.addEventListener("error", handleError);
-      video.addEventListener("canplay", handleCanPlay);
-
-      return () => {
-        video.removeEventListener("loadeddata", handleLoadedData);
-        video.removeEventListener("error", handleError);
-        video.removeEventListener("canplay", handleCanPlay);
-      };
-    }, []);
-
-    return (
-      <motion.div style={{ y: heroY }} className="absolute inset-0 z-0">
-        {/* Poster Image - Always visible first */}
-        <div
-          className="absolute inset-0 w-full h-full object-cover opacity-90 transition-opacity duration-1000"
-          style={{
-            backgroundImage: "url(/assets/images/wall3_poster.jpg)",
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-            filter:
-              "contrast(1.3) brightness(0.7) saturate(1.4) hue-rotate(5deg)",
-            opacity: videoLoaded ? 0 : 1,
-          }}
-        />
-
-        {/* Video - Fades in when loaded */}
-        <video
-          ref={videoRef}
-          autoPlay
-          muted
-          loop
-          playsInline
-          preload="auto"
-          className="absolute inset-0 w-full h-full object-cover opacity-90 transition-opacity duration-1000"
-          poster="/assets/images/wall3_poster.jpg"
-          style={{
-            filter:
-              "contrast(1.3) brightness(0.7) saturate(1.4) hue-rotate(5deg)",
-            opacity: videoLoaded ? 1 : 0,
-          }}
-        >
-          <source src="/assets/images/wall3.mp4" type="video/mp4" />
-          {/* Fallback text if video fails completely */}
-          <p className="sr-only">Video not supported</p>
-        </video>
-
-        {/* Overlay gradients */}
-        <div className="absolute inset-0 bg-gradient-to-br from-cyan-900/40 via-blue-900/30 to-purple-900/40" />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-black/30" />
-        <div className="absolute inset-0 bg-gradient-to-r from-cyan-500/20 via-transparent to-blue-500/20" />
-      </motion.div>
-    );
-  };
-
   return (
     <PerformanceContext.Provider value={performanceValue}>
       <div className="min-h-screen overflow-hidden">
@@ -535,18 +365,16 @@ export default function HomePage() {
               className="absolute inset-0 w-full h-full object-cover opacity-90"
               showLoadingIndicator={true}
               onVideoLoad={() => {
-                logger.log("Video loaded successfully");
+                // Video loaded successfully
               }}
               onVideoError={() => {
-                logger.warn("Video failed to load, using poster");
+                // Video failed to load, using poster
               }}
             />
           </motion.div>
 
           {/* Floating Orbs Animation */}
-          <ClientOnly>
-            <FloatingParticles />
-          </ClientOnly>
+          <FloatingParticles />
 
           <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center -mt-4 sm:-mt-10 md:-mt-20">
             <motion.div
@@ -590,7 +418,7 @@ export default function HomePage() {
                     }}
                     transition={{ duration: 8, repeat: Infinity }}
                   >
-                    Biomed Solutions
+                    Biomed Solution
                   </motion.h1>
                 </motion.div>
               </motion.div>
@@ -777,10 +605,7 @@ export default function HomePage() {
         <div className="relative h-0"></div>
 
         {/* Revolutionary Healthcare Solutions */}
-        <section
-          ref={servicesRef}
-          className="relative py-12 bg-gradient-to-br from-blue-100 via-cyan-50 to-blue-100 overflow-hidden"
-        >
+        <section className="relative py-12 bg-gradient-to-br from-blue-100 via-cyan-50 to-blue-100 overflow-hidden">
           {/* Enhanced Background Pattern */}
           <div className="absolute inset-0">
             <motion.div
@@ -830,7 +655,8 @@ export default function HomePage() {
             <motion.div
               variants={containerVariants}
               initial="hidden"
-              animate={servicesInView ? "visible" : "hidden"}
+              whileInView="visible"
+              viewport={{ once: true, amount: 0.3 }}
               className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 md:gap-8"
             >
               {services.map((service, index) => (
@@ -1013,9 +839,7 @@ export default function HomePage() {
         </section>
 
         {/* Featured Products Section */}
-        <ClientOnly>
-          <FeaturedProducts />
-        </ClientOnly>
+        <FeaturedProducts />
 
         {/* Diagnostic Panel - Temporary for debugging */}
 
@@ -1029,6 +853,7 @@ export default function HomePage() {
         >
           {/* Background Elements */}
           <div className="absolute inset-0">
+            {testimonialsInView && !isLowPerformance && (
             <motion.div
               className="absolute top-20 left-20 w-64 h-64 bg-gradient-to-br from-cyan-300/20 to-blue-400/20 rounded-full blur-3xl"
               animate={{
@@ -1037,7 +862,8 @@ export default function HomePage() {
                 scale: [1, 1.2, 1],
               }}
               transition={{ duration: 15, repeat: Infinity, ease: "linear" }}
-            />
+            />)}
+            {testimonialsInView && !isLowPerformance && (
             <motion.div
               className="absolute bottom-20 right-20 w-64 h-64 bg-gradient-to-br from-purple-300/20 to-pink-400/20 rounded-full blur-3xl"
               animate={{
@@ -1046,7 +872,7 @@ export default function HomePage() {
                 scale: [1.2, 1, 1.2],
               }}
               transition={{ duration: 18, repeat: Infinity, ease: "linear" }}
-            />
+            />)}
           </div>
 
           <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -1305,24 +1131,18 @@ export default function HomePage() {
                   </h3>
                   <div className="space-y-1 sm:space-y-2 text-xs sm:text-sm md:text-base">
                     <p className="text-gray-700">
-                      <strong>Address:</strong>{" "}
-                      {mounted
-                        ? settings.contact.address
-                        : "Annapurna Neurological Institute & Allied Sciences, Maitighar Mandala-10, Kathmandu 44600, Nepal"}
+                      <strong>Address:</strong> Annapurna Neurological Institute
+                      & Allied Sciences, Maitighar Mandala-10, Kathmandu 44600,
+                      Nepal
                     </p>
                     <p className="text-gray-700">
-                      <strong>Contact:</strong> 24/7 Support -{" "}
-                      {mounted ? settings.contact.supportPhone : "980120335/61"}
+                      <strong>Contact:</strong> 24/7 Support - 980120335/61
                     </p>
                     <p className="text-gray-700">
-                      <strong>Hospital:</strong>{" "}
-                      {mounted ? settings.contact.hospitalPhone : "01-5356568"}
+                      <strong>Hospital:</strong> 01-5356568
                     </p>
                     <p className="text-gray-700 mb-4 sm:mb-6">
-                      <strong>Email:</strong>{" "}
-                      {mounted
-                        ? settings.contact.email
-                        : "hingmang75@gmail.com"}
+                      <strong>Email:</strong> hingmang75@gmail.com
                     </p>
                   </div>
                   <motion.a

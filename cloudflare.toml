@@ -1,0 +1,152 @@
+# Cloudflare configuration for optimal performance
+# Place this file in your project root for Cloudflare Pages/Workers
+
+[build]
+command = "npm run build"
+publish = ".next"
+
+[build.environment]
+NODE_VERSION = "18"
+
+# Performance optimizations
+[site]
+bucket = ".next"
+
+# Cache and compression rules
+[[headers]]
+for = "/*"
+[headers.values]
+X-Frame-Options = "DENY"
+X-Content-Type-Options = "nosniff"
+Referrer-Policy = "strict-origin-when-cross-origin"
+Permissions-Policy = "camera=(), microphone=(), geolocation=()"
+
+# Static assets - long-term caching
+[[headers]]
+for = "/_next/static/*"
+[headers.values]
+Cache-Control = "public, max-age=31536000, immutable"
+Vary = "Accept-Encoding"
+
+[[headers]]
+for = "/assets/*"
+[headers.values]
+Cache-Control = "public, max-age=31536000, immutable"
+Vary = "Accept-Encoding"
+
+# CSS and JS files
+[[headers]]
+for = "*.css"
+[headers.values]
+Cache-Control = "public, max-age=31536000, immutable"
+Vary = "Accept-Encoding"
+
+[[headers]]
+for = "*.js"
+[headers.values]
+Cache-Control = "public, max-age=31536000, immutable"
+Vary = "Accept-Encoding"
+
+# Images - long-term caching
+[[headers]]
+for = "*.{jpg,jpeg,png,gif,webp,avif,svg}"
+[headers.values]
+Cache-Control = "public, max-age=31536000, immutable"
+Vary = "Accept-Encoding"
+
+# Fonts - long-term caching
+[[headers]]
+for = "*.{woff,woff2,ttf,otf}"
+[headers.values]
+Cache-Control = "public, max-age=31536000, immutable"
+Vary = "Accept-Encoding"
+
+# HTML pages - shorter cache for content updates
+[[headers]]
+for = "*.html"
+[headers.values]
+Cache-Control = "public, max-age=3600, must-revalidate"
+
+# API routes - no caching
+[[headers]]
+for = "/api/*"
+[headers.values]
+Cache-Control = "no-cache, no-store, must-revalidate"
+
+# Security headers
+[[headers]]
+for = "/*"
+[headers.values]
+Strict-Transport-Security = "max-age=31536000; includeSubDomains; preload"
+X-XSS-Protection = "1; mode=block"
+
+# Performance headers
+[[headers]]
+for = "/*"
+[headers.values]
+X-DNS-Prefetch-Control = "on"
+
+# Enable Brotli compression
+[compression]
+brotli = true
+gzip = true
+
+# Edge caching rules
+[cache]
+# Cache everything by default
+default = "public, max-age=31536000, immutable"
+
+# Don't cache API routes
+[[cache.rules]]
+pattern = "/api/*"
+cache = "no-cache"
+
+# Don't cache admin routes
+[[cache.rules]]
+pattern = "/admin/*"
+cache = "no-cache"
+
+# Cache static assets for a very long time
+[[cache.rules]]
+pattern = "/_next/static/*"
+cache = "public, max-age=31536000, immutable"
+
+[[cache.rules]]
+pattern = "/assets/*"
+cache = "public, max-age=31536000, immutable"
+
+# Cache images for a long time
+[[cache.rules]]
+pattern = "*.{jpg,jpeg,png,gif,webp,avif,svg}"
+cache = "public, max-age=31536000, immutable"
+
+# Cache fonts for a long time
+[[cache.rules]]
+pattern = "*.{woff,woff2,ttf,otf}"
+cache = "public, max-age=31536000, immutable"
+
+# Cache CSS and JS for a long time
+[[cache.rules]]
+pattern = "*.{css,js}"
+cache = "public, max-age=31536000, immutable"
+
+# Cache HTML pages for a shorter time
+[[cache.rules]]
+pattern = "*.html"
+cache = "public, max-age=3600, must-revalidate"
+
+# Workers for advanced caching (if using Cloudflare Workers)
+[workers]
+# Enable service worker for offline support
+service_worker = true
+
+# Performance monitoring
+[analytics]
+# Enable Web Analytics
+web_analytics = true
+
+# Enable Real User Monitoring
+rum = true
+
+# Enable Core Web Vitals monitoring
+core_web_vitals = true

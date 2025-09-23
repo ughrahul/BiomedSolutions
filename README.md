@@ -1,7 +1,7 @@
-# 🏥 Biomed Solutions - Advanced Medical Equipment Website
+# 🏥 Biomed Solution - Advanced Medical Equipment Website
 
 <div align="center">
-  <img src="public/assets/images/logo.png" alt="Biomed Solutions" width="120" height="120" />
+  <img src="public/assets/images/logo.png" alt="Biomed Solution" width="120" height="120" />
   
   <p align="center">
     <strong>Professional Medical Equipment Provider in Nepal</strong>
@@ -173,7 +173,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 SUPABASE_SERVICE_ROLE_KEY=your-service-key
 
 # App Configuration
-NEXT_PUBLIC_APP_NAME="Biomed Solutions"
+NEXT_PUBLIC_APP_NAME="Biomed Solution"
 NEXT_PUBLIC_APP_URL=https://your-domain.com
 ```
 

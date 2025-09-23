@@ -202,7 +202,7 @@ export default function ContactHero() {
                   backgroundSize: "200% 200%",
                 }}
               >
-                Biomed Solutions
+                Biomed Solution
               </motion.span>
             </motion.h1>
 
@@ -233,7 +233,7 @@ export default function ContactHero() {
                   icon={<Phone className="w-5 h-5" />}
                   onClick={() => {
                     if (typeof window !== 'undefined') {
-                      window.open("tel:+977980120335", "_self");
+                      window.open(`tel:${settings.contact.phone}`, "_self");
                     }
                   }}
                 >
@@ -251,7 +251,7 @@ export default function ContactHero() {
                   icon={<Mail className="w-5 h-5" />}
                   onClick={() => {
                     if (typeof window !== 'undefined') {
-                      window.open("mailto:info@annapurnahospitals.com", "_self");
+                      window.open(`mailto:${settings.contact.email}`, "_self");
                     }
                   }}
                 >

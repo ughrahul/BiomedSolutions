@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Users, Award, Globe, Heart } from "lucide-react";
 
 const stats = [
@@ -37,6 +37,8 @@ const stats = [
 export default function StatsSection() {
   const [counts, setCounts] = useState(stats.map(() => 0));
   const [hasAnimated, setHasAnimated] = useState(false);
+  const animationRef = useRef<number | null>(null);
+  const observerRef = useRef<IntersectionObserver | null>(null);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -48,37 +50,56 @@ export default function StatsSection() {
           }
         });
       },
-      { threshold: 0.5 }
+      { threshold: 0.3 }
     );
 
+    observerRef.current = observer;
     const element = document.getElementById("stats-section");
     if (element) {
       observer.observe(element);
     }
 
-    return () => observer.disconnect();
+    return () => {
+      if (observerRef.current) {
+        observerRef.current.disconnect();
+      }
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
   }, [hasAnimated]);
 
   const animateCounts = () => {
-    stats.forEach((stat, index) => {
-      const duration = 2000;
-      const steps = 60;
-      const increment = stat.number / steps;
-      let current = 0;
+    // Reset counts to 0 first
+    setCounts(stats.map(() => 0));
 
-      const timer = setInterval(() => {
-        current += increment;
-        if (current >= stat.number) {
-          current = stat.number;
-          clearInterval(timer);
-        }
-        setCounts((prev) => {
-          const newCounts = [...prev];
-          newCounts[index] = Math.floor(current);
-          return newCounts;
+    // Small delay to ensure reset is complete
+    setTimeout(() => {
+      const targets = stats.map((stat) => stat.number);
+      const startTime = performance.now();
+      const duration = 2500; // 2.5 seconds for smooth animation
+
+      const animate = (currentTime: number) => {
+        const elapsed = currentTime - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+
+        // Use easing function for smoother animation
+        const easeOutQuart = 1 - Math.pow(1 - progress, 4);
+        
+        const newCounts = targets.map((target) => {
+          const currentValue = Math.floor(target * easeOutQuart);
+          return Math.min(currentValue, target);
         });
-      }, duration / steps);
-    });
+
+        setCounts(newCounts);
+
+        if (progress < 1) {
+          animationRef.current = requestAnimationFrame(animate);
+        }
+      };
+
+      animationRef.current = requestAnimationFrame(animate);
+    }, 100);
   };
 
   return (

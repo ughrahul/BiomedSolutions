@@ -19,6 +19,7 @@ export default function ProductDetailPage() {
   const [product, setProduct] = useState<Product | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isLowPerformance, setIsLowPerformance] = useState(false);
 
   const productId = params.id as string;
   const supabase = createClientSupabase();
@@ -88,10 +89,11 @@ export default function ProductDetailPage() {
             }))
           : [],
         benefits: [],
-        warranty: "1 year",
+        warranty: data.warranty || "1 year",
         certifications: ["CE Marked", "FDA Approved"],
-        rating: 4.5,
-        review_count: 0,
+        rating: typeof data.rating === "number" ? data.rating : 0,
+        review_count:
+          typeof data.review_count === "number" ? data.review_count : 0,
         tags: data.features?.slice(0, 3) || [],
         is_active: data.is_active,
         is_featured: data.is_featured,
@@ -113,6 +115,18 @@ export default function ProductDetailPage() {
   useEffect(() => {
     fetchProduct();
   }, [fetchProduct]);
+
+  // Detect low-performance environments to disable heavy background animations
+  useEffect(() => {
+    try {
+      const lowPerf = (typeof window !== 'undefined' && (window.navigator.hardwareConcurrency || 0) <= 4) || /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+      setIsLowPerformance(!!lowPerf);
+    } catch {
+      setIsLowPerformance(false);
+    }
+  }, []);
+
+  // Title is handled via route-level metadata in layout.tsx
 
   if (loading) {
     return (
@@ -163,26 +177,28 @@ export default function ProductDetailPage() {
       transition={{ duration: 0.8 }}
     >
       {/* Background Effects */}
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <motion.div
-          className="absolute top-20 left-20 w-64 h-64 bg-gradient-to-br from-cyan-500/10 to-blue-600/10 rounded-full blur-3xl"
-          animate={{
-            x: [0, 80, 0],
-            y: [0, -40, 0],
-            scale: [1, 1.1, 1],
-          }}
-          transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-        />
-        <motion.div
-          className="absolute bottom-20 right-20 w-56 h-56 bg-gradient-to-br from-purple-500/10 to-pink-600/10 rounded-full blur-3xl"
-          animate={{
-            x: [0, -60, 0],
-            y: [0, 25, 0],
-            scale: [1.1, 0.9, 1.1],
-          }}
-          transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
-        />
-      </div>
+      {!isLowPerformance && (
+        <div className="fixed inset-0 overflow-hidden pointer-events-none">
+          <motion.div
+            className="absolute top-20 left-20 w-64 h-64 bg-gradient-to-br from-cyan-500/10 to-blue-600/10 rounded-full blur-3xl"
+            animate={{
+              x: [0, 80, 0],
+              y: [0, -40, 0],
+              scale: [1, 1.1, 1],
+            }}
+            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+          />
+          <motion.div
+            className="absolute bottom-20 right-20 w-56 h-56 bg-gradient-to-br from-purple-500/10 to-pink-600/10 rounded-full blur-3xl"
+            animate={{
+              x: [0, -60, 0],
+              y: [0, 25, 0],
+              scale: [1.1, 0.9, 1.1],
+            }}
+            transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
+          />
+        </div>
+      )}
 
       {/* Back to Products Button */}
       <div className="relative z-10 pt-4">

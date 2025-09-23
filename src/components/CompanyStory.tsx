@@ -2,7 +2,8 @@
 
 import { motion, useInView } from "framer-motion";
 import Image from "next/image";
-import { Building2, Award, Heart, Globe, Calendar, Sparkles, TrendingUp, Shield } from "lucide-react";
+import { Building2, Award, Heart, Globe, Sparkles, TrendingUp, Shield } from "lucide-react";
+import { SafeCalendar as Calendar } from "@/components/ui/safe-icons";
 import { useRef, useState } from "react";
 
 export default function CompanyStory() {

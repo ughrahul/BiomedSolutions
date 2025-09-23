@@ -1,7 +1,12 @@
+"use client";
+
 import Link from "next/link";
 import { ArrowRight, Phone, Mail } from "lucide-react";
+import { useWebsiteSettings } from "@/hooks/useWebsiteSettings";
 
 export default function CTASection() {
+  const { settings } = useWebsiteSettings();
+
   return (
     <section className="section-padding bg-gradient-to-br from-primary-600 via-primary-700 to-secondary-800">
       <div className="container-custom">
@@ -26,7 +31,7 @@ export default function CTASection() {
               <p className="text-secondary-200 text-sm">
                 Speak with our experts
               </p>
-              <p className="text-primary-300 font-medium">+1 (555) 123-4567</p>
+              <p className="text-primary-300 font-medium">{settings.contact.phone}</p>
             </div>
 
             <div className="glass rounded-xl p-6 text-center">
@@ -40,7 +45,7 @@ export default function CTASection() {
                 Get detailed information
               </p>
               <p className="text-primary-300 font-medium">
-                info@biomedsolutions.com
+                {settings.contact.email}
               </p>
             </div>
 

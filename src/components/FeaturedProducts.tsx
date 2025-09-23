@@ -31,28 +31,31 @@ export default function FeaturedProducts() {
 
   // Transform database data to Product type (same as ProductGrid)
   const transformProductData = (item: any): Product => ({
-    id: item.id,
-    name: item.name,
-    slug: item.name.toLowerCase().replace(/\s+/g, "-"),
+    id: item.id || "unknown",
+    name: item.name || "Unknown Product",
+    slug: (item.name || "unknown").toLowerCase().replace(/\s+/g, "-"),
     category: item.categories?.name || "Medical Equipment",
     category_id: item.category_id,
-    description: item.description,
+    description: item.description || "No description available",
     short_description:
-      item.short_description || item.description?.substring(0, 150) + "...",
-    full_description: item.description,
-    sku: item.sku,
+      item.short_description ||
+      (item.description
+        ? item.description.substring(0, 150) + "..."
+        : "No description available"),
+    full_description: item.description || "No description available",
+    sku: item.sku || "SKU-UNKNOWN",
     image_url: item.images?.[0] || "/assets/images/placeholder-product.svg",
     images: item.images?.map((url: string, index: number) => ({
-      id: `${item.id}-${index}`,
+      id: `${item.id || "unknown"}-${index}`,
       url,
-      alt: item.name,
+      alt: item.name || "Product",
       isPrimary: index === 0,
       order: index + 1,
     })) || [
       {
-        id: `${item.id}-placeholder`,
+        id: `${item.id || "unknown"}-placeholder`,
         url: "/assets/images/placeholder-product.svg",
-        alt: item.name,
+        alt: item.name || "Product",
         isPrimary: true,
         order: 1,
       },
@@ -67,15 +70,15 @@ export default function FeaturedProducts() {
         }))
       : [],
     benefits: [],
-    warranty: "1 year manufacturer warranty",
+    warranty: item.warranty || "1 year manufacturer warranty",
     certifications: ["CE Marked", "FDA Approved"],
-    rating: 4.5,
-    review_count: Math.floor(Math.random() * 50) + 10,
+    rating: typeof item.rating === "number" ? item.rating : 0,
+    review_count: typeof item.review_count === "number" ? item.review_count : 0,
     tags: item.features?.slice(0, 3) || [],
-    is_active: item.is_active,
-    is_featured: item.is_featured,
-    created_at: item.created_at,
-    updated_at: item.updated_at,
+    is_active: item.is_active ?? true,
+    is_featured: item.is_featured ?? false,
+    created_at: item.created_at || new Date().toISOString(),
+    updated_at: item.updated_at || new Date().toISOString(),
   });
 
   // Track window width for responsive design
@@ -545,6 +548,8 @@ export default function FeaturedProducts() {
           <div className="overflow-hidden">
             <motion.div
               className="flex gap-4 sm:gap-6 lg:gap-8"
+              onMouseEnter={() => setIsAutoPlaying(false)}
+              onMouseLeave={() => setIsAutoPlaying(true)}
               animate={{
                 x: isAutoPlaying
                   ? [

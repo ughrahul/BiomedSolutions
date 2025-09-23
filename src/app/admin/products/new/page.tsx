@@ -396,24 +396,24 @@ export default function NewProductPage() {
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
-        className="flex items-center justify-between bg-white rounded-2xl p-6 border border-gray-200 shadow-sm mt-4"
+        className="flex flex-col sm:flex-row sm:items-center sm:justify-between bg-white rounded-2xl p-4 sm:p-6 border border-gray-200 shadow-sm mt-4 gap-4"
       >
-        <div className="flex items-center gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
           <Link href="/admin/products">
             <Button
               variant="ghost"
               size="sm"
-              className="text-yellow-700 hover:bg-yellow-50 border border-yellow-200 hover:border-yellow-300"
+              className="text-yellow-700 hover:bg-yellow-50 border border-yellow-200 hover:border-yellow-300 w-full sm:w-auto"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Products
             </Button>
           </Link>
-          <div>
-            <h1 className="text-4xl font-bold text-gray-900 mb-2">
+          <div className="text-center sm:text-left">
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-gray-900 mb-2">
               Add New Product
             </h1>
-            <p className="text-gray-600">
+            <p className="text-sm sm:text-base text-gray-600">
               Create a comprehensive medical equipment product listing
             </p>
           </div>
@@ -428,21 +428,21 @@ export default function NewProductPage() {
           transition={{ duration: 0.5, delay: 0.1 }}
         >
           <Card className="bg-white border border-gray-200 shadow-sm hover:shadow-md transition-all duration-300">
-            <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-lg border-b border-gray-100">
-              <CardTitle className="text-2xl font-bold text-gray-900 flex items-center gap-3">
-                <div className="w-8 h-8 bg-blue-500 rounded-lg flex items-center justify-center">
-                  <Package className="w-5 h-5 text-white" />
+            <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-t-lg border-b border-gray-100 p-4 sm:p-6">
+              <CardTitle className="text-xl sm:text-2xl font-bold text-gray-900 flex flex-col sm:flex-row sm:items-center gap-3">
+                <div className="w-6 h-6 sm:w-8 sm:h-8 bg-blue-500 rounded-lg flex items-center justify-center">
+                  <Package className="w-3 h-3 sm:w-5 sm:h-5 text-white" />
                 </div>
-                Basic Information
+                <span>Basic Information</span>
               </CardTitle>
-              <CardDescription className="text-gray-600 text-lg">
+              <CardDescription className="text-gray-600 text-base sm:text-lg">
                 Enter the essential details of your medical equipment product
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6 p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6">
                 <div className="space-y-2">
-                  <label className="block text-lg font-bold text-gray-900">
+                  <label className="block text-base sm:text-lg font-bold text-gray-900">
                     Product Name <span className="text-red-500">*</span>
                   </label>
                   <input
@@ -452,7 +452,7 @@ export default function NewProductPage() {
                     placeholder="Enter product name"
                     value={formData.name}
                     onChange={(e) => handleInputChange("name", e.target.value)}
-                    className={`w-full h-14 rounded-xl border-2 bg-white px-4 text-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-4 transition-all duration-300 ${
+                    className={`w-full h-12 sm:h-14 rounded-xl border-2 bg-white px-3 sm:px-4 text-base sm:text-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-4 transition-all duration-300 ${
                       errors.name
                         ? "border-red-500 focus:ring-red-500/30"
                         : "border-gray-200 focus:border-blue-400 focus:ring-blue-500/30"
@@ -467,7 +467,7 @@ export default function NewProductPage() {
                   )}
                 </div>
                 <div className="space-y-2">
-                  <label className="block text-lg font-bold text-gray-900">
+                  <label className="block text-base sm:text-lg font-bold text-gray-900">
                     Category <span className="text-red-500">*</span>
                   </label>
                   <select
@@ -477,7 +477,7 @@ export default function NewProductPage() {
                     onChange={(e) =>
                       handleInputChange("category_id", e.target.value)
                     }
-                    className={`h-14 w-full rounded-xl border-2 bg-white px-4 text-lg text-gray-900 focus:outline-none focus:ring-4 transition-all duration-300 ${
+                    className={`h-12 sm:h-14 w-full rounded-xl border-2 bg-white px-3 sm:px-4 text-base sm:text-lg text-gray-900 focus:outline-none focus:ring-4 transition-all duration-300 ${
                       errors.category_id
                         ? "border-red-500 focus:ring-red-500/30"
                         : "border-gray-200 focus:border-blue-400 focus:ring-blue-500/30"
@@ -507,7 +507,7 @@ export default function NewProductPage() {
               </div>
 
               <div className="space-y-2">
-                <label className="block text-lg font-bold text-gray-900">
+                <label className="block text-base sm:text-lg font-bold text-gray-900">
                   SKU (Stock Keeping Unit){" "}
                   <span className="text-red-500">*</span>
                 </label>
@@ -518,19 +518,36 @@ export default function NewProductPage() {
                   placeholder="Auto-generated SKU"
                   value={formData.sku}
                   onChange={(e) => handleInputChange("sku", e.target.value)}
-                  className={`w-full h-14 rounded-xl border-2 bg-gray-50 px-4 text-lg text-gray-700 placeholder-gray-500 focus:outline-none focus:ring-4 transition-all duration-300 ${
+                  className={`w-full h-12 sm:h-14 rounded-xl border-2 px-3 sm:px-4 text-base sm:text-lg text-gray-700 placeholder-gray-500 focus:outline-none focus:ring-4 transition-all duration-300 ${
                     errors.sku
                       ? "border-red-500 focus:ring-red-500/30"
                       : "border-gray-200 focus:border-blue-400 focus:ring-blue-500/30"
                   }`}
                   required
-                  readOnly
                   autoComplete="off"
                 />
-                <p className="text-sm text-gray-600">
-                  SKU is automatically generated based on product name and
-                  category
-                </p>
+                <div className="flex items-center justify-between">
+                  <p className="text-sm text-gray-600">
+                    SKU is automatically generated based on product name and category
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (formData.name && formData.category_id) {
+                        const category = categories.find(c => c.id === formData.category_id);
+                        if (category) {
+                          const autoSKU = generateSKU(formData.name, category.slug);
+                          handleInputChange("sku", autoSKU);
+                        }
+                      } else {
+                        toast.error("Please enter product name and select category first");
+                      }
+                    }}
+                    className="text-sm text-blue-600 hover:text-blue-700 font-medium underline hover:no-underline transition-all duration-200"
+                  >
+                    Generate SKU
+                  </button>
+                </div>
                 {errors.sku && (
                   <p className="text-red-500 font-medium text-sm">
                     {errors.sku}
@@ -539,7 +556,7 @@ export default function NewProductPage() {
               </div>
 
               <div className="space-y-2">
-                <label className="block text-lg font-bold text-gray-900">
+                <label className="block text-base sm:text-lg font-bold text-gray-900">
                   Short Description
                 </label>
                 <textarea
@@ -550,14 +567,14 @@ export default function NewProductPage() {
                   onChange={(e) =>
                     handleInputChange("short_description", e.target.value)
                   }
-                  className="w-full h-24 rounded-xl border-2 border-gray-200 bg-white px-4 py-3 text-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-4 focus:border-blue-400 focus:ring-blue-500/30 transition-all duration-300 resize-none"
+                  className="w-full h-20 sm:h-24 rounded-xl border-2 border-gray-200 bg-white px-3 sm:px-4 py-2 sm:py-3 text-base sm:text-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-4 focus:border-blue-400 focus:ring-blue-500/30 transition-all duration-300 resize-none"
                   maxLength={500}
                   autoComplete="off"
                 />
               </div>
 
               <div className="space-y-2">
-                <label className="block text-lg font-bold text-gray-900">
+                <label className="block text-base sm:text-lg font-bold text-gray-900">
                   Description <span className="text-red-500">*</span>
                 </label>
                 <textarea
@@ -568,7 +585,7 @@ export default function NewProductPage() {
                   onChange={(e) =>
                     handleInputChange("description", e.target.value)
                   }
-                  className={`w-full h-32 rounded-xl border-2 bg-white px-4 py-3 text-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-4 transition-all duration-300 resize-none ${
+                  className={`w-full h-28 sm:h-32 rounded-xl border-2 bg-white px-3 sm:px-4 py-2 sm:py-3 text-base sm:text-lg text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-4 transition-all duration-300 resize-none ${
                     errors.description
                       ? "border-red-500 focus:ring-red-500/30"
                       : "border-gray-200 focus:border-blue-400 focus:ring-blue-500/30"
@@ -628,7 +645,7 @@ export default function NewProductPage() {
               </div>
 
               {formData.images.length > 0 && (
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
                   {formData.images.map((image, index) => (
                     <div key={index} className="relative group">
                       <Image
@@ -636,14 +653,14 @@ export default function NewProductPage() {
                         alt={`Product ${index + 1}`}
                         width={128}
                         height={128}
-                        className="w-full h-32 object-cover rounded-lg border border-gray-200"
+                        className="w-full h-24 sm:h-32 object-cover rounded-lg border border-gray-200"
                       />
                       <button
                         type="button"
                         onClick={() => removeImage(index)}
-                        className="absolute top-2 right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                        className="absolute top-1 right-1 sm:top-2 sm:right-2 w-5 h-5 sm:w-6 sm:h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                       >
-                        <X className="w-4 h-4" />
+                        <X className="w-3 h-3 sm:w-4 sm:h-4" />
                       </button>
                     </div>
                   ))}
@@ -723,7 +740,7 @@ export default function NewProductPage() {
                 <h4 className="text-lg font-medium text-gray-900 mb-4">
                   Specifications
                 </h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-2 mb-4">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-2 mb-4">
                   <input
                     type="text"
                     id="spec-name"
@@ -993,7 +1010,7 @@ export default function NewProductPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6 p-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                 <div>
                   <label className="block text-lg font-bold text-gray-900 mb-2">
                     Rating (1-5)
@@ -1070,7 +1087,7 @@ export default function NewProductPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6 p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {/* Active Status */}
                 <div className="space-y-4">
                   <label className="block text-lg font-bold text-gray-900">
@@ -1200,12 +1217,12 @@ export default function NewProductPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.6 }}
-          className="flex justify-center gap-6 pt-8"
+          className="flex flex-col sm:flex-row justify-center gap-4 sm:gap-6 pt-8"
         >
-          <Link href="/admin/products">
+          <Link href="/admin/products" className="w-full sm:w-auto">
             <button
               type="button"
-              className="px-8 py-4 bg-white border-2 border-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all duration-300 text-lg shadow-sm"
+              className="w-full sm:w-auto px-6 sm:px-8 py-3 sm:py-4 bg-white border-2 border-gray-200 text-gray-700 font-bold rounded-xl hover:bg-gray-50 hover:border-gray-300 transition-all duration-300 text-base sm:text-lg shadow-sm"
             >
               Cancel
             </button>
@@ -1213,19 +1230,19 @@ export default function NewProductPage() {
           <button
             type="submit"
             disabled={isLoading}
-            className={`px-12 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 text-lg shadow-lg hover:shadow-xl transform hover:scale-105 ${
+            className={`w-full sm:w-auto px-6 sm:px-12 py-3 sm:py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold rounded-xl hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 text-base sm:text-lg shadow-lg hover:shadow-xl transform hover:scale-105 ${
               isLoading ? "opacity-50 cursor-not-allowed" : ""
             }`}
           >
             {isLoading ? (
-              <div className="flex items-center gap-3">
-                <div className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
-                Creating Product...
+              <div className="flex items-center justify-center gap-2 sm:gap-3">
+                <div className="w-4 h-4 sm:w-5 sm:h-5 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+                <span className="text-sm sm:text-base">Creating Product...</span>
               </div>
             ) : (
-              <div className="flex items-center gap-3">
-                <Save className="w-5 h-5" />
-                Create Product
+              <div className="flex items-center justify-center gap-2 sm:gap-3">
+                <Save className="w-4 h-4 sm:w-5 sm:h-5" />
+                <span className="text-sm sm:text-base">Create Product</span>
               </div>
             )}
           </button>

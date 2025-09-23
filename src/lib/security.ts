@@ -51,89 +51,7 @@ export function validatePassword(password: string): {
   };
 }
 
-export function validateProductData(data: any): {
-  isValid: boolean;
-  errors: string[];
-} {
-  const errors: string[] = [];
 
-  // Required fields
-  if (
-    !data.name ||
-    typeof data.name !== "string" ||
-    data.name.trim().length === 0
-  ) {
-    errors.push("Product name is required");
-  } else if (data.name.length > 255) {
-    errors.push("Product name must be less than 255 characters");
-  }
-
-  if (
-    !data.description ||
-    typeof data.description !== "string" ||
-    data.description.trim().length === 0
-  ) {
-    errors.push("Product description is required");
-  } else if (data.description.length > 5000) {
-    errors.push("Product description must be less than 5000 characters");
-  }
-
-  if (!data.price || typeof data.price !== "number" || data.price <= 0) {
-    errors.push("Product price must be a positive number");
-  } else if (data.price > 1000000) {
-    errors.push("Product price cannot exceed $1,000,000");
-  }
-
-  if (
-    !data.sku ||
-    typeof data.sku !== "string" ||
-    data.sku.trim().length === 0
-  ) {
-    errors.push("Product SKU is required");
-  } else if (!/^[A-Z0-9-_]+$/i.test(data.sku)) {
-    errors.push(
-      "Product SKU can only contain letters, numbers, hyphens, and underscores"
-    );
-  }
-
-  if (typeof data.stock_quantity !== "number" || data.stock_quantity < 0) {
-    errors.push("Stock quantity must be a non-negative number");
-  }
-
-  if (!data.category_id || typeof data.category_id !== "string") {
-    errors.push("Product category is required");
-  }
-
-  // Optional fields validation
-  if (data.sale_price !== null && data.sale_price !== undefined) {
-    if (typeof data.sale_price !== "number" || data.sale_price <= 0) {
-      errors.push("Sale price must be a positive number");
-    } else if (data.sale_price >= data.price) {
-      errors.push("Sale price must be less than regular price");
-    }
-  }
-
-  if (data.short_description && data.short_description.length > 500) {
-    errors.push("Short description must be less than 500 characters");
-  }
-
-  if (data.features && Array.isArray(data.features)) {
-    if (data.features.length > 20) {
-      errors.push("Maximum 20 features allowed");
-    }
-    for (const feature of data.features) {
-      if (typeof feature !== "string" || feature.length > 255) {
-        errors.push("Each feature must be a string less than 255 characters");
-        break;
-      }
-    }
-  }
-
-  return {
-    isValid: errors.length === 0,
-    errors,
-  };
-}
 
 // CSRF Protection
 export function generateCSRFToken(): string {
@@ -218,22 +136,7 @@ export function validateFileUpload(
   return { isValid: true };
 }
 
-// SQL injection prevention helpers
-export function escapeString(str: string): string {
-  return str.replace(/'/g, "''").replace(/\\/g, "\\\\");
-}
 
-// XSS prevention
-export function escapeHtml(text: string): string {
-  const map: Record<string, string> = {
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': "&quot;",
-    "'": "&#39;",
-  };
-  return text.replace(/[&<>"']/g, (m) => map[m]);
-}
 
 // Secure headers for API responses
 export const securityHeaders = {
@@ -245,52 +148,7 @@ export const securityHeaders = {
   "Permissions-Policy": "camera=(), microphone=(), geolocation=()",
 };
 
-// Hash sensitive data
-export function hashSensitiveData(data: string, salt?: string): string {
-  const actualSalt = salt || crypto.randomBytes(16).toString("hex");
-  const hash = crypto.pbkdf2Sync(data, actualSalt, 10000, 64, "sha512");
-  return `${actualSalt}:${hash.toString("hex")}`;
-}
 
-export function verifySensitiveData(data: string, hashedData: string): boolean {
-  const [salt, hash] = hashedData.split(":");
-  const verifyHash = crypto.pbkdf2Sync(data, salt, 10000, 64, "sha512");
-  return hash === verifyHash.toString("hex");
-}
-
-// Generate secure random strings
-export function generateSecureRandomString(length: number = 32): string {
-  return crypto
-    .randomBytes(Math.ceil(length / 2))
-    .toString("hex")
-    .slice(0, length);
-}
-
-// Validate UUIDs
-export function isValidUUID(uuid: string): boolean {
-  const uuidRegex =
-    /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
-  return uuidRegex.test(uuid);
-}
-
-// Audit logging
-export interface AuditLog {
-  userId?: string;
-  action: string;
-  resource: string;
-  resourceId?: string;
-  metadata?: Record<string, any>;
-  ipAddress?: string;
-  userAgent?: string;
-  timestamp: Date;
-}
-
-export function createAuditLog(log: Omit<AuditLog, "timestamp">): AuditLog {
-  return {
-    ...log,
-    timestamp: new Date(),
-  };
-}
 
 // Content Security Policy
 export const contentSecurityPolicy = {

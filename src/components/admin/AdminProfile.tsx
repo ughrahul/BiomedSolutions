@@ -74,7 +74,7 @@ export default function AdminProfile({ className = "" }: AdminProfileProps) {
       avatar_url: profile.avatar_url,
     },
     company: {
-      name: "Biomed Solutions",
+      name: "Biomed Solution",
       email: "info@annapurnahospitals.com",
       phone: "+977-980-120-335",
       website: "https://annapurnahospitals.com",

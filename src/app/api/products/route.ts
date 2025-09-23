@@ -22,7 +22,6 @@ export async function GET(request: NextRequest) {
         categories(name, slug)
       `
       )
-      .eq("is_active", true)
       .order("created_at", { ascending: false });
 
     if (error) {

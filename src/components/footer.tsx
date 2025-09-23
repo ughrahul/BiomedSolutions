@@ -144,33 +144,7 @@ export default function Footer() {
             />
           ))}
 
-          {/* Comet-like Objects */}
-          {Array.from({ length: 3 }).map((_, i) => (
-            <motion.div
-              key={`comet-${i}`}
-              className="absolute w-3 h-3 bg-gradient-to-r from-white via-blue-200 to-transparent rounded-full"
-              style={{
-                filter: 'blur(1px)',
-              }}
-              initial={{
-                x: -50,
-                y: 200 + i * 200,
-                opacity: 0,
-              }}
-              animate={{
-                x: [null, 1300],
-                y: [null, 280 + i * 200],
-                opacity: [0, 0.8, 0.8, 0],
-                rotate: [0, 180],
-              }}
-              transition={{
-                duration: 8,
-                repeat: Infinity,
-                delay: i * 10 + 5,
-                ease: "linear",
-              }}
-            />
-          ))}
+
         </div>
       )}
 
@@ -237,7 +211,7 @@ export default function Footer() {
                 <div className="w-14 h-14 bg-gradient-to-br from-cyan-400/20 to-blue-500/20 rounded-xl backdrop-blur-sm border border-white/20 flex items-center justify-center">
                   <Image
                     src="/assets/images/logo.png"
-                    alt="Biomed Solutions"
+                    alt="Biomed Solution"
                     width={40}
                     height={40}
                     className="w-10 h-10 object-contain filter drop-shadow-md"
@@ -246,7 +220,7 @@ export default function Footer() {
                 </div>
                 <div>
                   <h3 className="text-2xl font-bold text-white">
-                    Biomed Solutions
+                    Biomed Solution
                   </h3>
                   <p className="text-cyan-300 text-sm">
                     For You, We Innovate
@@ -382,7 +356,7 @@ export default function Footer() {
               <p className="text-gray-400 text-sm">
                 © {currentYear}{" "}
                 <span className="text-cyan-400 font-medium">
-                  Biomed Solutions
+                  Biomed Solution
                 </span>
                 . All rights reserved.
               </p>
@@ -435,7 +409,7 @@ export default function Footer() {
                 </div>
                 <div className="text-sm">
                   <div className="text-white font-semibold mb-1 bg-gradient-to-r from-cyan-300 to-purple-300 bg-clip-text text-transparent">
-                    Crafted with Excellence
+                    Er. Rahul Kumar Mandal
                   </div>
                   <div className="text-xs text-gray-400 mb-2">Full-Stack Developer & UI/UX Designer</div>
                   <div className="flex items-center space-x-3 text-gray-400">
@@ -494,7 +468,7 @@ export default function Footer() {
                   <Palette className="w-5 h-5 text-pink-400" />
                 </motion.div>
                 <span className="text-sm font-medium bg-gradient-to-r from-cyan-300 to-purple-300 bg-clip-text text-transparent">
-                  Crafted with Excellence
+                  Er. Rahul Kumar Mandal
                 </span>
               </div>
               <div className="text-xs text-gray-400 mb-2">Full-Stack Developer & UI/UX Designer</div>

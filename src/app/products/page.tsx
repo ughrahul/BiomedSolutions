@@ -3,12 +3,11 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, useScroll, useTransform } from "framer-motion";
 import ProductGrid from "@/components/ProductGrid";
-import { Search, Grid, List, Sparkles, Shield, Zap, Heart, Award, ChevronDown } from "lucide-react";
+import { Search, Sparkles, Shield, Zap, Heart, Award, ChevronDown } from "lucide-react";
 import { EnhancedInput } from "@/components/ui/enhanced-input";
 
 export default function ProductsPage() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [viewMode, setViewMode] = useState<"grid" | "list">("grid");
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [isMobile, setIsMobile] = useState(false);
   
@@ -182,7 +181,7 @@ export default function ProductsPage() {
               transition={{ duration: 0.6, delay: 0.4 }}
               className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 md:gap-6 max-w-4xl mx-auto mb-6 sm:mb-8 px-4 sm:px-0 w-full"
             >
-              <div className="relative flex-1 w-full">
+              <div className="relative w-full max-w-2xl mx-auto">
                 <Search className="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-cyan-400 w-4 h-4 sm:w-5 sm:h-5" />
                 <EnhancedInput
                   type="text"
@@ -191,33 +190,6 @@ export default function ProductsPage() {
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-3 sm:py-4 bg-white/10 backdrop-blur-sm border-2 border-cyan-300/30 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 text-white placeholder-gray-300 text-sm sm:text-base min-h-[48px] touch-manipulation"
                 />
-              </div>
-              
-              <div className="flex bg-white/10 backdrop-blur-sm border-2 border-cyan-300/30 rounded-lg sm:rounded-xl p-1">
-                <motion.button
-                  onClick={() => setViewMode("grid")}
-                  className={`p-2 sm:p-3 rounded-md sm:rounded-lg transition-all duration-200 min-h-[44px] min-w-[44px] sm:min-h-auto sm:min-w-auto touch-manipulation ${
-                    viewMode === "grid"
-                      ? "bg-cyan-500 text-white shadow-lg"
-                      : "text-cyan-300 hover:text-white hover:bg-cyan-500/20"
-                  }`}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <Grid className="w-4 h-4 sm:w-5 sm:h-5" />
-                </motion.button>
-                <motion.button
-                  onClick={() => setViewMode("list")}
-                  className={`p-2 sm:p-3 rounded-md sm:rounded-lg transition-all duration-200 min-h-[44px] min-w-[44px] sm:min-h-auto sm:min-w-auto touch-manipulation ${
-                    viewMode === "list"
-                      ? "bg-cyan-500 text-white shadow-lg"
-                      : "text-cyan-300 hover:text-white hover:bg-cyan-500/20"
-                  }`}
-                  whileHover={{ scale: 1.05 }}
-                  whileTap={{ scale: 0.95 }}
-                >
-                  <List className="w-4 h-4 sm:w-5 sm:h-5" />
-                </motion.button>
               </div>
             </motion.div>
 
@@ -351,7 +323,6 @@ export default function ProductsPage() {
       {/* Products Grid with Compact Spacing */}
       <div id="products-grid">
         <ProductGrid
-          viewMode={viewMode}
           searchQuery={searchQuery}
           selectedCategory=""
         />

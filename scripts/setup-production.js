@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 /**
- * Production Setup Script for Biomed Solutions
+ * Production Setup Script for Biomed Solution
  * Helps set up environment and database for production deployment
  */
 
@@ -21,7 +21,7 @@ function question(prompt) {
 }
 
 async function setupProduction() {
-  console.log('🚀 Biomed Solutions - Production Setup\n');
+  console.log('🚀 Biomed Solution - Production Setup\n');
   console.log('This script will help you set up your production environment.\n');
 
   // Check if user has existing credentials
@@ -54,7 +54,7 @@ async function setupProduction() {
   );
 
   // Create production environment file
-  const envContent = `# Biomed Solutions - Production Environment Configuration
+  const envContent = `# Biomed Solution - Production Environment Configuration
 # Generated automatically
 
 # Supabase Configuration
@@ -64,7 +64,7 @@ SUPABASE_SERVICE_ROLE_KEY=${supabaseServiceKey}
 
 # Application Configuration
 NEXT_PUBLIC_DATABASE_MODE=full
-NEXT_PUBLIC_APP_NAME="Biomed Solutions"
+NEXT_PUBLIC_APP_NAME="Biomed Solution"
 NEXT_PUBLIC_DISABLE_DEMO_BANNER=true
 
 # Real-time Features
