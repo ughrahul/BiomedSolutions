@@ -117,10 +117,13 @@ export default function RootLayout({
           crossOrigin="anonymous"
         />
 
+        <meta name="application-name" content="Biomed Solution" />
+        <meta name="apple-mobile-web-app-title" content="Biomed Solution" />
+
         <Script
           id="organization-schema"
           type="application/ld+json"
-          strategy="afterInteractive"
+          strategy="beforeInteractive"
           dangerouslySetInnerHTML={{
             __html: JSON.stringify({
               "@context": "https://schema.org",
@@ -143,6 +146,19 @@ export default function RootLayout({
                 "https://www.facebook.com/biomedsolution",
                 "https://www.linkedin.com/company/biomed-solution"
               ],
+            }),
+          }}
+        />
+        <Script
+          id="website-schema"
+          type="application/ld+json"
+          strategy="beforeInteractive"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "WebSite",
+              url: "https://biomedsolution.com.np",
+              name: "Biomed Solution",
             }),
           }}
         />
