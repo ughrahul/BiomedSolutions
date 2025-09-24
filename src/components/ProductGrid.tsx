@@ -69,7 +69,7 @@ export default function ProductGrid({
         let anchorEl: HTMLElement | null = null;
         let bestTop = Number.POSITIVE_INFINITY;
         if (cards && cards.length) {
-          cards.forEach((el) => {
+          for (const el of Array.from(cards)) {
             const rect = el.getBoundingClientRect();
             if (rect.bottom > 0 && rect.top < window.innerHeight) {
               const distanceFromTop = Math.abs(rect.top);
@@ -78,7 +78,7 @@ export default function ProductGrid({
                 anchorEl = el;
               }
             }
-          });
+          }
         }
         if (anchorEl) {
           const rect = anchorEl.getBoundingClientRect();
