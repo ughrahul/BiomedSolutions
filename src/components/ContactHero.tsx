@@ -61,13 +61,7 @@ export default function ContactHero() {
     { icon: Send, delay: 2.5, position: "top-1/3 right-10" },
   ]), []);
 
-  if (loading) {
-    return (
-      <section className="relative h-[60vh] md:h-[70vh] bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 overflow-hidden flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-cyan-400"></div>
-      </section>
-    );
-  }
+  // Always render immediately using default settings; avoid any loading gate for instant paint
 
   const contactMethods = [
     {
