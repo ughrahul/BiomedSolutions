@@ -628,7 +628,7 @@ export default function FeaturedProducts() {
                       {/* Quick Actions */}
                       <div className="absolute top-2 sm:top-3 right-2 sm:right-3 flex flex-col gap-1 sm:gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
                         <Link
-                          href={`/products/${product.id}`}
+                          href={`/products/${product.slug || product.name.toLowerCase().replace(/\s+/g, "-")}`}
                           className="p-1.5 sm:p-2 bg-white rounded-full shadow-lg hover:bg-emerald-50 transition-colors"
                         >
                           <Eye className="w-3 h-3 sm:w-4 sm:h-4 text-emerald-600" />
@@ -673,7 +673,7 @@ export default function FeaturedProducts() {
                     {/* CTA Button - Fixed at bottom */}
                     <div className="mt-auto pt-3 sm:pt-4">
                       <Link
-                        href={`/products/${product.id}`}
+                        href={`/products/${product.slug || product.name.toLowerCase().replace(/\s+/g, "-")}`}
                         className="block w-full"
                       >
                         <motion.button

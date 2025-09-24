@@ -10,6 +10,34 @@ export default function ProductsPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [isMobile, setIsMobile] = useState(false);
+  const restoredRef = useRef(false);
+  // Preload saved state synchronously before first render
+  const [savedState] = useState(() => {
+    if (typeof window === 'undefined') {
+      return { page: 1, anchor: null as null | { id: string | null; delta: number }, y: null as null | number };
+    }
+    let page = 1;
+    let anchor: null | { id: string | null; delta: number } = null;
+    let y: null | number = null;
+    try {
+      const pageRaw = sessionStorage.getItem('productsPage');
+      if (pageRaw) {
+        const p = parseInt(pageRaw, 10);
+        if (!Number.isNaN(p) && p > 0) page = p;
+      }
+      const anchorRaw = sessionStorage.getItem('productsAnchor');
+      if (anchorRaw) {
+        const parsed = JSON.parse(anchorRaw);
+        if (parsed && (typeof parsed.id === 'string' || parsed.id === null) && typeof parsed.delta === 'number') {
+          anchor = { id: parsed.id, delta: parsed.delta };
+        }
+      } else {
+        const yRaw = sessionStorage.getItem('productsScrollY');
+        if (yRaw !== null) y = Number(yRaw);
+      }
+    } catch {}
+    return { page, anchor, y };
+  });
   
   const ref = useRef(null);
   const { scrollYProgress } = useScroll({
@@ -20,6 +48,13 @@ export default function ProductsPage() {
   const y = useTransform(scrollYProgress, [0, 1], ["0%", "20%"]);
 
   useEffect(() => {
+    // Ensure browser doesn't auto-handle scroll, we'll manage it
+    if (typeof window !== 'undefined' && 'scrollRestoration' in history) {
+      try {
+        (history as any).scrollRestoration = 'manual';
+      } catch {}
+    }
+
     const handleMouseMove = (e: MouseEvent) => {
       setMousePosition({ x: e.clientX, y: e.clientY });
     };
@@ -41,6 +76,49 @@ export default function ProductsPage() {
       }
     };
   }, []);
+
+  // Called by ProductGrid after it renders; perform scroll restore here
+  const handleGridRendered = () => {
+    if (restoredRef.current) return;
+    if (typeof window === 'undefined') return;
+    const tryAnchor = () => {
+      const anchor = savedState.anchor;
+      if (!anchor) return false;
+      // If we have a specific product id, try to find it first. Otherwise use first visible.
+      let targetEl: HTMLElement | null = null;
+      if (anchor.id) {
+        targetEl = document.querySelector(`[data-product-id="${anchor.id}"]`) as HTMLElement | null;
+      }
+      if (!targetEl) {
+        // fallback: first product in grid
+        targetEl = document.querySelector('[data-product-id]') as HTMLElement | null;
+      }
+      if (!targetEl) return false;
+      const rect = targetEl.getBoundingClientRect();
+      const currentTopOfElRelativeToViewport = rect.top;
+      const currentScrollY = window.scrollY;
+      const desiredTop = currentScrollY + currentTopOfElRelativeToViewport + anchor.delta;
+      window.scrollTo({ top: desiredTop, behavior: 'auto' });
+      return true;
+    };
+
+    const didAnchor = tryAnchor();
+    if (!didAnchor) {
+      const targetY = savedState.y;
+      if (targetY !== null) {
+        requestAnimationFrame(() => {
+          setTimeout(() => {
+            window.scrollTo({ top: targetY, behavior: 'auto' });
+          }, 30);
+        });
+      }
+    }
+    // Clear stored values
+    sessionStorage.removeItem('productsAnchor');
+    sessionStorage.removeItem('productsScrollY');
+    sessionStorage.removeItem('productsPage');
+    restoredRef.current = true;
+  };
 
   const floatingIcons = [
     { icon: Sparkles, delay: 0, position: "top-20 left-20" },
@@ -325,6 +403,8 @@ export default function ProductsPage() {
         <ProductGrid
           searchQuery={searchQuery}
           selectedCategory=""
+          initialPage={savedState.page}
+          onRendered={handleGridRendered}
         />
       </div>
     </div>

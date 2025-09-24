@@ -21,7 +21,7 @@ export default function ProductDetailPage() {
   const [error, setError] = useState<string | null>(null);
   const [isLowPerformance, setIsLowPerformance] = useState(false);
 
-  const productId = params.id as string;
+  const productParam = params.id as string;
   const supabase = createClientSupabase();
 
   const fetchProduct = useCallback(async () => {
@@ -33,52 +33,97 @@ export default function ProductDetailPage() {
         throw new Error("Database connection not available");
       }
 
-      const { data, error: supabaseError } = await supabase
-        .from("products")
-        .select(
-          `
+      const isUuid = (value: string) =>
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+          value
+        );
+      const slugify = (value: string) =>
+        String(value)
+          .toLowerCase()
+          .trim()
+          .replace(/[^a-z0-9\s-]/g, "")
+          .replace(/\s+/g, "-")
+          .replace(/-+/g, "-");
+
+      let data: any = null;
+      if (isUuid(productParam)) {
+        const { data: byId, error: supabaseError } = await supabase
+          .from("products")
+          .select(
+            `
           *,
           categories(name, slug)
         `
-        )
-        .eq("id", productId)
-        .eq("is_active", true)
-        .single();
+          )
+          .eq("id", productParam)
+          .eq("is_active", true)
+          .single();
 
-      if (supabaseError) {
-        if (supabaseError.code === "PGRST116") {
+        if (supabaseError) {
+          if ((supabaseError as any).code === "PGRST116") {
+            notFound();
+            return;
+          }
+          throw supabaseError;
+        }
+        data = byId;
+      } else {
+        // Treat param as slug (product name in URL)
+        const decoded = decodeURIComponent(productParam);
+        const candidateWithSpaces = decoded.replace(/-/g, " ");
+        const { data: list, error: listError } = await supabase
+          .from("products")
+          .select(
+            `
+          *,
+          categories(name, slug)
+        `
+          )
+          .eq("is_active", true)
+          .or(
+            `name.ilike.%${candidateWithSpaces}%,name.ilike.%${decoded}%`
+          );
+
+        if (listError) {
+          throw listError;
+        }
+
+        const exact = (list || []).find(
+          (p: any) => slugify(p.name) === slugify(decoded)
+        );
+        if (!exact) {
           notFound();
           return;
         }
-        throw supabaseError;
+        data = exact;
       }
 
-      // Transform the data to match our Product type
       const transformedProduct: Product = {
         id: data.id,
         name: data.name,
-        slug: data.name.toLowerCase().replace(/\s+/g, "-"),
+        slug: slugify(data.name),
         category: data.categories?.name || "Medical Equipment",
         category_id: data.category_id,
         description: data.description,
         short_description: data.short_description || data.description,
         full_description: data.description,
         sku: data.sku,
-        images: data.images?.map((url: string, index: number) => ({
-          id: `${data.id}-${index}`,
-          url,
-          alt: data.name,
-          isPrimary: index === 0,
-          order: index + 1,
-        })) || [
-          {
-            id: `${data.id}-placeholder`,
-            url: "/assets/images/placeholder-product.svg",
+        images:
+          data.images?.map((url: string, index: number) => ({
+            id: `${data.id}-${index}`,
+            url,
             alt: data.name,
-            isPrimary: true,
-            order: 1,
-          },
-        ],
+            isPrimary: index === 0,
+            order: index + 1,
+          })) || [
+            {
+              id: `${data.id}-placeholder`,
+              url: "/assets/images/placeholder-product.svg",
+              alt: data.name,
+              isPrimary: true,
+              order: 1,
+            },
+          ],
         features: data.features || [],
         specifications: Array.isArray(data.specifications)
           ? data.specifications
@@ -111,7 +156,7 @@ export default function ProductDetailPage() {
     } finally {
       setLoading(false);
     }
-  }, [productId, supabase]);
+  }, [productParam, supabase]);
 
   // Add this useEffect
   useEffect(() => {

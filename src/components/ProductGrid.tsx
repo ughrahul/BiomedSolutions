@@ -26,6 +26,8 @@ interface ProductGridProps {
   searchQuery?: string;
   selectedCategory?: string;
   sortBy?: string;
+  onRendered?: () => void;
+  initialPage?: number;
 }
 
 export default function ProductGrid({
@@ -33,6 +35,8 @@ export default function ProductGrid({
   searchQuery = "",
   selectedCategory = "",
   sortBy: initialSortBy = "featured",
+  onRendered,
+  initialPage = 1,
 }: ProductGridProps) {
   const { settings } = useWebsiteSettings();
   const [favorites, setFavorites] = useState<Set<string>>(() => {
@@ -49,8 +53,45 @@ export default function ProductGrid({
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState<Product[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(() => (initialPage && initialPage > 0 ? initialPage : 1));
   const itemsPerPage = 16; // Show 16 products per page
+  const gridRef = useRef<HTMLDivElement | null>(null);
+
+  const saveViewportAnchor = useCallback(() => {
+    try {
+      if (typeof window !== "undefined") {
+        // Persist current page for restoration
+        sessionStorage.setItem("productsPage", String(currentPage));
+        // Persist filters context (optional, future-proof)
+        sessionStorage.setItem("productsSearchQuery", String(searchQuery || ""));
+        sessionStorage.setItem("productsSelectedCategory", String(selectedCategory || ""));
+        const cards = gridRef.current?.querySelectorAll<HTMLElement>("[data-product-id]");
+        let anchorEl: HTMLElement | null = null;
+        let bestTop = Number.POSITIVE_INFINITY;
+        if (cards && cards.length) {
+          cards.forEach((el) => {
+            const rect = el.getBoundingClientRect();
+            if (rect.bottom > 0 && rect.top < window.innerHeight) {
+              const distanceFromTop = Math.abs(rect.top);
+              if (distanceFromTop < bestTop) {
+                bestTop = distanceFromTop;
+                anchorEl = el;
+              }
+            }
+          });
+        }
+        if (anchorEl) {
+          const rect = anchorEl.getBoundingClientRect();
+          const delta = -rect.top;
+          const productId = anchorEl.getAttribute("data-product-id");
+          const payload = { id: productId, delta };
+          sessionStorage.setItem("productsAnchor", JSON.stringify(payload));
+        } else {
+          sessionStorage.setItem("productsScrollY", String(window.scrollY));
+        }
+      }
+    } catch {}
+  }, [currentPage, searchQuery, selectedCategory]);
 
   // Transform database data to Product type
   const transformProductData = useCallback(
@@ -312,19 +353,46 @@ export default function ProductGrid({
   const endIndex = startIndex + itemsPerPage;
   const currentProducts = filteredProducts.slice(startIndex, endIndex);
 
-  // Reset to first page when filters change
+  // Reset to first page only when filters actually change (not on initial mount)
+  const prevFiltersRef = useRef<{ searchQuery: string; selectedCategory: string }>({ searchQuery, selectedCategory });
   useEffect(() => {
-    setCurrentPage(1);
+    const prev = prevFiltersRef.current;
+    if (prev.searchQuery !== searchQuery || prev.selectedCategory !== selectedCategory) {
+      setCurrentPage(1);
+    }
+    prevFiltersRef.current = { searchQuery, selectedCategory };
   }, [searchQuery, selectedCategory]);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
+    try {
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem("productsPage", String(page));
+      }
+    } catch {}
     // Smooth scroll to top of products section
     const productsSection = document.getElementById("products-grid");
     if (productsSection) {
       productsSection.scrollIntoView({ behavior: "smooth", block: "start" });
     }
   };
+
+  // Notify parent once the grid has rendered content (after data load and pagination)
+  useEffect(() => {
+    if (!loading) {
+      // Call once per render cycle with a small delay to allow layout to settle
+      const t1 = setTimeout(() => {
+        onRendered?.();
+      }, 0);
+      const t2 = setTimeout(() => {
+        onRendered?.();
+      }, 300);
+      return () => {
+        clearTimeout(t1);
+        clearTimeout(t2);
+      };
+    }
+  }, [loading, currentPage, totalItems, onRendered]);
 
   const toggleFavorite = (productId: string) => {
     setFavorites((prev) => {
@@ -568,7 +636,7 @@ export default function ProductGrid({
                       </div>
 
                       <div className="flex items-center gap-2 sm:gap-3">
-                        <Link href={`/products/${product.id}`}>
+                    <Link href={`/products/${product.slug || product.name.toLowerCase().replace(/\s+/g, "-")}`} onClick={saveViewportAnchor}>
                           <EnhancedButton
                             variant="outline"
                             size="sm"
@@ -668,9 +736,9 @@ export default function ProductGrid({
         )}
 
         {/* Products Grid */}
-        <div className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
+        <div ref={gridRef} className="grid grid-cols-1 xs:grid-cols-2 sm:grid-cols-2 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-2 sm:gap-3 md:gap-4">
           {currentProducts.map((product) => (
-            <motion.div key={product.id} variants={itemVariants}>
+            <motion.div key={product.id} variants={itemVariants} data-product-id={product.id}>
               <EnhancedCard
                 variant="medical"
                 hover="both"
@@ -716,7 +784,7 @@ export default function ProductGrid({
                     >
                       <Heart className="w-3 h-3 sm:w-4 sm:h-4" />
                     </button>
-                    <Link href={`/products/${product.id}`}>
+                    <Link href={`/products/${product.slug || product.name.toLowerCase().replace(/\s+/g, "-")}`} onClick={saveViewportAnchor}>
                       <button className="p-1.5 sm:p-2 bg-white/80 backdrop-blur-sm rounded-full shadow-lg hover:bg-white transition-colors touch-manipulation">
                         <Eye className="w-3 h-3 sm:w-4 sm:h-4 text-gray-700" />
                       </button>
@@ -756,7 +824,7 @@ export default function ProductGrid({
                       <div className="text-xs text-gray-500">Available</div>
                     </div>
 
-                    <Link href={`/products/${product.id}`} className="block">
+                    <Link href={`/products/${product.slug || product.name.toLowerCase().replace(/\s+/g, "-")}`} className="block" onClick={saveViewportAnchor}>
                       <EnhancedButton
                         variant="primary"
                         size="sm"
