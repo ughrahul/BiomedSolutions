@@ -35,6 +35,7 @@ import styles from "./login.module.css";
 import { useEffect, useRef } from "react";
 import ClientOnly from "@/components/ClientOnly";
 import LoadingSpinner from "@/components/LoadingSpinner";
+import DynamicHead from "@/components/DynamicHead";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -119,7 +120,17 @@ export default function LoginPage() {
             duration: 4000,
           }
         );
-        router.push("/admin");
+        // Use a robust redirect to handle Enter key submit timing
+        // Ensure navigation happens even if router push is ignored due to transition state
+        try {
+          router.replace("/admin");
+        } catch {}
+        // Fallback: force navigation shortly after to avoid race with auth cookie propagation
+        setTimeout(() => {
+          if (typeof window !== "undefined" && window.location.pathname.startsWith("/auth")) {
+            window.location.href = "/admin";
+          }
+        }, 300);
       } else {
         toast.error(result.error || "Login failed. Please try again.");
       }
@@ -141,6 +152,7 @@ export default function LoginPage() {
         </div>
       }
     >
+      <DynamicHead />
       <div
         ref={ref}
         className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-indigo-900 flex items-start justify-center p-4 pt-8 lg:pt-16 relative overflow-hidden"

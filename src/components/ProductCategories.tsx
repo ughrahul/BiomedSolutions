@@ -4,7 +4,6 @@ import { motion } from "framer-motion";
 import {
   Heart,
   Brain,
-  Eye,
   Activity,
   Shield,
   Zap,
@@ -33,7 +32,7 @@ const categories = [
   },
   {
     id: "imaging",
-    icon: Eye,
+    icon: Scan,
     title: "Imaging",
     description: "High-resolution imaging systems for accurate diagnostics",
     count: 32,

@@ -74,7 +74,12 @@ export default function FeaturedProducts() {
     certifications: ["CE Marked", "FDA Approved"],
     rating: typeof item.rating === "number" ? item.rating : 0,
     review_count: typeof item.review_count === "number" ? item.review_count : 0,
-    tags: item.features?.slice(0, 3) || [],
+    // Prefer explicit tags if present; otherwise include all features
+    tags: Array.isArray(item.tags)
+      ? item.tags
+      : Array.isArray(item.features)
+      ? item.features
+      : [],
     is_active: item.is_active ?? true,
     is_featured: item.is_featured ?? false,
     created_at: item.created_at || new Date().toISOString(),

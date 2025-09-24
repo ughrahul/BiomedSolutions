@@ -90,7 +90,9 @@ export default function ProductDetailPage() {
           : [],
         benefits: [],
         warranty: data.warranty || "1 year",
-        certifications: ["CE Marked", "FDA Approved"],
+        certifications: Array.isArray(data.certifications)
+          ? data.certifications.filter(Boolean)
+          : [],
         rating: typeof data.rating === "number" ? data.rating : 0,
         review_count:
           typeof data.review_count === "number" ? data.review_count : 0,

@@ -32,9 +32,6 @@ export async function GET() {
     if (authError) {
       // Handle specific auth session missing error
       if (isAuthSessionMissingError(authError)) {
-        if (process.env.NODE_ENV === "development") {
-          console.log("No active session - user not authenticated");
-        }
         return NextResponse.json(
           {
             error: "User not authenticated",
@@ -131,9 +128,6 @@ export async function PUT(request: NextRequest) {
     if (authError) {
       // Handle specific auth session missing error
       if (isAuthSessionMissingError(authError)) {
-        if (process.env.NODE_ENV === "development") {
-          console.log("No active session - user not authenticated");
-        }
         return NextResponse.json(
           {
             error: "User not authenticated",

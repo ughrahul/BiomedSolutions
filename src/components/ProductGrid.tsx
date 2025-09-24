@@ -35,7 +35,16 @@ export default function ProductGrid({
   sortBy: initialSortBy = "featured",
 }: ProductGridProps) {
   const { settings } = useWebsiteSettings();
-  const [favorites, setFavorites] = useState<Set<string>>(new Set());
+  const [favorites, setFavorites] = useState<Set<string>>(() => {
+    try {
+      if (typeof window !== "undefined") {
+        const stored = localStorage.getItem("biomed_favorites");
+        const ids: string[] = stored ? JSON.parse(stored) : [];
+        return new Set(Array.isArray(ids) ? ids : []);
+      }
+    } catch {}
+    return new Set();
+  });
   const [sortBy, setSortBy] = useState(initialSortBy);
   const [loading, setLoading] = useState(true);
   const [products, setProducts] = useState<Product[]>([]);
@@ -87,7 +96,12 @@ export default function ProductGrid({
       rating: typeof item.rating === "number" ? item.rating : 0,
       review_count:
         typeof item.review_count === "number" ? item.review_count : 0,
-      tags: item.features?.slice(0, 3) || [],
+      // Prefer explicit tags; fallback to all features
+      tags: Array.isArray(item.tags)
+        ? item.tags
+        : Array.isArray(item.features)
+        ? item.features
+        : [],
       is_active: item.is_active,
       is_featured: item.is_featured,
       created_at: item.created_at,
@@ -320,6 +334,12 @@ export default function ProductGrid({
       } else {
         newFavorites.add(productId);
       }
+      // Persist to localStorage
+      try {
+        if (typeof window !== "undefined") {
+          localStorage.setItem("biomed_favorites", JSON.stringify(Array.from(newFavorites)));
+        }
+      } catch {}
       return newFavorites;
     });
   };
@@ -520,16 +540,19 @@ export default function ProductGrid({
 
                       {product.features && product.features.length > 0 && (
                         <div className="flex flex-wrap gap-1.5 sm:gap-2 mb-3 sm:mb-4">
-                          {product.features
-                            .slice(0, 3)
-                            .map((feature, index) => (
+                          {product.features.map((feature) => {
+                            const featureKey = `${product.id}-feature-${String(feature)
+                              .toLowerCase()
+                              .replace(/[^a-z0-9]+/g, "-")}`;
+                            return (
                               <span
-                                key={index}
+                                key={featureKey}
                                 className="px-2 sm:px-3 py-0.5 sm:py-1 bg-gray-100 text-gray-700 text-xs sm:text-sm rounded-full"
                               >
                                 {feature}
                               </span>
-                            ))}
+                            );
+                          })}
                         </div>
                       )}
                     </div>
@@ -682,7 +705,7 @@ export default function ProductGrid({
                   </div>
 
                   {/* Action buttons */}
-                  <div className="absolute top-2 right-2 sm:top-3 sm:right-3 md:top-4 md:right-4 flex flex-col gap-1 sm:gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                  <div className="absolute top-2 right-2 sm:top-3 sm:right-3 md:top-4 md:right-4 flex flex-col gap-1 sm:gap-2 opacity-100">
                     <button
                       onClick={() => toggleFavorite(product.id)}
                       className={`p-1.5 sm:p-2 rounded-full backdrop-blur-sm shadow-lg transition-colors touch-manipulation ${

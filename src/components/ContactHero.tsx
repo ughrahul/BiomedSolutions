@@ -1,7 +1,7 @@
 "use client";
 
-import { motion, useScroll, useTransform } from "framer-motion";
-import { useState, useEffect, useRef } from "react";
+import { motion, useScroll, useTransform, useReducedMotion } from "framer-motion";
+import { useState, useEffect, useRef, useMemo } from "react";
 import {
   Phone,
   Mail,
@@ -26,28 +26,40 @@ export default function ContactHero() {
   
   const y = useTransform(scrollYProgress, [0, 1], ["0%", "20%"]);
   const { settings, loading } = useWebsiteSettings();
+  const prefersReducedMotion = useReducedMotion();
+  const [isLowPerformance, setIsLowPerformance] = useState(false);
 
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
 
   useEffect(() => {
+    const cores = typeof window !== "undefined" ? window.navigator.hardwareConcurrency || 4 : 4;
+    const isMobile = typeof navigator !== "undefined" && /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    setIsLowPerformance(prefersReducedMotion || isMobile || cores <= 4);
+  }, [prefersReducedMotion]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined' || prefersReducedMotion) return;
+    let ticking = false;
     const handleMouseMove = (e: globalThis.MouseEvent) => {
-      setMousePosition({ x: e.clientX, y: e.clientY });
+      if (ticking || isLowPerformance) return;
+      ticking = true;
+      requestAnimationFrame(() => {
+        setMousePosition({ x: e.clientX, y: e.clientY });
+        ticking = false;
+      });
     };
+    window.addEventListener('mousemove', handleMouseMove, { passive: true });
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, [prefersReducedMotion, isLowPerformance]);
 
-    if (typeof window !== 'undefined') {
-      window.addEventListener('mousemove', handleMouseMove);
-      return () => window.removeEventListener('mousemove', handleMouseMove);
-    }
-  }, []);
-
-  const floatingIcons = [
+  const floatingIcons = useMemo(() => ([
     { icon: Sparkles, delay: 0, position: "top-20 left-20" },
     { icon: Shield, delay: 0.5, position: "top-40 right-32" },
     { icon: Zap, delay: 1, position: "bottom-40 left-32" },
     { icon: Heart, delay: 1.5, position: "bottom-20 right-20" },
     { icon: MessageCircle, delay: 2, position: "top-1/2 left-10" },
     { icon: Send, delay: 2.5, position: "top-1/3 right-10" },
-  ];
+  ]), []);
 
   if (loading) {
     return (
@@ -102,42 +114,45 @@ export default function ContactHero() {
         <div className="absolute inset-0 bg-[url('/grid.svg')] opacity-20"></div>
         <div className="absolute inset-0 bg-gradient-to-t from-black/20 to-transparent"></div>
         
-        {/* Mouse-following gradient */}
-        <motion.div
-          className="absolute w-96 h-96 bg-gradient-to-r from-cyan-500/30 to-purple-600/30 rounded-full blur-3xl pointer-events-none"
-          animate={{
-            x: mousePosition.x - 192,
-            y: mousePosition.y - 192,
-          }}
-          transition={{ type: "spring", damping: 30, stiffness: 200 }}
-        />
+        {/* Mouse-following gradient (disabled on low perf/reduced motion) */}
+        {!isLowPerformance && !prefersReducedMotion && (
+          <motion.div
+            className="absolute w-96 h-96 bg-gradient-to-r from-cyan-500/30 to-purple-600/30 rounded-full blur-3xl pointer-events-none"
+            animate={{
+              x: mousePosition.x - 192,
+              y: mousePosition.y - 192,
+            }}
+            transition={{ type: "spring", damping: 30, stiffness: 200 }}
+          />
+        )}
       </motion.div>
 
-      {/* Floating Background Elements */}
-      <div className="absolute inset-0">
-        {floatingIcons.map((item, index) => (
-          <motion.div
-            key={index}
-            className={`absolute ${item.position} w-16 h-16 opacity-20`}
-            initial={{ opacity: 0, scale: 0 }}
-            animate={{ opacity: 0.2, scale: 1 }}
-            transition={{ delay: item.delay, duration: 1 }}
-          >
+      {/* Floating Background Elements (skipped on low perf) */}
+      {!isLowPerformance && !prefersReducedMotion && (
+        <div className="absolute inset-0">
+          {floatingIcons.map((item, index) => (
             <motion.div
-              animate={{
-                y: [0, -20, 0],
-                rotate: [0, 5, -5, 0],
-              }}
-              transition={{
-                duration: 4 + index,
-                repeat: Infinity,
-                ease: "easeInOut",
-              }}
+              key={index}
+              className={`absolute ${item.position} w-16 h-16 opacity-20`}
+              initial={{ opacity: 0, scale: 0 }}
+              animate={{ opacity: 0.2, scale: 1 }}
+              transition={{ delay: item.delay, duration: 1 }}
             >
-              <item.icon className="w-16 h-16 text-white" />
+              <motion.div
+                animate={{
+                  y: [0, -20, 0],
+                  rotate: [0, 5, -5, 0],
+                }}
+                transition={{
+                  duration: 4 + index,
+                  repeat: Infinity,
+                  ease: "easeInOut",
+                }}
+              >
+                <item.icon className="w-16 h-16 text-white" />
+              </motion.div>
             </motion.div>
-          </motion.div>
-        ))}
+          ))}
 
         <motion.div
           className="absolute top-20 left-20 w-64 h-64 bg-gradient-to-br from-cyan-500/20 to-blue-600/20 rounded-full blur-3xl"
@@ -157,7 +172,8 @@ export default function ContactHero() {
           }}
           transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
         />
-      </div>
+        </div>
+      )}
 
       {/* Main Content */}
       <div className="relative z-10 container-responsive">

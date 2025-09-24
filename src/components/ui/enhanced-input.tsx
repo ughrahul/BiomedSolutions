@@ -1,7 +1,6 @@
 "use client";
 
 import { forwardRef, useState } from "react";
-import { Eye, EyeOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export interface EnhancedInputProps
@@ -104,9 +103,37 @@ const EnhancedInput = forwardRef<HTMLInputElement, EnhancedInputProps>(
               className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 transition-colors"
             >
               {showPassword ? (
-                <EyeOff className="w-5 h-5" />
+                // EyeOff inline SVG
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="w-5 h-5"
+                >
+                  <path d="M17.94 17.94A10.94 10.94 0 0 1 12 20c-5 0-9.27-3.11-11-8 1.01-2.93 3.05-5.26 5.65-6.71" />
+                  <path d="M1 1l22 22" />
+                  <path d="M10.58 10.58a2 2 0 0 0 2.84 2.84" />
+                  <path d="M9.88 4.24A10.94 10.94 0 0 1 12 4c5 0 9.27 3.11 11 8a11.18 11.18 0 0 1-4.12 5.06" />
+                </svg>
               ) : (
-                <Eye className="w-5 h-5" />
+                // Eye inline SVG
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="w-5 h-5"
+                >
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                  <circle cx="12" cy="12" r="3" />
+                </svg>
               )}
             </button>
           )}

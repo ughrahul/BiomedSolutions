@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import {
@@ -56,7 +56,32 @@ export default function ProductDetailHero({ product }: ProductDetailHeroProps) {
     }
   };
 
+  // Load persisted favorite state from localStorage
+  useEffect(() => {
+    try {
+      const stored = typeof window !== 'undefined' ? localStorage.getItem('biomed_favorites') : null;
+      if (stored) {
+        const ids: string[] = JSON.parse(stored);
+        setIsFavorited(Array.isArray(ids) && ids.includes(product.id));
+      }
+    } catch {}
+  }, [product.id]);
 
+  const toggleFavorite = () => {
+    setIsFavorited((prev) => {
+      const next = !prev;
+      try {
+        if (typeof window !== 'undefined') {
+          const stored = localStorage.getItem('biomed_favorites');
+          const ids: string[] = stored ? JSON.parse(stored) : [];
+          const set = new Set<string>(Array.isArray(ids) ? ids : []);
+          if (next) set.add(product.id); else set.delete(product.id);
+          localStorage.setItem('biomed_favorites', JSON.stringify(Array.from(set)));
+        }
+      } catch {}
+      return next;
+    });
+  };
 
   return (
     <section className="py-8 sm:py-12 bg-gradient-to-br from-cyan-50 via-blue-50 to-white">
@@ -114,11 +139,11 @@ export default function ProductDetailHero({ product }: ProductDetailHeroProps) {
               </div>
 
               {/* Action Buttons */}
-              <div className="absolute top-4 right-4 flex flex-col gap-2">
+              <div className="absolute top-4 right-4 z-10 flex flex-col gap-2">
                 <motion.button
                   whileHover={{ scale: 1.1 }}
                   whileTap={{ scale: 0.9 }}
-                  onClick={() => setIsFavorited(!isFavorited)}
+                  onClick={toggleFavorite}
                   className={`p-2 rounded-full backdrop-blur-sm shadow-lg transition-colors ${
                     isFavorited
                       ? "bg-red-500 text-white"
@@ -245,14 +270,20 @@ export default function ProductDetailHero({ product }: ProductDetailHeroProps) {
                   Feature Tags
                 </h3>
                 <div className="flex flex-wrap gap-2">
-                  {product.tags.map((tag, index) => (
-                    <span
-                      key={index}
-                      className="px-3 py-1 bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-sm font-medium rounded-full shadow-sm hover:shadow-md transition-shadow"
-                    >
-                      {tag}
-                    </span>
-                  ))}
+                  {product.tags.map((tag, index) => {
+                    const sanitizedTag = String(tag)
+                      .toLowerCase()
+                      .replace(/[^a-z0-9]+/g, "-");
+                    const uniqueKey = `${product.id}-tag-${index}-${sanitizedTag}`;
+                    return (
+                      <span
+                        key={uniqueKey}
+                        className="px-3 py-1 bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-sm font-medium rounded-full shadow-sm hover:shadow-md transition-shadow"
+                      >
+                        {tag}
+                      </span>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -302,7 +333,7 @@ export default function ProductDetailHero({ product }: ProductDetailHeroProps) {
             </div>
 
             {/* Guarantees */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+            <div className="grid grid-cols-3 sm:grid-cols-3 gap-4 sm:gap-6">
               <div className="text-center">
                 <div className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-2 bg-blue-100 rounded-full flex items-center justify-center">
                   <Shield className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600" />
@@ -326,13 +357,17 @@ export default function ProductDetailHero({ product }: ProductDetailHeroProps) {
             </div>
 
             {/* Certifications */}
-            {product.certifications && product.certifications.length > 0 && (
+            {(() => {
+              const displayedCerts = (product.certifications || []).filter(
+                (c) => c && !["CE Marked", "FDA Approved"].includes(c)
+              );
+              return displayedCerts.length > 0 ? (
               <div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-3">
                   Certifications
                 </h3>
                 <div className="flex flex-wrap gap-2">
-                  {product.certifications.map((cert, index) => (
+                  {displayedCerts.map((cert, index) => (
                     <span
                       key={index}
                       className="px-3 py-1 bg-blue-100 text-blue-700 text-sm font-medium rounded-full"
@@ -342,7 +377,8 @@ export default function ProductDetailHero({ product }: ProductDetailHeroProps) {
                   ))}
                 </div>
               </div>
-            )}
+              ) : null;
+            })()}
           </motion.div>
         </div>
       </div>

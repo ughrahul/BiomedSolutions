@@ -54,7 +54,7 @@ import {
   MapPin,
   ExternalLink,
   Quote,
-} from "lucide-react";
+} from "@/components/ui/safe-icons";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import Image from "next/image";
@@ -358,12 +358,12 @@ export default function HomePage() {
           className="relative h-[92vh] sm:h-[90vh] md:h-[95vh] flex items-center justify-center pt-16 sm:pt-20 pb-8 sm:pb-0 bg-gradient-to-br from-white via-cyan-50 to-blue-100"
         >
           {/* Enhanced Video Background */}
-          <motion.div style={{ y: heroY }} className="absolute inset-0 z-0">
+          <motion.div style={{ y: heroY }} className="absolute inset-0 z-0 pointer-events-none">
             <VideoBackground
               videoSrc="/assets/images/wall3.mp4"
               posterSrc="/assets/images/wall3_poster.jpg"
               className="absolute inset-0 w-full h-full object-cover opacity-90"
-              showLoadingIndicator={true}
+              showLoadingIndicator={false}
               onVideoLoad={() => {
                 // Video loaded successfully
               }}
@@ -374,14 +374,16 @@ export default function HomePage() {
           </motion.div>
 
           {/* Floating Orbs Animation */}
-          <FloatingParticles />
+          <div className="relative z-10">
+            <FloatingParticles />
+          </div>
 
-          <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center -mt-4 sm:-mt-10 md:-mt-20">
-            <motion.div
-              initial={{ opacity: 0, y: 50 }}
-              animate={heroInView ? { opacity: 1, y: 0 } : {}}
-              transition={{ duration: 0.8, ease: "easeOut" }}
-            >
+          <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center mt-2 sm:mt-0 md:-mt-10">
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                animate={heroInView ? { opacity: 1, y: 0 } : {}}
+                transition={{ duration: 0.7, ease: "easeOut" }}
+              >
               {/* Main Heading with Glassy Effect */}
               <motion.div
                 initial={{ opacity: 0, y: 50 }}
@@ -444,22 +446,57 @@ export default function HomePage() {
                 initial={{ opacity: 0, y: 20 }}
                 animate={heroInView ? { opacity: 1, y: 0 } : {}}
                 transition={{ duration: 0.8, delay: 0.6 }}
-                className="flex flex-col sm:flex-row gap-3 sm:gap-4 md:gap-6 justify-center items-center px-4 sm:px-0 w-full max-w-md sm:max-w-none mx-auto"
+                className="flex flex-col sm:flex-row gap-3 sm:gap-4 md:gap-6 justify-center items-center px-4 sm:px-0 w-full max-w-md mx-auto mt-6 sm:mt-8 relative z-20"
               >
-                <Link href="/products">
+                <Link href="/contact" className="w-full sm:w-auto">
                   <motion.div
-                    className="group relative"
-                    whileHover={{ scale: 1.08, y: -6, rotate: 1 }}
-                    whileTap={{ scale: 0.95 }}
+                    className="group relative w-full z-20"
+                    whileHover={{ scale: 1.04, y: -4, rotate: -0.5 }}
+                    whileTap={{ scale: 0.97 }}
+                  >
+                    <div className="absolute -inset-2 bg-gradient-to-r from-white/30 to-cyan-200/30 rounded-3xl blur-lg opacity-50 group-hover:opacity-80 transition duration-500"></div>
+                    <Button
+                      size="lg"
+                      variant="outline"
+                      className="relative w-full bg-white/10 backdrop-blur-lg hover:bg-white/20 text-white px-8 md:px-12 py-4 md:py-6 text-base md:text-xl font-bold rounded-2xl border-2 border-white/30 hover:border-white/50 transition-all duration-300 overflow-hidden shadow-xl min-h-[48px] touch-manipulation"
+                    >
+                      <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-cyan-200/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                      <motion.div
+                        className="flex items-center justify-center relative z-10"
+                        whileHover={{ x: 3 }}
+                      >
+                        <motion.div
+                          animate={{ scale: [1, 1.2, 1] }}
+                          transition={{ duration: 1.5, repeat: Infinity }}
+                        >
+                          <Heart className="w-6 h-6 mr-3 text-red-300" />
+                        </motion.div>
+                        <span>Get Consultation</span>
+                      </motion.div>
+                      <motion.div
+                        className="absolute inset-0 bg-white/10"
+                        initial={{ x: "-100%" }}
+                        whileHover={{ x: "100%" }}
+                        transition={{ duration: 0.6 }}
+                      />
+                    </Button>
+                  </motion.div>
+                </Link>
+
+                <Link href="/products" className="w-full sm:w-auto">
+                  <motion.div
+                    className="group relative w-full z-20"
+                    whileHover={{ scale: 1.06, y: -5, rotate: 0.5 }}
+                    whileTap={{ scale: 0.97 }}
                   >
                     <div className="absolute -inset-2 bg-gradient-to-r from-cyan-400 to-blue-600 rounded-3xl blur-lg opacity-70 group-hover:opacity-100 transition duration-500"></div>
                     <Button
                       size="lg"
-                      className="relative bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white px-8 sm:px-10 md:px-12 py-4 sm:py-5 md:py-6 text-base sm:text-lg md:text-xl font-bold rounded-xl sm:rounded-2xl shadow-2xl border border-cyan-400/50 overflow-hidden w-full sm:w-auto min-h-[48px] touch-manipulation"
+                      className="relative w-full bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white px-8 md:px-12 py-4 md:py-6 text-base md:text-xl font-bold rounded-2xl shadow-2xl border border-cyan-400/50 overflow-hidden min-h-[48px] touch-manipulation"
                     >
                       <div className="absolute inset-0 bg-gradient-to-r from-cyan-300/20 to-blue-400/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                       <motion.div
-                        className="flex items-center relative z-10"
+                        className="flex items-center justify-center relative z-10"
                         whileHover={{ x: 3 }}
                       >
                         <motion.div
@@ -483,41 +520,6 @@ export default function HomePage() {
                       </motion.div>
                       <motion.div
                         className="absolute inset-0 bg-white/20"
-                        initial={{ x: "-100%" }}
-                        whileHover={{ x: "100%" }}
-                        transition={{ duration: 0.6 }}
-                      />
-                    </Button>
-                  </motion.div>
-                </Link>
-
-                <Link href="/contact">
-                  <motion.div
-                    className="group relative"
-                    whileHover={{ scale: 1.08, y: -6, rotate: -1 }}
-                    whileTap={{ scale: 0.95 }}
-                  >
-                    <div className="absolute -inset-2 bg-gradient-to-r from-white/30 to-cyan-200/30 rounded-3xl blur-lg opacity-50 group-hover:opacity-80 transition duration-500"></div>
-                    <Button
-                      size="lg"
-                      variant="outline"
-                      className="relative bg-white/10 backdrop-blur-lg hover:bg-white/20 text-white px-8 sm:px-10 md:px-12 py-4 sm:py-5 md:py-6 text-base sm:text-lg md:text-xl font-bold rounded-xl sm:rounded-2xl border-2 border-white/30 hover:border-white/50 transition-all duration-300 overflow-hidden shadow-xl w-full sm:w-auto min-h-[48px] touch-manipulation"
-                    >
-                      <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-cyan-200/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                      <motion.div
-                        className="flex items-center relative z-10"
-                        whileHover={{ x: 3 }}
-                      >
-                        <motion.div
-                          animate={{ scale: [1, 1.2, 1] }}
-                          transition={{ duration: 1.5, repeat: Infinity }}
-                        >
-                          <Heart className="w-6 h-6 mr-3 text-red-300" />
-                        </motion.div>
-                        <span>Get Consultation</span>
-                      </motion.div>
-                      <motion.div
-                        className="absolute inset-0 bg-white/10"
                         initial={{ x: "-100%" }}
                         whileHover={{ x: "100%" }}
                         transition={{ duration: 0.6 }}
@@ -1153,8 +1155,11 @@ export default function HomePage() {
                     whileTap={{ scale: 0.95 }}
                     className="touch-manipulation"
                   >
-                    <Button className="bg-gradient-to-r from-sky-500 to-teal-500 hover:from-sky-600 hover:to-teal-600 text-white px-4 sm:px-6 md:px-8 py-2 sm:py-3 rounded-xl font-semibold text-xs sm:text-sm md:text-base min-h-[44px] w-full sm:w-auto">
-                      <ExternalLink className="w-3 h-3 sm:w-4 sm:h-4 md:w-5 md:h-5 mr-1 sm:mr-2" />
+                    <Button
+                      className="bg-gradient-to-r from-sky-500 to-teal-500 hover:from-sky-600 hover:to-teal-600 text-white px-4 sm:px-6 md:px-8 py-2 sm:py-3 rounded-xl font-semibold text-xs sm:text-sm md:text-base min-h-[44px] w-full sm:w-auto"
+                      icon={<ExternalLink className="w-4 h-4 md:w-5 md:h-5" />}
+                      iconPosition="left"
+                    >
                       Open in Google Maps
                     </Button>
                   </motion.a>

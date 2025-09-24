@@ -283,6 +283,7 @@ export default function AdminLayout({
                 <Link
                   key={item.name}
                   href={item.href}
+                  prefetch
                   className={`group flex items-center px-4 py-3 text-gray-700 rounded-xl transition-all duration-300 ${
                     isActive
                       ? "bg-gradient-to-r from-blue-50 to-indigo-50 text-blue-700 border-l-4 border-blue-500 shadow-sm"

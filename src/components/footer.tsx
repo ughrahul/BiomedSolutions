@@ -281,6 +281,7 @@ export default function Footer() {
                 <li key={link.name}>
                   <Link
                     href={link.href}
+                    prefetch
                     className="group text-gray-400 hover:text-cyan-400 transition-all duration-300 text-sm block py-1"
                   >
                     <motion.span

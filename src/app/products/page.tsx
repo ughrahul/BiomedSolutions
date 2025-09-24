@@ -188,7 +188,7 @@ export default function ProductsPage() {
                   placeholder="Search medical equipment..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-3 sm:py-4 bg-white/10 backdrop-blur-sm border-2 border-cyan-300/30 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 text-white placeholder-gray-300 text-sm sm:text-base min-h-[48px] touch-manipulation"
+                  className="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-3 sm:py-4 bg-white/20 border-2 border-cyan-300/30 rounded-lg sm:rounded-xl focus:ring-2 focus:ring-cyan-400 focus:border-cyan-400 text-white placeholder-gray-300 text-sm sm:text-base min-h-[48px] touch-manipulation"
                 />
               </div>
             </motion.div>

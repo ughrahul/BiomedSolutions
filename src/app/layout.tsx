@@ -6,7 +6,6 @@ import ConditionalLayout from "@/components/ConditionalLayout";
 import DemoModeBanner from "@/components/DemoModeBanner";
 import ErrorBoundary from "@/components/ErrorBoundary";
 import React from "react";
-import DynamicHead from "@/components/DynamicHead";
 
 import Script from "next/script";
 import { Analytics } from "@vercel/analytics/next";
@@ -103,6 +102,12 @@ export default function RootLayout({
           name="viewport"
           content="width=device-width, initial-scale=1, viewport-fit=cover"
         />
+        <link rel="icon" href="/favicon.ico" />
+        <link rel="icon" type="image/png" sizes="32x32" href="/assets/images/logo.png" />
+        <link rel="icon" type="image/png" sizes="48x48" href="/assets/images/logo.png" />
+        <link rel="icon" type="image/png" sizes="192x192" href="/assets/images/logo.png" />
+        <link rel="apple-touch-icon" sizes="180x180" href="/assets/images/logo.png" />
+        <meta name="theme-color" content="#0ea5e9" />
 
         {/* Preconnect for critical external domains (keep non-font domains if needed) */}
         <link rel="dns-prefetch" href="https://maps.googleapis.com" />
@@ -122,14 +127,21 @@ export default function RootLayout({
               "@type": "Organization",
               name: "Biomed Solution",
               url: "https://biomedsolution.com.np",
-              logo: "https://biomedsolution.com.np/assets/images/logo.png",
-              images: [
-                {
-                  url: "https://biomedsolution.com.np/assets/images/logo.png",
-                  width: 1200,
-                  height: 630,
-                  alt: "Biomed Solution",
-                },
+              logo: {
+                "@type": "ImageObject",
+                url: "https://biomedsolution.com.np/assets/images/logo.png",
+                width: 512,
+                height: 512,
+              },
+              image: {
+                "@type": "ImageObject",
+                url: "https://biomedsolution.com.np/assets/images/logo.png",
+                width: 1200,
+                height: 630,
+              },
+              sameAs: [
+                "https://www.facebook.com/biomedsolution",
+                "https://www.linkedin.com/company/biomed-solution"
               ],
             }),
           }}
@@ -143,8 +155,7 @@ export default function RootLayout({
           <Providers>
             <DemoModeBanner />
             <ConditionalLayout>{children}</ConditionalLayout>
-            {/* Dynamic title and favicon per route */}
-            <DynamicHead />
+            {/* Titles and icons are handled via Next.js Metadata API per route */}
           </Providers>
           {/* Mount client-side dynamic head updater */}
           {/* eslint-disable-next-line @next/next/no-head-element */}

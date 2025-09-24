@@ -10,7 +10,7 @@ export async function generateMetadata({
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
   const { id } = await params;
-  const defaultTitle = process.env.NEXT_PUBLIC_APP_NAME || "Biomed Solution";
+  const defaultTitle = "Biomed Solution";
 
   try {
     const supabase = await createServerSupabase();

@@ -351,6 +351,7 @@ export default function Navbar() {
                   >
                     <Link
                       href={item.href}
+                      prefetch
                       className={`relative px-3 sm:px-4 lg:px-6 py-2 sm:py-3 text-base sm:text-lg font-semibold transition-all duration-300 rounded-xl group ${
                         isActive
                           ? "text-blue-600"
