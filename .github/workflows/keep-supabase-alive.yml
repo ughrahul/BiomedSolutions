@@ -1,0 +1,18 @@
+
+
+name: Keep Supabase Alive
+
+# Run every 5 minutes automatically and also manually
+on:
+  schedule:
+    - cron: '*/5 * * * *'  # every 5 minutes
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping Supabase
+        run: |
+          curl -X GET https://iqnosnulliwdyhpgraqo.supabase.co/rest/v1/healthcheck \
+          -H "apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imlxbm9zbnVsbGl3ZHlocGdyYXFvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQxNDU3ODYsImV4cCI6MjA2OTcyMTc4Nn0.rLvU07LAZUco62c4eIfWUaKpEP3RJ5THt2_MX9V7lHw"
